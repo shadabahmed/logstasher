@@ -1,0 +1,3 @@
+Logstasher - Awesome rails logs
+=======
+
