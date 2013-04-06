@@ -12,8 +12,10 @@ module ActionController
 
       if Logstasher.payload_appender
         before_keys = raw_payload.keys.clone
-        Logstasher.payload_appender.call(self, request, raw_payload)
+        # Execue the payload appened in current context
+        self.instance_exec raw_payload, &Logstasher.payload_appender
         after_keys = raw_payload.keys
+        # Add to payload all extra keys added to payload hash
         raw_payload[:log_stasher_appended_param_keys] = after_keys - before_keys
       end
 
