@@ -77,7 +77,7 @@ module Logstasher
     def extract_exception(payload)
       if payload[:exception]
         exception, message = payload[:exception]
-        message = "#{exception} : #{message}\n #{($!.backtrace.join("\n"))}"
+        message = "#{exception}\n#{message}\n#{($!.backtrace.join("\n"))}"
         { :status => 500, :error => message }
       else
         {}
@@ -86,7 +86,7 @@ module Logstasher
 
     def extract_appended_params(payload)
       appended_keys = payload.delete(:log_stasher_appended_param_keys)
-      (appended_keys && payload.extract!(*appended_keys)) || {}
+      (appended_keys && payload.extract!(*appended_keys.uniq)) || {}
     end
   end
 end
