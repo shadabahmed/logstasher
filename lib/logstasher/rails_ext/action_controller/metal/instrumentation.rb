@@ -10,13 +10,13 @@ module ActionController
           :path       => (request.fullpath rescue "unknown")
       }
 
-      if Logstasher.payload_appender
+      Logstasher.append_default_info_to_payload(raw_payload, request)
+      if self.respond_to?(:logtasher_append_custom_info_to_payload)
         before_keys = raw_payload.keys.clone
-        # Execue the payload appened in current context
-        self.instance_exec raw_payload, &Logstasher.payload_appender
+        logtasher_append_custom_info_to_payload(raw_payload)
         after_keys = raw_payload.keys
-        # Add to payload all extra keys added to payload hash
-        raw_payload[:log_stasher_appended_param_keys] = after_keys - before_keys
+        # Store all extra keys added to payload hash in payload itself. This is a thread safe way
+        raw_payload[:log_stasher_appended_param_keys] += after_keys - before_keys
       end
 
       ActiveSupport::Notifications.instrument("start_processing.action_controller", raw_payload.dup)

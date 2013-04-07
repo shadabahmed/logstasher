@@ -11,8 +11,16 @@ module Logstasher
   # Set the options for the adding cutom data to payload
   mattr_accessor :payload_appender
 
+  def self.append_default_info_to_payload(payload, request)
+    payload[:ip] = request.ip
+    payload[:route] = "#{request.params[:controller]}##{request.params[:action]}"
+    payload[:parameters] = request.params.except(*ActionController::LogSubscriber::INTERNAL_PARAMS).inject(""){|s,(k,v)|
+      s+="#{k}=#{v}\n"}
+    payload[:log_stasher_appended_param_keys] = [:ip, :route, :parameters]
+  end
+
   def self.append_payload(&block)
-    self.payload_appender = block
+    ActionController::Base.send(:define_method, :logtasher_append_custom_info_to_payload, &block)
   end
 
   def self.remove_existing_log_subscriptions
