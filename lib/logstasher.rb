@@ -16,10 +16,10 @@ module Logstasher
     payload[:route] = "#{request.params[:controller]}##{request.params[:action]}"
     payload[:parameters] = request.params.except(*ActionController::LogSubscriber::INTERNAL_PARAMS).inject(""){|s,(k,v)|
       s+="#{k}=#{v}\n"}
-    payload[:log_stasher_appended_param_keys] = [:ip, :route, :parameters]
+    payload[:logstasher_appended_params] = [:ip, :route, :parameters]
   end
 
-  def self.append_payload(&block)
+  def self.append_custom_payload(&block)
     ActionController::Base.send(:define_method, :logtasher_append_custom_info_to_payload, &block)
   end
 
@@ -46,14 +46,39 @@ module Logstasher
   end
 
   def self.setup(app)
-    Logstasher.enabled = true
     app.config.action_dispatch.rack_cache[:verbose] = false if app.config.action_dispatch.rack_cache
-    require 'logstasher/rails_ext/rack/logger'
+    # Path instrumentation class to insert our hook
     require 'logstasher/rails_ext/action_controller/metal/instrumentation'
     require 'logstash/event'
-    Logstasher.remove_existing_log_subscriptions
+    self.suppress_app_logs(app)
     Logstasher::RequestLogSubscriber.attach_to :action_controller
-    self.logger = app.config.logstasher.logger || Logger.new("#{Rails.root}/log/logstash.log")
+    self.logger = app.config.logstasher.logger || Logger.new("#{Rails.root}/log/logstash_#{Rails.env}.log")
+    self.logger.level = app.config.logstasher.log_level || Logger::WARN
+    self.enabled = true
+  end
+
+  def self.suppress_app_logs(app)
+    if app.config.logstasher.supress_app_log.nil? || app.config.logstasher.supress_app_log
+      require 'logstasher/rails_ext/rack/logger'
+      Logstasher.remove_existing_log_subscriptions
+    end
+  end
+
+  def self.add(severity, msg)
+    if self.logger && self.logger.send("#{severity}?")
+      event = LogStash::Event.new('@fields' => {:message => msg, :level => severity},'@tags' => ['log'])
+      self.logger.send severity, event.to_json
+    end
+  end
+
+  class << self
+    %w( fatal error warn info debug unknown ).each do |severity|
+      eval <<-EOM, nil, __FILE__, __LINE__ + 1
+        def #{severity}(msg)
+          self.add(:#{severity}, msg)
+        end
+      EOM
+    end
   end
 end
 
