@@ -13,8 +13,9 @@ module Logstasher
       data.merge! extract_exception(payload)
       data.merge! extract_appended_params(payload)
 
-      event = LogStash::Event.new("@fields" => data)
-      Logstasher.logger.info event.to_json
+      event = LogStash::Event.new('@fields' => data, '@tags' => ['request'])
+      event.tags << 'exception' if payload[:exception]
+      Logstasher.logger.unknown event.to_json
     end
 
     def redirect_to(event)
@@ -85,7 +86,7 @@ module Logstasher
     end
 
     def extract_appended_params(payload)
-      appended_keys = payload.delete(:log_stasher_appended_param_keys)
+      appended_keys = payload.delete(:logstasher_appended_params)
       (appended_keys && payload.extract!(*appended_keys.uniq)) || {}
     end
   end
