@@ -29,8 +29,8 @@ module Logstasher
         :method => payload[:method],
         :path => extract_path(payload),
         :format => extract_format(payload),
-        :controller => payload[:controller],
-        :action => payload[:action]
+        :controller => payload[:params][:controller],
+        :action => payload[:params][:action]
       }
     end
 
@@ -50,7 +50,7 @@ module Logstasher
       if payload[:status]
         { :status => payload[:status].to_i }
       else
-        {}
+        { :status => 0 }
       end
     end
 
@@ -86,8 +86,7 @@ module Logstasher
     end
 
     def extract_appended_params(payload)
-      appended_keys = payload.delete(:logstasher_appended_params)
-      (appended_keys && payload.extract!(*appended_keys.uniq)) || {}
+      (!Logstasher.appended_params.empty? && payload.extract!(*Logstasher.appended_params)) || {}
     end
   end
 end

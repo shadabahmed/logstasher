@@ -16,7 +16,7 @@ module ActionController
         logtasher_append_custom_info_to_payload(raw_payload)
         after_keys = raw_payload.keys
         # Store all extra keys added to payload hash in payload itself. This is a thread safe way
-        raw_payload[:logstasher_appended_params] += after_keys - before_keys
+        Logstasher.appended_params += after_keys - before_keys
       end
 
       ActiveSupport::Notifications.instrument("start_processing.action_controller", raw_payload.dup)
