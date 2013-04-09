@@ -1,9 +1,4 @@
 require 'spec_helper'
-require 'logstasher'
-require 'logstasher/log_subscriber'
-require 'active_support/notifications'
-require 'active_support/core_ext/string'
-require 'logger'
 
 describe Logstasher::RequestLogSubscriber do
   let(:log_output) {StringIO.new}
@@ -12,10 +7,14 @@ describe Logstasher::RequestLogSubscriber do
     logger.formatter = ->(_, _, _, msg) {
       msg
     }
+    def log_output.json
+      JSON.parse! self.string
+    end
     logger
   }
   before do
-    Logstasher::RequestLogSubscriber.logger = logger
+    Logstasher.logger = logger
+    Logstasher.appended_params = []
   end
 
   let(:subscriber) {Logstasher::RequestLogSubscriber.new}
@@ -23,8 +22,8 @@ describe Logstasher::RequestLogSubscriber do
     ActiveSupport::Notifications::Event.new(
       'process_action.action_controller', Time.now, Time.now, 2, {
         status: 200, format: 'application/json', method: 'GET', path: '/home?foo=bar', params: {
-          'controller' => 'home', 'action' => 'index', 'foo' => 'bar'
-        }, db_runtime: 0.02, view_runtime: 0.01
+          :controller => 'home', :action => 'index', 'foo' => 'bar'
+        }.with_indifferent_access, db_runtime: 0.02, view_runtime: 0.01
       }
     )
   }
@@ -35,64 +34,73 @@ describe Logstasher::RequestLogSubscriber do
     )
   }
 
-  describe "when processing an action with logstasher output" do
-    before do
-      Logstasher::log_format = :logstasher
+  describe 'logstasher output' do
+
+    it "should contain request tag" do
+      subscriber.process_action(event)
+      log_output.json['@tags'].should include 'request'
     end
 
-    it "should include the URL in the log output" do
+    it "should contain HTTP method" do
       subscriber.process_action(event)
-      log_output.string.should include('/home')
+      log_output.json['@fields']['method'].should == 'GET'
     end
 
-    it "should not include the query string in the url" do
+    it "should include the path in the log output" do
       subscriber.process_action(event)
-      log_output.string.should_not include('?foo=bar')
+      log_output.json['@fields']['path'].should == '/home'
     end
 
-    it "should start the log line with the HTTP method" do
+    it "should include the format in the log output" do
       subscriber.process_action(event)
-      log_output.string.starts_with?('method=GET ').should == true
+      log_output.json['@fields']['format'].should == 'application/json'
     end
 
     it "should include the status code" do
       subscriber.process_action(event)
-      log_output.string.should include('status=200 ')
+      log_output.json['@fields']['status'].should == 200
     end
 
-    it "should include the controller and action" do
+    it "should include the controller" do
       subscriber.process_action(event)
-      log_output.string.should include('controller=home action=index')
+      log_output.json['@fields']['controller'].should == 'home'
     end
 
-    it "should include the duration" do
+    it "should include the action" do
       subscriber.process_action(event)
-      log_output.string.should =~ /duration=[\.0-9]{4,4} /
+      log_output.json['@fields']['action'].should == 'index'
     end
 
     it "should include the view rendering time" do
       subscriber.process_action(event)
-      log_output.string.should =~ /view=0.01 /
+      log_output.json['@fields']['view'].should == 0.01
     end
 
     it "should include the database rendering time" do
       subscriber.process_action(event)
-      log_output.string.should =~ /db=0.02/
+      log_output.json['@fields']['db'].should == 0.02
     end
 
     it "should add a 500 status when an exception occurred" do
-      event.payload[:status] = nil
-      event.payload[:exception] = ['AbstractController::ActionNotFound', 'Route not found']
-      subscriber.process_action(event)
-      log_output.string.should =~ /status=500 /
-      log_output.string.should =~ /error='AbstractController::ActionNotFound:Route not found' /
+      begin
+        raise AbstractController::ActionNotFound.new('Could not find an action')
+      # working this in rescue to get access to $! variable
+      rescue
+        event.payload[:status] = nil
+        event.payload[:exception] = ['AbstractController::ActionNotFound', 'Route not found']
+        subscriber.process_action(event)
+        log_output.json['@fields']['status'].should == 500
+        log_output.json['@fields']['error'].should =~ /AbstractController::ActionNotFound.*Route not found.*logstasher\/spec\/logstasher_logsubscriber_spec\.rb/m
+        log_output.json['@tags'].should include 'request'
+        log_output.json['@tags'].should include 'exception'
+      end
     end
 
     it "should return an unknown status when no status or exception is found" do
       event.payload[:status] = nil
       event.payload[:exception] = nil
       subscriber.process_action(event)
-      log_output.string.should =~ /status=0 /
+      log_output.json['@fields']['status'].should == 0
     end
 
     describe "with a redirect" do
@@ -102,7 +110,7 @@ describe Logstasher::RequestLogSubscriber do
 
       it "should add the location to the log line" do
         subscriber.process_action(event)
-        log_output.string.should =~ %r{ location=http://www.example.com}
+        log_output.json['@fields']['location'].should == 'http://www.example.com'
       end
 
       it "should remove the thread local variable" do
@@ -113,231 +121,37 @@ describe Logstasher::RequestLogSubscriber do
 
     it "should not include a location by default" do
       subscriber.process_action(event)
-      log_output.string.should_not =~ /location=/
+      log_output.json['@fields']['location'].should be_nil
     end
   end
 
-  describe "when processing an action with logstash output" do
-    before do
-      require 'logstash-event'
-      Logstasher::log_format = :logstash
-    end
-
-    it "should include the URL in the log output" do
+  describe "with append_custom_params block specified" do
+    let(:request) { mock(:ip => '10.0.0.1')}
+    it "should add default custom data to the output" do
+      request.stub(:params => event.payload[:params])
+      Logstasher.append_default_info_to_payload(event.payload, request)
       subscriber.process_action(event)
-      log_output.string.should include('/home')
-    end
-
-    it "should start include the HTTP method" do
-      subscriber.process_action(event)
-      log_output.string.should include('"method":"GET"')
-    end
-
-    it "should include the status code" do
-      subscriber.process_action(event)
-      log_output.string.should include('"status":200')
-    end
-
-    it "should include the controller and action" do
-      subscriber.process_action(event)
-      log_output.string.should include('"controller":"home"')
-      log_output.string.should include('"action":"index"')
-    end
-
-    it "should include the duration" do
-      subscriber.process_action(event)
-      log_output.string.should =~ /"duration":\d+\.\d{0,2}/
-    end
-
-    it "should include the view rendering time" do
-      subscriber.process_action(event)
-      log_output.string.should =~ /"view":0.01/
-    end
-
-    it "should include the database rendering time" do
-      subscriber.process_action(event)
-      log_output.string.should =~ /"db":0.02/
-    end
-
-    it "should add a 500 status when an exception occurred" do
-      event.payload[:status] = nil
-      event.payload[:exception] = ['AbstractController::ActionNotFound', 'Route not found']
-      subscriber.process_action(event)
-      log_output.string.should =~ /"status":500/
-      log_output.string.should =~ /"error":"AbstractController::ActionNotFound:Route not found"/
-    end
-
-    it "should return an unknown status when no status or exception is found" do
-      event.payload[:status] = nil
-      event.payload[:exception] = nil
-      subscriber.process_action(event)
-      log_output.string.should =~ /"status":0/
-    end
-
-    describe "with a redirect" do
-      before do
-        Thread.current[:logstasher_location] = "http://www.example.com"
-      end
-
-      it "should add the location to the log line" do
-        subscriber.process_action(event)
-        log_output.string.should =~ %r{"location":"http://www.example.com"}
-      end
-
-      it "should remove the thread local variable" do
-        subscriber.process_action(event)
-        Thread.current[:logstasher_location].should == nil
-      end
-    end
-
-    it "should not include a location by default" do
-      subscriber.process_action(event)
-      log_output.string.should_not =~ /"location":/
+      log_output.json['@fields']['ip'].should == '10.0.0.1'
+      log_output.json['@fields']['route'].should == 'home#index'
+      log_output.json['@fields']['parameters'].should == "foo=bar\n"
     end
   end
 
-  describe "when processing an action with graylog2 output" do
+  describe "with append_custom_params block specified" do
     before do
-      Logstasher::log_format = :graylog2
-    end
-
-    it "should include the URL in the log output" do
-      subscriber.process_action(event)
-      log_output.string.should include(':_path=>"/home"')
-    end
-
-    it "should start include the HTTP method" do
-      subscriber.process_action(event)
-      log_output.string.should include(':_method=>"GET"')
-    end
-
-    it "should include the status code" do
-      subscriber.process_action(event)
-      log_output.string.should include(':_status=>200')    end
-
-    it "should include the controller and action" do
-      subscriber.process_action(event)
-      log_output.string.should include(':_controller=>"home"')
-      log_output.string.should include(':_action=>"index"')
-    end
-
-    it "should include the duration" do
-      subscriber.process_action(event)
-      log_output.string.should =~ /:_duration=>\d+\.\d{0,2}/
-    end
-
-    it "should include the view rendering time" do
-      subscriber.process_action(event)
-      log_output.string.should include(':_view=>0.01')
-    end
-
-    it "should include the database rendering time" do
-      subscriber.process_action(event)
-      log_output.string.should include(':_db=>0.02')
-    end
-
-    it "should add a 500 status when an exception occurred" do
-      event.payload[:status] = nil
-      event.payload[:exception] = ['AbstractController::ActionNotFound', 'Route not found']
-      subscriber.process_action(event)
-      log_output.string.should include(':_status=>500')
-      log_output.string.should include(':_error=>"AbstractController::ActionNotFound:Route not found"')
-    end
-
-    it "should return an unknown status when no status or exception is found" do
-      event.payload[:status] = nil
-      event.payload[:exception] = nil
-      subscriber.process_action(event)
-      log_output.string.should include(':_status=>0')
-    end
-
-    describe "with a redirect" do
-      before do
-        Thread.current[:logstasher_location] = "http://www.example.com"
+      Logstasher.stub(:append_custom_params) do |&block|
+        @block = block
       end
-
-      it "should add the location to the log line" do
-        subscriber.process_action(event)
-        log_output.string.should include(':_location=>"http://www.example.com"')
+      Logstasher.append_custom_params do |payload|
+        payload[:user] = 'user'
       end
-
-      it "should remove the thread local variable" do
-        subscriber.process_action(event)
-        Thread.current[:logstasher_location].should == nil
-      end
+      Logstasher.appended_params += [:user]
     end
 
-    it "should not include a location by default" do
+    it "should add the custom data to the output" do
+      @block.call(event.payload)
       subscriber.process_action(event)
-      log_output.string.should_not =~ /"location":/
-    end
-  end
-
-  describe "with custom_options configured for graylog2 output" do
-    before do
-      Logstasher::log_format = :graylog2
-    end
-
-    it "should combine the hash properly for the output" do
-      Logstasher.custom_options = {:data => "value"}
-      subscriber.process_action(event)
-      log_output.string.should include(':_data=>"value"')
-    end
-
-    it "should combine the output of a lambda properly" do
-      Logstasher.custom_options = lambda {|event| {:data => "value"}}
-      subscriber.process_action(event)
-      log_output.string.should include(':_data=>"value"')
-    end
-
-    it "should work if the method returns nil" do
-      Logstasher.custom_options = lambda {|event| nil}
-      subscriber.process_action(event)
-      log_output.string.should be_present
-    end
-  end
-
-  describe "with custom_options configured for logstasher output" do
-    before do
-      Logstasher::log_format = :logstasher
-    end
-
-    it "should combine the hash properly for the output" do
-      Logstasher.custom_options = {:data => "value"}
-      subscriber.process_action(event)
-      log_output.string.should =~ / data=value/
-    end
-    it "should combine the output of a lambda properly" do
-      Logstasher.custom_options = lambda {|event| {:data => "value"}}
-      subscriber.process_action(event)
-      log_output.string.should =~ / data=value/
-    end
-    it "should work if the method returns nil" do
-      Logstasher.custom_options = lambda {|event| nil}
-      subscriber.process_action(event)
-      log_output.string.should be_present
-    end
-  end
-
-  describe "with custom_options configured for logstash output" do
-    before do
-      Logstasher::log_format = :logstash
-    end
-
-    it "should combine the hash properly for the output" do
-      Logstasher.custom_options = {:data => "value"}
-      subscriber.process_action(event)
-      log_output.string.should =~ /"data":"value"/
-    end
-    it "should combine the output of a lambda properly" do
-      Logstasher.custom_options = lambda {|event| {:data => "value"}}
-      subscriber.process_action(event)
-      log_output.string.should =~ /"data":"value"/
-    end
-    it "should work if the method returns nil" do
-      Logstasher.custom_options = lambda {|event| nil}
-      subscriber.process_action(event)
-      log_output.string.should be_present
+      log_output.json['@fields']['user'].should == 'user'
     end
   end
 

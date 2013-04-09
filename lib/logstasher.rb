@@ -8,28 +8,13 @@ module Logstasher
   # Logger for the logstash logs
   mattr_accessor :logger, :enabled
 
-  # Set the options for the adding cutom data to payload
-  mattr_accessor :payload_appender
-
-  def self.append_default_info_to_payload(payload, request)
-    payload[:ip] = request.ip
-    payload[:route] = "#{request.params[:controller]}##{request.params[:action]}"
-    payload[:parameters] = request.params.except(*ActionController::LogSubscriber::INTERNAL_PARAMS).inject(""){|s,(k,v)|
-      s+="#{k}=#{v}\n"}
-    payload[:logstasher_appended_params] = [:ip, :route, :parameters]
-  end
-
-  def self.append_custom_payload(&block)
-    ActionController::Base.send(:define_method, :logtasher_append_custom_info_to_payload, &block)
-  end
-
   def self.remove_existing_log_subscriptions
     ActiveSupport::LogSubscriber.log_subscribers.each do |subscriber|
       case subscriber
-      when ActionView::LogSubscriber
-        unsubscribe(:action_view, subscriber)
-      when ActionController::LogSubscriber
-        unsubscribe(:action_controller, subscriber)
+        when ActionView::LogSubscriber
+          unsubscribe(:action_view, subscriber)
+        when ActionController::LogSubscriber
+          unsubscribe(:action_controller, subscriber)
       end
     end
   end
@@ -45,6 +30,18 @@ module Logstasher
     end
   end
 
+  def self.append_default_info_to_payload(payload, request)
+    payload[:ip] = request.ip
+    payload[:route] = "#{request.params[:controller]}##{request.params[:action]}"
+    payload[:parameters] = payload[:params].except(*ActionController::LogSubscriber::INTERNAL_PARAMS).inject(""){|s,(k,v)|
+      s+="#{k}=#{v}\n"}
+    self.appended_params += [:ip, :route, :parameters]
+  end
+
+  def self.append_custom_params(&block)
+    ActionController::Base.send(:define_method, :logtasher_append_custom_info_to_payload, &block)
+  end
+
   def self.setup(app)
     app.config.action_dispatch.rack_cache[:verbose] = false if app.config.action_dispatch.rack_cache
     # Path instrumentation class to insert our hook
@@ -55,6 +52,7 @@ module Logstasher
     self.logger = app.config.logstasher.logger || Logger.new("#{Rails.root}/log/logstash_#{Rails.env}.log")
     self.logger.level = app.config.logstasher.log_level || Logger::WARN
     self.enabled = true
+    self.appended_params = []
   end
 
   def self.suppress_app_logs(app)
@@ -64,7 +62,16 @@ module Logstasher
     end
   end
 
-  def self.add(severity, msg)
+  def self.appended_params
+    Thread.current[:logstasher_appended_params]
+  end
+
+  def self.appended_params=(val)
+    Thread.current[:logstasher_appended_params] = val
+  end
+
+
+  def self.log(severity, msg)
     if self.logger && self.logger.send("#{severity}?")
       event = LogStash::Event.new('@fields' => {:message => msg, :level => severity},'@tags' => ['log'])
       self.logger.send severity, event.to_json
@@ -75,7 +82,7 @@ module Logstasher
     %w( fatal error warn info debug unknown ).each do |severity|
       eval <<-EOM, nil, __FILE__, __LINE__ + 1
         def #{severity}(msg)
-          self.add(:#{severity}, msg)
+          self.log(:#{severity}, msg)
         end
       EOM
     end
