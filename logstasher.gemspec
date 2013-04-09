@@ -4,7 +4,7 @@ require "logstasher/version"
 
 Gem::Specification.new do |s|
   s.name        = "logstasher"
-  s.version     = Logstasher::VERSION
+  s.version     = LogStasher::VERSION
   s.authors     = ["Shadab Ahmed"]
   s.email       = ["shadab.ansari@gmail.com"]
   s.homepage    = "https://github.com/shadabahmed/logstasher"

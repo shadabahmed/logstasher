@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Logstasher do
+describe LogStasher do
   describe "when removing Rails' log subscribers" do
     after do
       ActionController::LogSubscriber.attach_to :action_controller
@@ -9,7 +9,7 @@ describe Logstasher do
 
     it "should remove subscribers for controller events" do
       expect {
-        Logstasher.remove_existing_log_subscriptions
+        LogStasher.remove_existing_log_subscriptions
       }.to change {
         ActiveSupport::Notifications.notifier.listeners_for('process_action.action_controller')
       }
@@ -17,7 +17,7 @@ describe Logstasher do
 
     it "should remove subscribers for all events" do
       expect {
-        Logstasher.remove_existing_log_subscriptions
+        LogStasher.remove_existing_log_subscriptions
       }.to change {
         ActiveSupport::Notifications.notifier.listeners_for('render_template.action_view')
       }
@@ -26,7 +26,7 @@ describe Logstasher do
     it "shouldn't remove subscribers that aren't from Rails" do
       blk = -> {}
       ActiveSupport::Notifications.subscribe("process_action.action_controller", &blk)
-      Logstasher.remove_existing_log_subscriptions
+      LogStasher.remove_existing_log_subscriptions
       listeners = ActiveSupport::Notifications.notifier.listeners_for('process_action.action_controller')
       listeners.size.should > 0
     end
@@ -37,15 +37,15 @@ describe Logstasher do
     let(:payload) { {:params => params} }
     let(:request) { mock(:params => params, :ip => '10.0.0.1')}
     after do
-      Logstasher.appended_params = []
+      LogStasher.appended_params = []
     end
     it 'appends default parameters to payload' do
-      Logstasher.appended_params = []
-      Logstasher.append_default_info_to_payload(payload, request)
+      LogStasher.appended_params = []
+      LogStasher.append_default_info_to_payload(payload, request)
       payload[:ip].should == '10.0.0.1'
       payload[:route].should == 'test#action'
       payload[:parameters].should == "a=1\nb=2\n"
-      Logstasher.appended_params.should == [:ip, :route, :parameters]
+      LogStasher.appended_params.should == [:ip, :route, :parameters]
     end
   end
 
@@ -53,7 +53,7 @@ describe Logstasher do
     let(:block) { ->{} }
     it 'defines a method in ActionController::Base' do
       ActionController::Base.should_receive(:send).with(:define_method, :logtasher_append_custom_info_to_payload, &block)
-      Logstasher.append_custom_params(&block)
+      LogStasher.append_custom_params(&block)
     end
   end
 
@@ -66,14 +66,14 @@ describe Logstasher do
       config.stub(:action_dispatch => mock(:rack_cache => false))
     end
     it 'defines a method in ActionController::Base' do
-      Logstasher.should_receive(:require).with('logstasher/rails_ext/action_controller/metal/instrumentation')
-      Logstasher.should_receive(:require).with('logstash/event')
-      Logstasher.should_receive(:suppress_app_logs).with(app)
-      Logstasher::RequestLogSubscriber.should_receive(:attach_to).with(:action_controller)
+      LogStasher.should_receive(:require).with('logstasher/rails_ext/action_controller/metal/instrumentation')
+      LogStasher.should_receive(:require).with('logstash/event')
+      LogStasher.should_receive(:suppress_app_logs).with(app)
+      LogStasher::RequestLogSubscriber.should_receive(:attach_to).with(:action_controller)
       logger.should_receive(:level=).with('warn')
-      Logstasher.setup(app)
-      Logstasher.enabled.should be_true
-      Logstasher.appended_params.should == []
+      LogStasher.setup(app)
+      LogStasher.enabled.should be_true
+      LogStasher.appended_params.should == []
     end
   end
 
@@ -81,22 +81,22 @@ describe Logstasher do
     let(:logstasher_config){ mock(:logstasher => mock(:supress_app_log => true))}
     let(:app){ mock(:config => logstasher_config)}
     it 'removes existing subscription if enabled' do
-      Logstasher.should_receive(:require).with('logstasher/rails_ext/rack/logger')
-      Logstasher.should_receive(:remove_existing_log_subscriptions)
-      Logstasher.suppress_app_logs(app)
+      LogStasher.should_receive(:require).with('logstasher/rails_ext/rack/logger')
+      LogStasher.should_receive(:remove_existing_log_subscriptions)
+      LogStasher.suppress_app_logs(app)
     end
   end
 
   describe '.appended_params' do
     it 'returns the stored var in current thread' do
       Thread.current[:logstasher_appended_params] = :test
-      Logstasher.appended_params.should == :test
+      LogStasher.appended_params.should == :test
     end
   end
 
   describe '.appended_params=' do
     it 'returns the stored var in current thread' do
-      Logstasher.appended_params = :test
+      LogStasher.appended_params = :test
       Thread.current[:logstasher_appended_params].should == :test
     end
   end
@@ -104,13 +104,13 @@ describe Logstasher do
   describe '.log' do
     let(:logger) { mock() }
     before do
-      Logstasher.logger = logger
+      LogStasher.logger = logger
       LogStash::Time.stub(:now => 'timestamp')
     end
     it 'adds to log with specified level' do
       logger.should_receive(:send).with('warn?').and_return(true)
       logger.should_receive(:send).with('warn',"{\"@source\":\"unknown\",\"@tags\":[\"log\"],\"@fields\":{\"message\":\"WARNING\",\"level\":\"warn\"},\"@timestamp\":\"timestamp\"}")
-      Logstasher.log('warn', 'WARNING')
+      LogStasher.log('warn', 'WARNING')
     end
   end
 
@@ -118,8 +118,8 @@ describe Logstasher do
     describe ".#{severity}" do
       let(:message) { "This is a #{severity} message" }
       it 'should log with specified level' do
-        Logstasher.should_receive(:log).with(severity.to_sym, message)
-        Logstasher.send(severity, message )
+        LogStasher.should_receive(:log).with(severity.to_sym, message)
+        LogStasher.send(severity, message )
       end
     end
   end

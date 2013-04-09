@@ -4,7 +4,7 @@ require 'active_support/core_ext/module/attribute_accessors'
 require 'active_support/core_ext/string/inflections'
 require 'active_support/ordered_options'
 
-module Logstasher
+module LogStasher
   # Logger for the logstash logs
   mattr_accessor :logger, :enabled
 
@@ -48,7 +48,7 @@ module Logstasher
     require 'logstasher/rails_ext/action_controller/metal/instrumentation'
     require 'logstash/event'
     self.suppress_app_logs(app)
-    Logstasher::RequestLogSubscriber.attach_to :action_controller
+    LogStasher::RequestLogSubscriber.attach_to :action_controller
     self.logger = app.config.logstasher.logger || Logger.new("#{Rails.root}/log/logstash_#{Rails.env}.log")
     self.logger.level = app.config.logstasher.log_level || Logger::WARN
     self.enabled = true
@@ -58,7 +58,7 @@ module Logstasher
   def self.suppress_app_logs(app)
     if app.config.logstasher.supress_app_log.nil? || app.config.logstasher.supress_app_log
       require 'logstasher/rails_ext/rack/logger'
-      Logstasher.remove_existing_log_subscriptions
+      LogStasher.remove_existing_log_subscriptions
     end
   end
 

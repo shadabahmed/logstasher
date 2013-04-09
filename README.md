@@ -1,3 +1,3 @@
-Logstasher - Awesome rails logs
+LogStasher - Awesome rails logs
 =======
 

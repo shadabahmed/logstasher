@@ -1,7 +1,7 @@
 require 'active_support/core_ext/class/attribute'
 require 'active_support/log_subscriber'
 
-module Logstasher
+module LogStasher
   class RequestLogSubscriber < ActiveSupport::LogSubscriber
     def process_action(event)
       payload = event.payload
@@ -15,7 +15,7 @@ module Logstasher
 
       event = LogStash::Event.new('@fields' => data, '@tags' => ['request'])
       event.tags << 'exception' if payload[:exception]
-      Logstasher.logger.unknown event.to_json
+      LogStasher.logger.unknown event.to_json
     end
 
     def redirect_to(event)
@@ -86,7 +86,7 @@ module Logstasher
     end
 
     def extract_appended_params(payload)
-      (!Logstasher.appended_params.empty? && payload.extract!(*Logstasher.appended_params)) || {}
+      (!LogStasher.appended_params.empty? && payload.extract!(*LogStasher.appended_params)) || {}
     end
   end
 end
