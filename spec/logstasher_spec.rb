@@ -35,25 +35,25 @@ describe LogStasher do
   describe '.appened_default_info_to_payload' do
     let(:params)  { {'a' => '1', 'b' => 2, 'action' => 'action', 'controller' => 'test'}.with_indifferent_access }
     let(:payload) { {:params => params} }
-    let(:request) { mock(:params => params, :ip => '10.0.0.1')}
+    let(:request) { mock(:params => params, :remote_ip => '10.0.0.1')}
     after do
-      LogStasher.appended_params = []
+      LogStasher.custom_fields = []
     end
     it 'appends default parameters to payload' do
-      LogStasher.appended_params = []
-      LogStasher.append_default_info_to_payload(payload, request)
+      LogStasher.custom_fields = []
+      LogStasher.add_default_fields_to_payload(payload, request)
       payload[:ip].should == '10.0.0.1'
       payload[:route].should == 'test#action'
       payload[:parameters].should == "a=1\nb=2\n"
-      LogStasher.appended_params.should == [:ip, :route, :parameters]
+      LogStasher.custom_fields.should == [:ip, :route, :parameters]
     end
   end
 
   describe '.append_custom_params' do
     let(:block) { ->{} }
     it 'defines a method in ActionController::Base' do
-      ActionController::Base.should_receive(:send).with(:define_method, :logtasher_append_custom_info_to_payload, &block)
-      LogStasher.append_custom_params(&block)
+      ActionController::Base.should_receive(:send).with(:define_method, :logtasher_add_custom_fields_to_payload, &block)
+      LogStasher.add_custom_fields(&block)
     end
   end
 
@@ -73,7 +73,7 @@ describe LogStasher do
       logger.should_receive(:level=).with('warn')
       LogStasher.setup(app)
       LogStasher.enabled.should be_true
-      LogStasher.appended_params.should == []
+      LogStasher.custom_fields.should == []
     end
   end
 
@@ -89,15 +89,15 @@ describe LogStasher do
 
   describe '.appended_params' do
     it 'returns the stored var in current thread' do
-      Thread.current[:logstasher_appended_params] = :test
-      LogStasher.appended_params.should == :test
+      Thread.current[:logstasher_custom_fields] = :test
+      LogStasher.custom_fields.should == :test
     end
   end
 
   describe '.appended_params=' do
     it 'returns the stored var in current thread' do
-      LogStasher.appended_params = :test
-      Thread.current[:logstasher_appended_params].should == :test
+      LogStasher.custom_fields = :test
+      Thread.current[:logstasher_custom_fields].should == :test
     end
   end
 

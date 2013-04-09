@@ -14,7 +14,7 @@ describe LogStasher::RequestLogSubscriber do
   }
   before do
     LogStasher.logger = logger
-    LogStasher.appended_params = []
+    LogStasher.custom_fields = []
   end
 
   let(:subscriber) {LogStasher::RequestLogSubscriber.new}
@@ -126,10 +126,10 @@ describe LogStasher::RequestLogSubscriber do
   end
 
   describe "with append_custom_params block specified" do
-    let(:request) { mock(:ip => '10.0.0.1')}
+    let(:request) { mock(:remote_ip => '10.0.0.1')}
     it "should add default custom data to the output" do
       request.stub(:params => event.payload[:params])
-      LogStasher.append_default_info_to_payload(event.payload, request)
+      LogStasher.add_default_fields_to_payload(event.payload, request)
       subscriber.process_action(event)
       log_output.json['@fields']['ip'].should == '10.0.0.1'
       log_output.json['@fields']['route'].should == 'home#index'
@@ -139,13 +139,13 @@ describe LogStasher::RequestLogSubscriber do
 
   describe "with append_custom_params block specified" do
     before do
-      LogStasher.stub(:append_custom_params) do |&block|
+      LogStasher.stub(:add_custom_fields) do |&block|
         @block = block
       end
-      LogStasher.append_custom_params do |payload|
+      LogStasher.add_custom_fields do |payload|
         payload[:user] = 'user'
       end
-      LogStasher.appended_params += [:user]
+      LogStasher.custom_fields += [:user]
     end
 
     it "should add the custom data to the output" do
