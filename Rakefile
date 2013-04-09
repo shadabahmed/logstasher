@@ -16,7 +16,7 @@ end
 require 'rdoc/task'
 RDoc::Task.new do |rdoc|
   require "logstasher/version"
-  version = Logstasher::VERSION
+  version = LogStasher::VERSION
 
   rdoc.rdoc_dir = 'rdoc'
   rdoc.title = "logstasher #{version}"

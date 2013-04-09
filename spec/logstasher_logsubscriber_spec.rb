@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Logstasher::RequestLogSubscriber do
+describe LogStasher::RequestLogSubscriber do
   let(:log_output) {StringIO.new}
   let(:logger) {
     logger = Logger.new(log_output)
@@ -13,11 +13,11 @@ describe Logstasher::RequestLogSubscriber do
     logger
   }
   before do
-    Logstasher.logger = logger
-    Logstasher.appended_params = []
+    LogStasher.logger = logger
+    LogStasher.appended_params = []
   end
 
-  let(:subscriber) {Logstasher::RequestLogSubscriber.new}
+  let(:subscriber) {LogStasher::RequestLogSubscriber.new}
   let(:event) {
     ActiveSupport::Notifications::Event.new(
       'process_action.action_controller', Time.now, Time.now, 2, {
@@ -129,7 +129,7 @@ describe Logstasher::RequestLogSubscriber do
     let(:request) { mock(:ip => '10.0.0.1')}
     it "should add default custom data to the output" do
       request.stub(:params => event.payload[:params])
-      Logstasher.append_default_info_to_payload(event.payload, request)
+      LogStasher.append_default_info_to_payload(event.payload, request)
       subscriber.process_action(event)
       log_output.json['@fields']['ip'].should == '10.0.0.1'
       log_output.json['@fields']['route'].should == 'home#index'
@@ -139,13 +139,13 @@ describe Logstasher::RequestLogSubscriber do
 
   describe "with append_custom_params block specified" do
     before do
-      Logstasher.stub(:append_custom_params) do |&block|
+      LogStasher.stub(:append_custom_params) do |&block|
         @block = block
       end
-      Logstasher.append_custom_params do |payload|
+      LogStasher.append_custom_params do |payload|
         payload[:user] = 'user'
       end
-      Logstasher.appended_params += [:user]
+      LogStasher.appended_params += [:user]
     end
 
     it "should add the custom data to the output" do
