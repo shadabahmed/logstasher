@@ -11,7 +11,7 @@ module LogStasher
       data.merge! runtimes(event)
       data.merge! location(event)
       data.merge! extract_exception(payload)
-      data.merge! extract_appended_params(payload)
+      data.merge! extract_custom_fields(payload)
 
       event = LogStash::Event.new('@fields' => data, '@tags' => ['request'])
       event.tags << 'exception' if payload[:exception]
@@ -29,8 +29,8 @@ module LogStasher
         :method => payload[:method],
         :path => extract_path(payload),
         :format => extract_format(payload),
-        :controller => payload[:params][:controller],
-        :action => payload[:params][:action]
+        :controller => payload[:params]['controller'],
+        :action => payload[:params]['action']
       }
     end
 
@@ -85,8 +85,10 @@ module LogStasher
       end
     end
 
-    def extract_appended_params(payload)
-      (!LogStasher.appended_params.empty? && payload.extract!(*LogStasher.appended_params)) || {}
+    def extract_custom_fields(payload)
+      custom_fields = (!LogStasher.custom_fields.empty? && payload.extract!(*LogStasher.custom_fields)) || {}
+      LogStasher.custom_fields.clear
+      custom_fields
     end
   end
 end

@@ -30,16 +30,16 @@ module LogStasher
     end
   end
 
-  def self.append_default_info_to_payload(payload, request)
-    payload[:ip] = request.ip
+  def self.add_default_fields_to_payload(payload, request)
+    payload[:ip] = request.remote_ip
     payload[:route] = "#{request.params[:controller]}##{request.params[:action]}"
     payload[:parameters] = payload[:params].except(*ActionController::LogSubscriber::INTERNAL_PARAMS).inject(""){|s,(k,v)|
       s+="#{k}=#{v}\n"}
-    self.appended_params += [:ip, :route, :parameters]
+    self.custom_fields += [:ip, :route, :parameters]
   end
 
-  def self.append_custom_params(&block)
-    ActionController::Base.send(:define_method, :logtasher_append_custom_info_to_payload, &block)
+  def self.add_custom_fields(&block)
+    ActionController::Base.send(:define_method, :logtasher_add_custom_fields_to_payload, &block)
   end
 
   def self.setup(app)
@@ -52,7 +52,7 @@ module LogStasher
     self.logger = app.config.logstasher.logger || Logger.new("#{Rails.root}/log/logstash_#{Rails.env}.log")
     self.logger.level = app.config.logstasher.log_level || Logger::WARN
     self.enabled = true
-    self.appended_params = []
+    self.custom_fields = []
   end
 
   def self.suppress_app_logs(app)
@@ -62,12 +62,12 @@ module LogStasher
     end
   end
 
-  def self.appended_params
-    Thread.current[:logstasher_appended_params]
+  def self.custom_fields
+    Thread.current[:logstasher_custom_fields]
   end
 
-  def self.appended_params=(val)
-    Thread.current[:logstasher_appended_params] = val
+  def self.custom_fields=(val)
+    Thread.current[:logstasher_custom_fields] = val
   end
 
 
