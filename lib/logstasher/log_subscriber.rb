@@ -15,7 +15,7 @@ module LogStasher
 
       event = LogStash::Event.new('@fields' => data, '@tags' => ['request'])
       event.tags << 'exception' if payload[:exception]
-      LogStasher.logger << event.to_json
+      LogStasher.logger << event.to_json + "\n"
     end
 
     def redirect_to(event)
