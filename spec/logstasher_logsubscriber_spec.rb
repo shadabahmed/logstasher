@@ -34,6 +34,28 @@ describe LogStasher::RequestLogSubscriber do
     )
   }
 
+  describe '.process_action' do
+    let!(:request_subscriber) { @request_subscriber ||= LogStasher::RequestLogSubscriber.new() }
+    let(:payload) { {} }
+    let(:event)   { mock(:payload => payload) }
+    let(:logger)  { mock }
+    let(:json)    { "{\"@source\":\"unknown\",\"@tags\":[\"request\"],\"@fields\":{\"request\":true,\"status\":true,\"runtimes\":true,\"location\":true,\"exception\":true,\"custom\":true},\"@timestamp\":\"timestamp\"}" }
+    before do
+      LogStasher.stub(:logger => logger)
+      LogStash::Time.stub(:now => 'timestamp')
+    end
+    it 'calls all extractors and outputs the json' do
+      request_subscriber.should_receive(:extract_request).with(payload).and_return({:request => true})
+      request_subscriber.should_receive(:extract_status).with(payload).and_return({:status => true})
+      request_subscriber.should_receive(:runtimes).with(event).and_return({:runtimes => true})
+      request_subscriber.should_receive(:location).with(event).and_return({:location => true})
+      request_subscriber.should_receive(:extract_exception).with(payload).and_return({:exception => true})
+      request_subscriber.should_receive(:extract_custom_fields).with(payload).and_return({:custom => true})
+      LogStasher.logger.should_receive(:<<).with(json)
+      request_subscriber.process_action(event)
+    end
+  end
+
   describe 'logstasher output' do
 
     it "should contain request tag" do
