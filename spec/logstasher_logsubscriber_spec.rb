@@ -39,7 +39,7 @@ describe LogStasher::RequestLogSubscriber do
     let(:payload) { {} }
     let(:event)   { mock(:payload => payload) }
     let(:logger)  { mock }
-    let(:json)    { "{\"@source\":\"unknown\",\"@tags\":[\"request\"],\"@fields\":{\"request\":true,\"status\":true,\"runtimes\":true,\"location\":true,\"exception\":true,\"custom\":true},\"@timestamp\":\"timestamp\"}" }
+    let(:json)    { "{\"@source\":\"unknown\",\"@tags\":[\"request\"],\"@fields\":{\"request\":true,\"status\":true,\"runtimes\":true,\"location\":true,\"exception\":true,\"custom\":true},\"@timestamp\":\"timestamp\"}\n" }
     before do
       LogStasher.stub(:logger => logger)
       LogStash::Time.stub(:now => 'timestamp')
