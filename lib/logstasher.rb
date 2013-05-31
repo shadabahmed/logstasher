@@ -53,7 +53,6 @@ module LogStasher
     self.logger = app.config.logstasher.logger || Logger.new("#{Rails.root}/log/logstash_#{Rails.env}.log")
     self.logger.level = app.config.logstasher.log_level || Logger::WARN
     self.enabled = true
-    self.custom_fields = []
   end
 
   def self.suppress_app_logs(app)
@@ -64,7 +63,7 @@ module LogStasher
   end
 
   def self.custom_fields
-    Thread.current[:logstasher_custom_fields]
+    Thread.current[:logstasher_custom_fields] || []
   end
 
   def self.custom_fields=(val)
