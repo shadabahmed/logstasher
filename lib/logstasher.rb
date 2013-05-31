@@ -39,6 +39,7 @@ module LogStasher
   end
 
   def self.add_custom_fields(&block)
+    ActionController::Metal.send(:define_method, :logtasher_add_custom_fields_to_payload, &block)
     ActionController::Base.send(:define_method, :logtasher_add_custom_fields_to_payload, &block)
   end
 
