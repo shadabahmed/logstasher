@@ -63,7 +63,7 @@ module LogStasher
   end
 
   def self.custom_fields
-    Thread.current[:logstasher_custom_fields] || []
+    Thread.current[:logstasher_custom_fields] ||= []
   end
 
   def self.custom_fields=(val)
