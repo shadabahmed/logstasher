@@ -39,6 +39,7 @@ module LogStasher
   end
 
   def self.add_custom_fields(&block)
+    ActionController::Metal.send(:define_method, :logtasher_add_custom_fields_to_payload, &block)
     ActionController::Base.send(:define_method, :logtasher_add_custom_fields_to_payload, &block)
   end
 
@@ -52,7 +53,6 @@ module LogStasher
     self.logger = app.config.logstasher.logger || Logger.new("#{Rails.root}/log/logstash_#{Rails.env}.log")
     self.logger.level = app.config.logstasher.log_level || Logger::WARN
     self.enabled = true
-    self.custom_fields = []
   end
 
   def self.suppress_app_logs(app)
@@ -63,7 +63,7 @@ module LogStasher
   end
 
   def self.custom_fields
-    Thread.current[:logstasher_custom_fields]
+    Thread.current[:logstasher_custom_fields] ||= []
   end
 
   def self.custom_fields=(val)
