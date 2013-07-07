@@ -10,5 +10,5 @@ group :test do
   gem 'growl'
   gem 'simplecov', :platforms => :mri_19, :require => false
   gem 'rcov', :platforms => :mri_18
-  gem 'rails', '~> 3.2.0'
+  gem 'rails', "~> #{ENV["RAILS_VERSION"] || "3.2.0"}"
 end

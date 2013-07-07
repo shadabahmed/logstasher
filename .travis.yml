@@ -1,6 +1,12 @@
 language: ruby
 rvm:
-  - 2.0
   - 1.9.3
-  - 1.9.2
+  - 2.0.0
+
+env:
+  - "RAILS_VERSION=4.0"
+  - "RAILS_VERSION=3.2"
+  - "RAILS_VERSION=3.1"
+  - "RAILS_VERSION=3.0"
+
 script: bundle exec rspec
