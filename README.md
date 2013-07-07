@@ -75,7 +75,7 @@ Since some fields are very specific to your application for e.g. *user_name*, so
     end
 
 ## Versions
-All versions require Rails 3.0.x and higher and Ruby 1.9.2+
+All versions require Rails 3.0.x and higher and Ruby 1.9.2+. Tested on Rails 4 and Ruby 2.0
 
 ## Development
  - Run tests - `rake`
