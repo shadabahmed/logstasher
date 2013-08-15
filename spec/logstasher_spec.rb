@@ -77,13 +77,31 @@ describe LogStasher do
     end
   end
 
-  describe '.supress_app_logs' do
-    let(:logstasher_config){ mock(:logstasher => mock(:supress_app_log => true))}
+  describe '.suppress_app_logs' do
+    let(:logstasher_config){ mock(:logstasher => mock(:suppress_app_log => true))}
     let(:app){ mock(:config => logstasher_config)}
     it 'removes existing subscription if enabled' do
       LogStasher.should_receive(:require).with('logstasher/rails_ext/rack/logger')
       LogStasher.should_receive(:remove_existing_log_subscriptions)
       LogStasher.suppress_app_logs(app)
+    end
+
+    context 'when disabled' do
+      let(:logstasher_config){ mock(:logstasher => mock(:suppress_app_log => false)) }
+      it 'does not remove existing subscription' do
+        LogStasher.should_not_receive(:remove_existing_log_subscriptions)
+        LogStasher.suppress_app_logs(app)
+      end
+
+      describe "backward compatibility" do
+        context 'with spelling "supress_app_log"' do
+          let(:logstasher_config){ mock(:logstasher => mock(:suppress_app_log => nil, :supress_app_log => false)) }
+          it 'does not remove existing subscription' do
+            LogStasher.should_not_receive(:remove_existing_log_subscriptions)
+            LogStasher.suppress_app_logs(app)
+          end
+        end
+      end
     end
   end
 

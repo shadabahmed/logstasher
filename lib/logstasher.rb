@@ -56,10 +56,15 @@ module LogStasher
   end
 
   def self.suppress_app_logs(app)
-    if app.config.logstasher.supress_app_log.nil? || app.config.logstasher.supress_app_log
+    if configured_to_suppress_app_logs?(app)
       require 'logstasher/rails_ext/rack/logger'
       LogStasher.remove_existing_log_subscriptions
     end
+  end
+
+  def self.configured_to_suppress_app_logs?(app)
+    # This supports both spellings: "suppress_app_log" and "supress_app_log"
+    !!(app.config.logstasher.suppress_app_log.nil? ? app.config.logstasher.supress_app_log : app.config.logstasher.suppress_app_log)
   end
 
   def self.custom_fields

@@ -55,8 +55,8 @@ In your Gemfile:
     # Enable the logstasher logs for the current environment
     config.logstasher.enabled = true
 
-    # This line is optional if you do not want to supress app logs in your <environment>.log
-    config.logstasher.supress_app_log = false
+    # This line is optional if you do not want to suppress app logs in your <environment>.log
+    config.logstasher.suppress_app_log = false
 
 ## Adding custom fields to the log
 
