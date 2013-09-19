@@ -10,7 +10,7 @@ if ENV['COVERAGE']
   end
 end
 
-# Modify load path so you can require 'multi_config' directly.
+# Modify load path so you can require 'logstasher' directly.
 $LOAD_PATH.unshift(File.expand_path('../../lib', __FILE__))
 
 require 'rubygems'
