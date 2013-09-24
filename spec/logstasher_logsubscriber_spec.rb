@@ -37,8 +37,8 @@ describe LogStasher::RequestLogSubscriber do
   describe '.process_action' do
     let!(:request_subscriber) { @request_subscriber ||= LogStasher::RequestLogSubscriber.new() }
     let(:payload) { {} }
-    let(:event)   { mock(:payload => payload) }
-    let(:logger)  { mock }
+    let(:event)   { double(:payload => payload) }
+    let(:logger)  { double }
     let(:json)    { "{\"@source\":\"unknown\",\"@tags\":[\"request\"],\"@fields\":{\"request\":true,\"status\":true,\"runtimes\":true,\"location\":true,\"exception\":true,\"custom\":true},\"@timestamp\":\"timestamp\"}\n" }
     before do
       LogStasher.stub(:logger => logger)
@@ -148,7 +148,7 @@ describe LogStasher::RequestLogSubscriber do
   end
 
   describe "with append_custom_params block specified" do
-    let(:request) { mock(:remote_ip => '10.0.0.1')}
+    let(:request) { double(:remote_ip => '10.0.0.1')}
     it "should add default custom data to the output" do
       request.stub(:params => event.payload[:params])
       LogStasher.add_default_fields_to_payload(event.payload, request)
