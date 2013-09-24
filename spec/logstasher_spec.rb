@@ -67,7 +67,7 @@ describe LogStasher do
     end
     it 'defines a method in ActionController::Base' do
       LogStasher.should_receive(:require).with('logstasher/rails_ext/action_controller/metal/instrumentation')
-      LogStasher.should_receive(:require).with('logstash/event')
+      LogStasher.should_receive(:require).with('logstash-event')
       LogStasher.should_receive(:suppress_app_logs).with(app)
       LogStasher::RequestLogSubscriber.should_receive(:attach_to).with(:action_controller)
       logger.should_receive(:level=).with('warn')

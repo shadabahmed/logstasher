@@ -47,7 +47,7 @@ module LogStasher
     app.config.action_dispatch.rack_cache[:verbose] = false if app.config.action_dispatch.rack_cache
     # Path instrumentation class to insert our hook
     require 'logstasher/rails_ext/action_controller/metal/instrumentation'
-    require 'logstash/event'
+    require 'logstash-event'
     self.suppress_app_logs(app)
     LogStasher::RequestLogSubscriber.attach_to :action_controller
     self.logger = app.config.logstasher.logger || Logger.new("#{Rails.root}/log/logstash_#{Rails.env}.log")
