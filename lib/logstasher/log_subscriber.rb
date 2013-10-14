@@ -13,8 +13,9 @@ module LogStasher
       data.merge! extract_exception(payload)
       data.merge! extract_custom_fields(payload)
 
-      event = LogStash::Event.new('@fields' => data, '@tags' => ['request'])
-      event.tags << 'exception' if payload[:exception]
+      tags = ['request']
+      tags.push('exception') if payload[:exception]
+      event = LogStash::Event.new('@fields' => data, '@tags' => tags)
       LogStasher.logger << event.to_json + "\n"
     end
 
