@@ -44,7 +44,7 @@ describe LogStasher do
       LogStasher.add_default_fields_to_payload(payload, request)
       payload[:ip].should == '10.0.0.1'
       payload[:route].should == 'test#action'
-      payload[:parameters].should == "a=1\nb=2\n"
+      payload[:parameters].should == {'a' => '1', 'b' => 2}
       LogStasher.custom_fields.should == [:ip, :route, :parameters]
     end
   end
