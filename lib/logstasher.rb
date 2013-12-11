@@ -33,8 +33,7 @@ module LogStasher
   def self.add_default_fields_to_payload(payload, request)
     payload[:ip] = request.remote_ip
     payload[:route] = "#{request.params[:controller]}##{request.params[:action]}"
-    payload[:parameters] = payload[:params].except(*ActionController::LogSubscriber::INTERNAL_PARAMS).inject(""){|s,(k,v)|
-      s+="#{k}=#{v}\n"}
+    payload[:parameters] = payload[:params].except(*ActionController::LogSubscriber::INTERNAL_PARAMS)
     self.custom_fields += [:ip, :route, :parameters]
   end
 

@@ -155,7 +155,7 @@ describe LogStasher::RequestLogSubscriber do
       subscriber.process_action(event)
       log_output.json['@fields']['ip'].should == '10.0.0.1'
       log_output.json['@fields']['route'].should == 'home#index'
-      log_output.json['@fields']['parameters'].should == "foo=bar\n"
+      log_output.json['@fields']['parameters'].should == {'foo' => 'bar'}
     end
   end
 
