@@ -40,11 +40,7 @@ module LogStasher
     end
 
     def extract_format(payload)
-      if ::ActionPack::VERSION::MAJOR == 3 && ::ActionPack::VERSION::MINOR == 0
-        payload[:formats].first
-      else
-        payload[:format]
-      end
+      payload[:format]
     end
 
     def extract_status(payload)
