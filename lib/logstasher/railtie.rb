@@ -7,7 +7,7 @@ module LogStasher
     config.logstasher = ActiveSupport::OrderedOptions.new
     config.logstasher.enabled = false
 
-    initializer :logstasher do |app|
+    initializer :logstasher, :before => :load_config_initializers do |app|
       LogStasher.setup(app) if app.config.logstasher.enabled
     end
   end
