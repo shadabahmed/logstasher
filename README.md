@@ -59,6 +59,18 @@ In your Gemfile:
     # This line is optional if you do not want to suppress app logs in your <environment>.log
     config.logstasher.suppress_app_log = false
 
+## Logging params hash
+
+Logstasher can be configured to log the contents of the params hash.  When enabled, the contents of the params hash (minus the ActionController internal params)
+will be added to the log as a deep hash.  This can cause conflicts within the Elasticsearch mappings though, so should be enabled with care.  Conflicts will occur
+if different actions (or even different applications logging to the same Elasticsearch cluster) use the same params key, but with a different data type (e.g. a
+string vs. a hash).  This can lead to lost log entries.  Enabling this can also significantly increase the size of the Elasticsearch indexes.
+
+To enable this, add the following to your `<environment>.rb`
+
+    # Enable logging of controller params
+    config.logstasher.log_controller_parameters = true
+
 ## Adding custom fields to the log
 
 Since some fields are very specific to your application for e.g. *user_name*, so it is left upto you, to add them. Here's how to add those fields to the logs:
