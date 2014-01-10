@@ -38,14 +38,23 @@ describe LogStasher do
     let(:request) { double(:params => params, :remote_ip => '10.0.0.1')}
     after do
       LogStasher.custom_fields = []
+      LogStasher.log_controller_parameters = false
     end
     it 'appends default parameters to payload' do
+      LogStasher.log_controller_parameters = true
       LogStasher.custom_fields = []
       LogStasher.add_default_fields_to_payload(payload, request)
       payload[:ip].should == '10.0.0.1'
       payload[:route].should == 'test#action'
       payload[:parameters].should == {'a' => '1', 'b' => 2}
       LogStasher.custom_fields.should == [:ip, :route, :parameters]
+    end
+
+    it 'does not include parameters when not configured to' do
+      LogStasher.custom_fields = []
+      LogStasher.add_default_fields_to_payload(payload, request)
+      payload.should_not have_key(:parameters)
+      LogStasher.custom_fields.should == [:ip, :route]
     end
   end
 
@@ -59,7 +68,7 @@ describe LogStasher do
 
   describe '.setup' do
     let(:logger) { double }
-    let(:logstasher_config) { double(:logger => logger,:log_level => 'warn') }
+    let(:logstasher_config) { double(:logger => logger,:log_level => 'warn',:log_controller_parameters => nil) }
     let(:config) { double(:logstasher => logstasher_config) }
     let(:app) { double(:config => config) }
     before do
@@ -74,6 +83,7 @@ describe LogStasher do
       LogStasher.setup(app)
       LogStasher.enabled.should be_true
       LogStasher.custom_fields.should == []
+      LogStasher.log_controller_parameters.should == false
     end
   end
 
