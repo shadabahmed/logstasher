@@ -49,7 +49,7 @@ module LogStasher
     require 'logstash-event'
     self.suppress_app_logs(app)
     LogStasher::RequestLogSubscriber.attach_to :action_controller
-    self.logger = app.config.logstasher.logger || Logger.new("#{Rails.root}/log/logstash_#{Rails.env}.log")
+    self.logger = app.config.logstasher.logger || new_logger("#{Rails.root}/log/logstash_#{Rails.env}.log")
     self.logger.level = app.config.logstasher.log_level || Logger::WARN
     self.enabled = true
   end
@@ -88,6 +88,13 @@ module LogStasher
         self.log(:#{severity}, msg)
       end
     EOM
+  end
+
+  private
+
+  def new_logger(path)
+    FileUtils.touch path # prevent autocreate messages in log
+    Logger.new path
   end
 end
 
