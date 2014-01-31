@@ -14,7 +14,11 @@ describe LogStasher::RequestLogSubscriber do
   }
   before do
     LogStasher.logger = logger
+    LogStasher.log_controller_parameters = true
     LogStasher.custom_fields = []
+  end
+  after do
+    LogStasher.log_controller_parameters = false
   end
 
   let(:subscriber) {LogStasher::RequestLogSubscriber.new}
