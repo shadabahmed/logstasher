@@ -6,7 +6,7 @@ require 'active_support/ordered_options'
 
 module LogStasher
   extend self
-  attr_accessor :logger, :enabled
+  attr_accessor :logger, :enabled, :log_controller_parameters
 
   def remove_existing_log_subscriptions
     ActiveSupport::LogSubscriber.log_subscribers.each do |subscriber|
@@ -33,8 +33,11 @@ module LogStasher
   def add_default_fields_to_payload(payload, request)
     payload[:ip] = request.remote_ip
     payload[:route] = "#{request.params[:controller]}##{request.params[:action]}"
-    payload[:parameters] = payload[:params].except(*ActionController::LogSubscriber::INTERNAL_PARAMS)
-    self.custom_fields += [:ip, :route, :parameters]
+    self.custom_fields += [:ip, :route]
+    if self.log_controller_parameters
+      payload[:parameters] = payload[:params].except(*ActionController::LogSubscriber::INTERNAL_PARAMS)
+      self.custom_fields += [:parameters]
+    end
   end
 
   def add_custom_fields(&block)
@@ -52,6 +55,7 @@ module LogStasher
     self.logger = app.config.logstasher.logger || new_logger("#{Rails.root}/log/logstash_#{Rails.env}.log")
     self.logger.level = app.config.logstasher.log_level || Logger::WARN
     self.enabled = true
+    self.log_controller_parameters = !! app.config.logstasher.log_controller_parameters
   end
 
   def suppress_app_logs(app)
