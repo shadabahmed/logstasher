@@ -46,7 +46,7 @@ describe LogStasher::RequestLogSubscriber do
     let(:json)    { "{\"@source\":\"unknown\",\"@tags\":[\"request\"],\"@fields\":{\"request\":true,\"status\":true,\"runtimes\":true,\"location\":true,\"exception\":true,\"custom\":true},\"@timestamp\":\"timestamp\"}\n" }
     before do
       LogStasher.stub(:logger => logger)
-      LogStash::Time.stub(:now => 'timestamp')
+      Logstash::Time.stub(:now => 'timestamp')
     end
     it 'calls all extractors and outputs the json' do
       request_subscriber.should_receive(:extract_request).with(payload).and_return({:request => true})
@@ -64,47 +64,47 @@ describe LogStasher::RequestLogSubscriber do
 
     it "should contain request tag" do
       subscriber.process_action(event)
-      log_output.json['@tags'].should include 'request'
+      log_output.json['tags'].should include 'request'
     end
 
     it "should contain HTTP method" do
       subscriber.process_action(event)
-      log_output.json['@fields']['method'].should == 'GET'
+      log_output.json['method'].should == 'GET'
     end
 
     it "should include the path in the log output" do
       subscriber.process_action(event)
-      log_output.json['@fields']['path'].should == '/home'
+      log_output.json['path'].should == '/home'
     end
 
     it "should include the format in the log output" do
       subscriber.process_action(event)
-      log_output.json['@fields']['format'].should == 'application/json'
+      log_output.json['format'].should == 'application/json'
     end
 
     it "should include the status code" do
       subscriber.process_action(event)
-      log_output.json['@fields']['status'].should == 200
+      log_output.json['status'].should == 200
     end
 
     it "should include the controller" do
       subscriber.process_action(event)
-      log_output.json['@fields']['controller'].should == 'home'
+      log_output.json['controller'].should == 'home'
     end
 
     it "should include the action" do
       subscriber.process_action(event)
-      log_output.json['@fields']['action'].should == 'index'
+      log_output.json['action'].should == 'index'
     end
 
     it "should include the view rendering time" do
       subscriber.process_action(event)
-      log_output.json['@fields']['view'].should == 0.01
+      log_output.json['view'].should == 0.01
     end
 
     it "should include the database rendering time" do
       subscriber.process_action(event)
-      log_output.json['@fields']['db'].should == 0.02
+      log_output.json['db'].should == 0.02
     end
 
     it "should add a valid status when an exception occurred" do
@@ -115,10 +115,10 @@ describe LogStasher::RequestLogSubscriber do
         event.payload[:status] = nil
         event.payload[:exception] = ['AbstractController::ActionNotFound', 'Route not found']
         subscriber.process_action(event)
-        log_output.json['@fields']['status'].should >= 400
-        log_output.json['@fields']['error'].should =~ /AbstractController::ActionNotFound.*Route not found.*logstasher\/spec\/lib\/logstasher\/log_subscriber_spec\.rb/m
-        log_output.json['@tags'].should include 'request'
-        log_output.json['@tags'].should include 'exception'
+        log_output.json['status'].should >= 400
+        log_output.json['error'].should =~ /AbstractController::ActionNotFound.*Route not found.*logstasher\/spec\/lib\/logstasher\/log_subscriber_spec\.rb/m
+        log_output.json['tags'].should include 'request'
+        log_output.json['tags'].should include 'exception'
       end
     end
 
@@ -126,7 +126,7 @@ describe LogStasher::RequestLogSubscriber do
       event.payload[:status] = nil
       event.payload[:exception] = nil
       subscriber.process_action(event)
-      log_output.json['@fields']['status'].should == 0
+      log_output.json['status'].should == 0
     end
 
     describe "with a redirect" do
@@ -136,7 +136,7 @@ describe LogStasher::RequestLogSubscriber do
 
       it "should add the location to the log line" do
         subscriber.process_action(event)
-        log_output.json['@fields']['location'].should == 'http://www.example.com'
+        log_output.json['location'].should == 'http://www.example.com'
       end
 
       it "should remove the thread local variable" do
@@ -147,7 +147,7 @@ describe LogStasher::RequestLogSubscriber do
 
     it "should not include a location by default" do
       subscriber.process_action(event)
-      log_output.json['@fields']['location'].should be_nil
+      log_output.json['location'].should be_nil
     end
   end
 
@@ -157,9 +157,9 @@ describe LogStasher::RequestLogSubscriber do
       request.stub(:params => event.payload[:params])
       LogStasher.add_default_fields_to_payload(event.payload, request)
       subscriber.process_action(event)
-      log_output.json['@fields']['ip'].should == '10.0.0.1'
-      log_output.json['@fields']['route'].should == 'home#index'
-      log_output.json['@fields']['parameters'].should == {'foo' => 'bar'}
+      log_output.json['ip'].should == '10.0.0.1'
+      log_output.json['route'].should == 'home#index'
+      log_output.json['parameters'].should == {'foo' => 'bar'}
     end
   end
 
@@ -177,7 +177,7 @@ describe LogStasher::RequestLogSubscriber do
     it "should add the custom data to the output" do
       @block.call(event.payload)
       subscriber.process_action(event)
-      log_output.json['@fields']['user'].should == 'user'
+      log_output.json['user'].should == 'user'
     end
   end
 
