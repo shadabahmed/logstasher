@@ -31,6 +31,19 @@ describe LogStasher::Device::Redis do
     device.key.should eq 'the_key'
   end
 
+  it 'quits the redis connection on #close' do
+    device = LogStasher::Device::Redis.new
+    device.redis.should_receive(:quit)
+    device.close
+  end
+
+  it 'works as a logger device' do
+    device = LogStasher::Device::Redis.new
+    device.should_receive(:write).with('blargh')
+    logger = Logger.new(device)
+    logger << 'blargh'
+  end
+
   describe '#write' do
     it "rpushes logs onto a list" do
       device = LogStasher::Device::Redis.new(data_type: 'list')

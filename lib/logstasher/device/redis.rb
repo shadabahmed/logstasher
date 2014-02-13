@@ -39,6 +39,10 @@ module LogStasher
         end
       end
 
+      def close
+        redis.quit
+      end
+
       private
 
       def default_options
