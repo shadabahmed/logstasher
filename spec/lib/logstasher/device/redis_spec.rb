@@ -16,19 +16,31 @@ describe LogStasher::Device::Redis do
     device.options.should eq(default_options)
   end
 
-  it 'creates a redis connection' do
+  it 'creates a redis instance' do
     ::Redis.should_receive(:new).with({})
     LogStasher::Device::Redis.new()
   end
 
-  it 'forwards unkown options to redis' do
-    ::Redis.should_receive(:new).with(hash_including(unknown: 'option'))
-    LogStasher::Device::Redis.new(unknown: 'option')
+  it 'assumes unknown options are for redis' do
+    ::Redis.should_receive(:new).with(hash_including(db: '0'))
+    device = LogStasher::Device::Redis.new(db: '0')
+    device.redis_options.should eq(db: '0')
   end
 
-  it 'has a configurable key' do
+  it 'has a key' do
     device = LogStasher::Device::Redis.new(key: 'the_key')
     device.key.should eq 'the_key'
+  end
+
+  it 'has a data_type' do
+    device = LogStasher::Device::Redis.new(data_type: 'channel')
+    device.data_type.should eq 'channel'
+  end
+
+  it 'does not allow unsupported data types' do
+    expect {
+      device = LogStasher::Device::Redis.new(data_type: 'blargh')
+    }.to raise_error()
   end
 
   it 'quits the redis connection on #close' do

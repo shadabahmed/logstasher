@@ -8,7 +8,8 @@ module LogStasher
 
       def initialize(options = {})
         @options = default_options.merge(options)
-        @redis = ::Redis.new(redis_options)
+        validate_options
+        configure_redis
       end
 
       def data_type
@@ -45,8 +46,18 @@ module LogStasher
 
       private
 
+      def configure_redis
+        @redis = ::Redis.new(redis_options)
+      end
+
       def default_options
           { key: 'logstash', data_type: 'list' }
+      end
+
+      def validate_options
+        unless ['list', 'channel'].include?(options[:data_type])
+          fail 'Expected :data_type to be either "list" or "channel"'
+        end
       end
     end
   end
