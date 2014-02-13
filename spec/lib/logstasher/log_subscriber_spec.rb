@@ -72,9 +72,9 @@ describe LogStasher::RequestLogSubscriber do
       log_output.json['method'].should == 'GET'
     end
 
-    it "should include the path in the log output" do
+    it "should include the uri in the log output" do
       subscriber.process_action(event)
-      log_output.json['path'].should == '/home'
+      log_output.json['uri'].should == '/home'
     end
 
     it "should include the format in the log output" do

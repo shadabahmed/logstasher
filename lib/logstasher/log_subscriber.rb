@@ -29,7 +29,7 @@ module LogStasher
     def extract_request(payload)
       {
         :method => payload[:method],
-        :path => extract_path(payload),
+        :uri => extract_path(payload),
         :format => extract_format(payload),
         :controller => payload[:params]['controller'],
         :action => payload[:params]['action']
