@@ -60,8 +60,8 @@ module LogStasher
 
   def suppress_app_logs(app)
     if configured_to_suppress_app_logs?(app)
-      require 'logstasher/rails_ext/rack/logger'
       LogStasher.remove_existing_log_subscriptions
+      Rails::Rack::Logger.logger = ::Logger.new('/dev/null')
     end
   end
 

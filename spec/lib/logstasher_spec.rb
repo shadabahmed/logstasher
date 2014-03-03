@@ -91,7 +91,7 @@ describe LogStasher do
     let(:logstasher_config){ double(:logstasher => double(:suppress_app_log => true))}
     let(:app){ double(:config => logstasher_config)}
     it 'removes existing subscription if enabled' do
-      LogStasher.should_receive(:require).with('logstasher/rails_ext/rack/logger')
+      Rails::Rack::Logger.should_receive(:logger=).with(an_instance_of(Logger))
       LogStasher.should_receive(:remove_existing_log_subscriptions)
       LogStasher.suppress_app_logs(app)
     end
