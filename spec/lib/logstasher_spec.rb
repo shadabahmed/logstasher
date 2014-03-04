@@ -85,17 +85,14 @@ describe LogStasher do
 
     it 'adds to log with specified level' do
       ::LogStasher.stub(:logger => logger)
-      ::LogStash::Time.stub(:now => timestamp)
 
       logger.should_receive(:warn) do |json|
         JSON.parse(json).should eq ({
-          '@source' => 'unknown',
+          '@version' => '1',
           '@timestamp' => timestamp,
-          '@tags' => ['log'],
-          '@fields' => {
-            'message' => 'WARNING',
-            'level'   => 'warn'
-          }
+          'tags' => ['log'],
+          'message' => 'WARNING',
+          'level'   => 'warn'
         })
       end
 

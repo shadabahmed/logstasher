@@ -53,24 +53,20 @@ describe LogStasher::LogSubscriber do
     let(:event) { double(:payload => payload, :duration => duration) }
 
     it 'logs the event in logstash format' do
-      ::LogStash::Time.stub(:now => timestamp)
-
       logger.should_receive(:<<) do |json|
         JSON.parse(json).should eq({
-          '@source'    => 'unknown',
           '@timestamp' => timestamp,
-          '@tags'      => ['request'],
-          '@fields'    => {
-            'action'     => action,
-            'controller' => controller,
-            'format'     => format,
-            'ip'         => mock_request.remote_ip,
-            'method'     => method,
-            'path'       => path,
-            'route'      => "#{controller}##{action}",
-            'status'     => status,
-            'duration'   => duration
-          },
+          '@version'   => '1',
+          'tags'       => ['request'],
+          'action'     => action,
+          'controller' => controller,
+          'format'     => format,
+          'ip'         => mock_request.remote_ip,
+          'method'     => method,
+          'path'       => path,
+          'route'      => "#{controller}##{action}",
+          'status'     => status,
+          'duration'   => duration
         })
       end
 
@@ -84,7 +80,7 @@ describe LogStasher::LogSubscriber do
       end
 
       logger.should_receive(:<<) do |json|
-        fields = JSON.parse(json)['@fields']
+        fields = JSON.parse(json)
         fields['user_id'].should eq mock_controller.user_id
         fields['other'].should eq 'stuff'
       end
@@ -96,7 +92,7 @@ describe LogStasher::LogSubscriber do
       ::LogStasher.stub(:log_controller_parameters => true)
 
       logger.should_receive(:<<) do |json|
-        JSON.parse(json)['@fields']['parameters'].should eq params
+        JSON.parse(json)['parameters'].should eq params
       end
 
       subject.process_action(event)
@@ -107,7 +103,7 @@ describe LogStasher::LogSubscriber do
       subject.redirect_to(redirect_event)
 
       logger.should_receive(:<<) do |json|
-        JSON.parse(json)['@fields']['location'].should eq 'new/location'
+        JSON.parse(json)['location'].should eq 'new/location'
       end
 
       subject.process_action(event)
@@ -121,8 +117,8 @@ describe LogStasher::LogSubscriber do
 
       logger.should_receive(:<<) do |json|
         log = JSON.parse(json)
-        log['@fields']['view'].should eq 3.3
-        log['@fields']['db'].should eq 2.1
+        log['view'].should eq 3.3
+        log['db'].should eq 2.1
       end
 
       subject.process_action(event)
@@ -139,9 +135,9 @@ describe LogStasher::LogSubscriber do
 
         logger.should_receive(:<<) do |json|
           log = JSON.parse(json)
-          log['@fields']['error'].should match /^RuntimeError\nit no work\n.+/m
-          log['@fields']['status'].should eq 500
-          log['@tags'].should include('exception')
+          log['error'].should match /^RuntimeError\nit no work\n.+/m
+          log['status'].should eq 500
+          log['tags'].should include('exception')
         end
 
         subject.process_action(event)

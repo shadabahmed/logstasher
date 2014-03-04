@@ -15,7 +15,7 @@ module LogStasher
       fields.merge! extract_parameters(payload)
       fields.merge! custom_fields
 
-      event = LogStash::Event.new('@fields' => fields, '@tags' => tags)
+      event = LogStash::Event.new(fields.merge('tags' => tags))
 
       LogStasher.logger << event.to_json + "\n"
     end
