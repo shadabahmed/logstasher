@@ -32,40 +32,6 @@ describe LogStasher do
     end
   end
 
-  describe '.appened_default_info_to_payload' do
-    let(:params)  { {'a' => '1', 'b' => 2, 'action' => 'action', 'controller' => 'test'}.with_indifferent_access }
-    let(:payload) { {:params => params} }
-    let(:request) { double(:params => params, :remote_ip => '10.0.0.1')}
-    after do
-      LogStasher.custom_fields = []
-      LogStasher.log_controller_parameters = false
-    end
-    it 'appends default parameters to payload' do
-      LogStasher.log_controller_parameters = true
-      LogStasher.custom_fields = []
-      LogStasher.add_default_fields_to_payload(payload, request)
-      payload[:ip].should == '10.0.0.1'
-      payload[:route].should == 'test#action'
-      payload[:parameters].should == {'a' => '1', 'b' => 2}
-      LogStasher.custom_fields.should == [:ip, :route, :parameters]
-    end
-
-    it 'does not include parameters when not configured to' do
-      LogStasher.custom_fields = []
-      LogStasher.add_default_fields_to_payload(payload, request)
-      payload.should_not have_key(:parameters)
-      LogStasher.custom_fields.should == [:ip, :route]
-    end
-  end
-
-  describe '.append_custom_params' do
-    let(:block) { ->{} }
-    it 'defines a method in ActionController::Base' do
-      ActionController::Base.should_receive(:send).with(:define_method, :logtasher_add_custom_fields_to_payload, &block)
-      LogStasher.add_custom_fields(&block)
-    end
-  end
-
   describe '.setup' do
     let(:logger) { double }
     let(:logstasher_config) { double(:logger => logger,:log_level => 'warn',:log_controller_parameters => nil) }
@@ -75,14 +41,12 @@ describe LogStasher do
       config.stub(:action_dispatch => double(:rack_cache => false))
     end
     it 'defines a method in ActionController::Base' do
-      LogStasher.should_receive(:require).with('logstasher/rails_ext/action_controller/metal/instrumentation')
-      LogStasher.should_receive(:require).with('logstash-event')
       LogStasher.should_receive(:suppress_app_logs).with(app)
-      LogStasher::RequestLogSubscriber.should_receive(:attach_to).with(:action_controller)
+      LogStasher::LogSubscriber.should_receive(:attach_to).with(:action_controller)
+      ActionController::Base.should_receive(:send).with(:include, ActionController::LogStasher)
       logger.should_receive(:level=).with('warn')
       LogStasher.setup(app)
       LogStasher.enabled.should be_true
-      LogStasher.custom_fields.should == []
       LogStasher.log_controller_parameters.should == false
     end
   end
@@ -115,29 +79,26 @@ describe LogStasher do
     end
   end
 
-  describe '.appended_params' do
-    it 'returns the stored var in current thread' do
-      Thread.current[:logstasher_custom_fields] = :test
-      LogStasher.custom_fields.should == :test
-    end
-  end
-
-  describe '.appended_params=' do
-    it 'returns the stored var in current thread' do
-      LogStasher.custom_fields = :test
-      Thread.current[:logstasher_custom_fields].should == :test
-    end
-  end
-
   describe '.log' do
-    let(:logger) { double() }
-    before do
-      LogStasher.logger = logger
-      LogStash::Time.stub(:now => 'timestamp')
-    end
+    let(:logger) { ::Logger.new('/dev/null') }
+    let(:timestamp) { ::Time.new.utc.iso8601(3) }
+
     it 'adds to log with specified level' do
-      logger.should_receive(:send).with('warn?').and_return(true)
-      logger.should_receive(:send).with('warn',"{\"@source\":\"unknown\",\"@tags\":[\"log\"],\"@fields\":{\"message\":\"WARNING\",\"level\":\"warn\"},\"@timestamp\":\"timestamp\"}")
+      ::LogStasher.stub(:logger => logger)
+      ::LogStash::Time.stub(:now => timestamp)
+
+      logger.should_receive(:warn) do |json|
+        JSON.parse(json).should eq ({
+          '@source' => 'unknown',
+          '@timestamp' => timestamp,
+          '@tags' => ['log'],
+          '@fields' => {
+            'message' => 'WARNING',
+            'level'   => 'warn'
+          }
+        })
+      end
+
       LogStasher.log('warn', 'WARNING')
     end
   end

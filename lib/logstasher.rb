@@ -1,12 +1,20 @@
-require 'logstasher/version'
-require 'logstasher/log_subscriber'
+require 'active_support/core_ext/class/attribute'
 require 'active_support/core_ext/module/attribute_accessors'
 require 'active_support/core_ext/string/inflections'
+require 'active_support/log_subscriber'
+require 'active_support/notifications'
 require 'active_support/ordered_options'
+require 'action_controller/log_subscriber'
+require 'action_controller/metal/logstasher'
+require 'logstash/event'
+
+require 'logstasher/version'
+require 'logstasher/log_subscriber'
 
 module LogStasher
   extend self
   attr_accessor :logger, :enabled, :log_controller_parameters
+  attr_reader :custom_fields_callback
 
   def remove_existing_log_subscriptions
     ActiveSupport::LogSubscriber.log_subscribers.each do |subscriber|
@@ -30,32 +38,20 @@ module LogStasher
     end
   end
 
-  def add_default_fields_to_payload(payload, request)
-    payload[:ip] = request.remote_ip
-    payload[:route] = "#{request.params[:controller]}##{request.params[:action]}"
-    self.custom_fields += [:ip, :route]
-    if self.log_controller_parameters
-      payload[:parameters] = payload[:params].except(*ActionController::LogSubscriber::INTERNAL_PARAMS)
-      self.custom_fields += [:parameters]
-    end
-  end
-
   def add_custom_fields(&block)
-    ActionController::Metal.send(:define_method, :logtasher_add_custom_fields_to_payload, &block)
-    ActionController::Base.send(:define_method, :logtasher_add_custom_fields_to_payload, &block)
+    @custom_fields_callback = block
   end
 
   def setup(app)
     app.config.action_dispatch.rack_cache[:verbose] = false if app.config.action_dispatch.rack_cache
-    # Path instrumentation class to insert our hook
-    require 'logstasher/rails_ext/action_controller/metal/instrumentation'
-    require 'logstash-event'
     self.suppress_app_logs(app)
-    LogStasher::RequestLogSubscriber.attach_to :action_controller
     self.logger = app.config.logstasher.logger || new_logger("#{Rails.root}/log/logstash_#{Rails.env}.log")
     self.logger.level = app.config.logstasher.log_level || Logger::WARN
     self.enabled = true
     self.log_controller_parameters = !! app.config.logstasher.log_controller_parameters
+
+    ActionController::Base.send(:include, ActionController::LogStasher)
+    LogStasher::LogSubscriber.attach_to :action_controller
   end
 
   def suppress_app_logs(app)
@@ -69,15 +65,6 @@ module LogStasher
     # This supports both spellings: "suppress_app_log" and "supress_app_log"
     !!(app.config.logstasher.suppress_app_log.nil? ? app.config.logstasher.supress_app_log : app.config.logstasher.suppress_app_log)
   end
-
-  def custom_fields
-    Thread.current[:logstasher_custom_fields] ||= []
-  end
-
-  def custom_fields=(val)
-    Thread.current[:logstasher_custom_fields] = val
-  end
-
 
   def log(severity, msg)
     if self.logger && self.logger.send("#{severity}?")
@@ -99,6 +86,12 @@ module LogStasher
   def new_logger(path)
     FileUtils.touch path # prevent autocreate messages in log
     Logger.new path
+  end
+end
+
+class LogStash::Event
+  def to_json
+    return JSON.generate(@data)
   end
 end
 

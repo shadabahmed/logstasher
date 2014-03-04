@@ -1,190 +1,162 @@
 require 'spec_helper'
+require 'securerandom'
 
-describe LogStasher::RequestLogSubscriber do
-  let(:log_output) {StringIO.new}
-  let(:logger) {
-    logger = Logger.new(log_output)
-    logger.formatter = ->(_, _, _, msg) {
-      msg
-    }
-    def log_output.json
-      JSON.parse! self.string
-    end
-    logger
-  }
-  before do
+class MockController
+  def user_id
+    @user_id ||= SecureRandom.hex(16)
+  end
+end
+
+class MockRequest
+  def remote_ip
+    '127.0.0.1'
+  end
+end
+
+describe LogStasher::LogSubscriber do
+  subject { described_class.new }
+
+  let(:logger) { ::Logger.new('/dev/null') }
+  let(:mock_controller) { MockController.new }
+  let(:mock_request) { MockRequest.new }
+  let(:context) {{ :controller => mock_controller, :request => mock_request }}
+
+  around do |example|
+    backup_logger = LogStasher.logger
     LogStasher.logger = logger
-    LogStasher.log_controller_parameters = true
-    LogStasher.custom_fields = []
-  end
-  after do
-    LogStasher.log_controller_parameters = false
-  end
-
-  let(:subscriber) {LogStasher::RequestLogSubscriber.new}
-  let(:event) {
-    ActiveSupport::Notifications::Event.new(
-      'process_action.action_controller', Time.now, Time.now, 2, {
-        status: 200, format: 'application/json', method: 'GET', path: '/home?foo=bar', params: {
-          :controller => 'home', :action => 'index', 'foo' => 'bar'
-        }.with_indifferent_access, db_runtime: 0.02, view_runtime: 0.01
-      }
-    )
-  }
-
-  let(:redirect) {
-    ActiveSupport::Notifications::Event.new(
-      'redirect_to.action_controller', Time.now, Time.now, 1, location: 'http://example.com', status: 302
-    )
-  }
-
-  describe '.process_action' do
-    let!(:request_subscriber) { @request_subscriber ||= LogStasher::RequestLogSubscriber.new() }
-    let(:payload) { {} }
-    let(:event)   { double(:payload => payload) }
-    let(:logger)  { double }
-    let(:json)    { "{\"@source\":\"unknown\",\"@tags\":[\"request\"],\"@fields\":{\"request\":true,\"status\":true,\"runtimes\":true,\"location\":true,\"exception\":true,\"custom\":true},\"@timestamp\":\"timestamp\"}\n" }
-    before do
-      LogStasher.stub(:logger => logger)
-      LogStash::Time.stub(:now => 'timestamp')
-    end
-    it 'calls all extractors and outputs the json' do
-      request_subscriber.should_receive(:extract_request).with(payload).and_return({:request => true})
-      request_subscriber.should_receive(:extract_status).with(payload).and_return({:status => true})
-      request_subscriber.should_receive(:runtimes).with(event).and_return({:runtimes => true})
-      request_subscriber.should_receive(:location).with(event).and_return({:location => true})
-      request_subscriber.should_receive(:extract_exception).with(payload).and_return({:exception => true})
-      request_subscriber.should_receive(:extract_custom_fields).with(payload).and_return({:custom => true})
-      LogStasher.logger.should_receive(:<<).with(json)
-      request_subscriber.process_action(event)
-    end
+    Thread.current[:logstasher_context] = context
+    Timecop.freeze { example.run }
+    Thread.current[:logstasher_context] = nil
+    LogStasher.logger = backup_logger
   end
 
-  describe 'logstasher output' do
+  describe '#process_action' do
+    let(:timestamp) { ::Time.new.utc.iso8601(3) }
+    let(:controller) { 'users' }
+    let(:action) { 'show' }
+    let(:params) {{ 'foo' => 'bar' }}
+    let(:format) { 'text/plain' }
+    let(:method) { 'method' }
+    let(:path) { '/users/1' }
+    let(:duration) { 12.4 }
+    let(:status) { 200 }
+    let(:payload) {{
+      :controller => controller,
+      :action     => action,
+      :params     => params,
+      :format     => format,
+      :method     => method,
+      :path       => path,
+      :status     => status
+    }}
 
-    it "should contain request tag" do
-      subscriber.process_action(event)
-      log_output.json['@tags'].should include 'request'
+    let(:event) { double(:payload => payload, :duration => duration) }
+
+    it 'logs the event in logstash format' do
+      ::LogStash::Time.stub(:now => timestamp)
+
+      logger.should_receive(:<<) do |json|
+        JSON.parse(json).should eq({
+          '@source'    => 'unknown',
+          '@timestamp' => timestamp,
+          '@tags'      => ['request'],
+          '@fields'    => {
+            'action'     => action,
+            'controller' => controller,
+            'format'     => format,
+            'ip'         => mock_request.remote_ip,
+            'method'     => method,
+            'path'       => path,
+            'route'      => "#{controller}##{action}",
+            'status'     => status,
+            'duration'   => duration
+          },
+        })
+      end
+
+      subject.process_action(event)
     end
 
-    it "should contain HTTP method" do
-      subscriber.process_action(event)
-      log_output.json['@fields']['method'].should == 'GET'
+    it 'includes custom fields in the log' do
+      ::LogStasher.add_custom_fields do |fields|
+        fields['user_id'] = user_id
+        fields['other']   = 'stuff'
+      end
+
+      logger.should_receive(:<<) do |json|
+        fields = JSON.parse(json)['@fields']
+        fields['user_id'].should eq mock_controller.user_id
+        fields['other'].should eq 'stuff'
+      end
+
+      subject.process_action(event)
     end
 
-    it "should include the path in the log output" do
-      subscriber.process_action(event)
-      log_output.json['@fields']['path'].should == '/home'
+    it 'includes parameters in the log' do
+      ::LogStasher.stub(:log_controller_parameters => true)
+
+      logger.should_receive(:<<) do |json|
+        JSON.parse(json)['@fields']['parameters'].should eq params
+      end
+
+      subject.process_action(event)
     end
 
-    it "should include the format in the log output" do
-      subscriber.process_action(event)
-      log_output.json['@fields']['format'].should == 'application/json'
+    it 'includes redirect location in the log' do
+      redirect_event = double(:payload => {:location => 'new/location'})
+      subject.redirect_to(redirect_event)
+
+      logger.should_receive(:<<) do |json|
+        JSON.parse(json)['@fields']['location'].should eq 'new/location'
+      end
+
+      subject.process_action(event)
     end
 
-    it "should include the status code" do
-      subscriber.process_action(event)
-      log_output.json['@fields']['status'].should == 200
+    it 'includes runtimes in the log' do
+      payload.merge!({
+        :view_runtime => 3.3,
+        :db_runtime =>  2.1
+      })
+
+      logger.should_receive(:<<) do |json|
+        log = JSON.parse(json)
+        log['@fields']['view'].should eq 3.3
+        log['@fields']['db'].should eq 2.1
+      end
+
+      subject.process_action(event)
     end
 
-    it "should include the controller" do
-      subscriber.process_action(event)
-      log_output.json['@fields']['controller'].should == 'home'
-    end
-
-    it "should include the action" do
-      subscriber.process_action(event)
-      log_output.json['@fields']['action'].should == 'index'
-    end
-
-    it "should include the view rendering time" do
-      subscriber.process_action(event)
-      log_output.json['@fields']['view'].should == 0.01
-    end
-
-    it "should include the database rendering time" do
-      subscriber.process_action(event)
-      log_output.json['@fields']['db'].should == 0.02
-    end
-
-    it "should add a valid status when an exception occurred" do
+    it 'includes exception info in the log' do
       begin
-        raise AbstractController::ActionNotFound.new('Could not find an action')
-      # working this in rescue to get access to $! variable
+        fail RuntimeError, 'it no work'
       rescue
-        event.payload[:status] = nil
-        event.payload[:exception] = ['AbstractController::ActionNotFound', 'Route not found']
-        subscriber.process_action(event)
-        log_output.json['@fields']['status'].should >= 400
-        log_output.json['@fields']['error'].should =~ /AbstractController::ActionNotFound.*Route not found.*logstasher\/spec\/lib\/logstasher\/log_subscriber_spec\.rb/m
-        log_output.json['@tags'].should include 'request'
-        log_output.json['@tags'].should include 'exception'
+        # Test inside the rescue block so $! is properly set
+        payload.merge!({
+          :exception => ['RuntimeError', 'it no work']
+        })
+
+        logger.should_receive(:<<) do |json|
+          log = JSON.parse(json)
+          log['@fields']['error'].should match /^RuntimeError\nit no work\n.+/m
+          log['@fields']['status'].should eq 500
+          log['@tags'].should include('exception')
+        end
+
+        subject.process_action(event)
       end
-    end
-
-    it "should return an unknown status when no status or exception is found" do
-      event.payload[:status] = nil
-      event.payload[:exception] = nil
-      subscriber.process_action(event)
-      log_output.json['@fields']['status'].should == 0
-    end
-
-    describe "with a redirect" do
-      before do
-        Thread.current[:logstasher_location] = "http://www.example.com"
-      end
-
-      it "should add the location to the log line" do
-        subscriber.process_action(event)
-        log_output.json['@fields']['location'].should == 'http://www.example.com'
-      end
-
-      it "should remove the thread local variable" do
-        subscriber.process_action(event)
-        Thread.current[:logstasher_location].should == nil
-      end
-    end
-
-    it "should not include a location by default" do
-      subscriber.process_action(event)
-      log_output.json['@fields']['location'].should be_nil
     end
   end
 
-  describe "with append_custom_params block specified" do
-    let(:request) { double(:remote_ip => '10.0.0.1')}
-    it "should add default custom data to the output" do
-      request.stub(:params => event.payload[:params])
-      LogStasher.add_default_fields_to_payload(event.payload, request)
-      subscriber.process_action(event)
-      log_output.json['@fields']['ip'].should == '10.0.0.1'
-      log_output.json['@fields']['route'].should == 'home#index'
-      log_output.json['@fields']['parameters'].should == {'foo' => 'bar'}
-    end
-  end
+  describe '#redirect_to' do
+    let(:location) { "users/#{SecureRandom.hex(16)}" }
+    let(:payload) {{ :location => location }}
+    let(:event) { double(:payload => payload) }
 
-  describe "with append_custom_params block specified" do
-    before do
-      LogStasher.stub(:add_custom_fields) do |&block|
-        @block = block
-      end
-      LogStasher.add_custom_fields do |payload|
-        payload[:user] = 'user'
-      end
-      LogStasher.custom_fields += [:user]
-    end
-
-    it "should add the custom data to the output" do
-      @block.call(event.payload)
-      subscriber.process_action(event)
-      log_output.json['@fields']['user'].should == 'user'
-    end
-  end
-
-  describe "when processing a redirect" do
-    it "should store the location in a thread local variable" do
-      subscriber.redirect_to(redirect)
-      Thread.current[:logstasher_location].should == "http://example.com"
+    it 'copies the location from the event' do
+      subject.redirect_to(event)
+      Thread.current[:logstasher_location].should eq location
     end
   end
 end

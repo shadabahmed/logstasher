@@ -1,21 +1,22 @@
-require 'active_support/core_ext/class/attribute'
-require 'active_support/log_subscriber'
-
 module LogStasher
-  class RequestLogSubscriber < ActiveSupport::LogSubscriber
+  class LogSubscriber < ActiveSupport::LogSubscriber
+
+    INTERNAL_PARAMS = ::ActionController::LogSubscriber::INTERNAL_PARAMS
+
     def process_action(event)
       payload = event.payload
+      tags    = extract_tags(payload)
+      fields  = extract_request(payload)
 
-      data      = extract_request(payload)
-      data.merge! extract_status(payload)
-      data.merge! runtimes(event)
-      data.merge! location(event)
-      data.merge! extract_exception(payload)
-      data.merge! extract_custom_fields(payload)
+      fields.merge! extract_status(payload)
+      fields.merge! runtimes(event)
+      fields.merge! location
+      fields.merge! extract_exception(payload)
+      fields.merge! extract_parameters(payload)
+      fields.merge! custom_fields
 
-      tags = ['request']
-      tags.push('exception') if payload[:exception]
-      event = LogStash::Event.new('@fields' => data, '@tags' => tags)
+      event = LogStash::Event.new('@fields' => fields, '@tags' => tags)
+
       LogStasher.logger << event.to_json + "\n"
     end
 
@@ -25,13 +26,26 @@ module LogStasher
 
     private
 
+    def controller
+      Thread.current[:logstasher_context][:controller]
+    end
+
+    def custom_fields
+      callback = ::LogStasher.custom_fields_callback
+      {}.tap do |fields|
+        controller.instance_exec(fields, &callback) if callback
+      end
+    end
+
     def extract_request(payload)
       {
-        :method => payload[:method],
-        :path => extract_path(payload),
-        :format => extract_format(payload),
-        :controller => payload[:params]['controller'],
-        :action => payload[:params]['action']
+        :action     => payload[:action],
+        :controller => payload[:controller],
+        :format     => extract_format(payload),
+        :ip         => request.remote_ip,
+        :method     => payload[:method],
+        :path       => extract_path(payload),
+        :route      => "#{payload[:controller]}##{payload[:action]}"
       }
     end
 
@@ -55,6 +69,12 @@ module LogStasher
       end
     end
 
+    def extract_tags(payload)
+      tags = ['request']
+      tags.push('exception') if payload[:exception]
+      tags
+    end
+
     def runtimes(event)
       {
         :duration => event.duration,
@@ -66,7 +86,7 @@ module LogStasher
       end
     end
 
-    def location(event)
+    def location
       if location = Thread.current[:logstasher_location]
         Thread.current[:logstasher_location] = nil
         { :location => location }
@@ -87,10 +107,16 @@ module LogStasher
       end
     end
 
-    def extract_custom_fields(payload)
-      custom_fields = (!LogStasher.custom_fields.empty? && payload.extract!(*LogStasher.custom_fields)) || {}
-      LogStasher.custom_fields.clear
-      custom_fields
+    def extract_parameters(payload)
+      if LogStasher.log_controller_parameters
+        { :parameters => payload[:params].except(INTERNAL_PARAMS) }
+      else
+        {}
+      end
+    end
+
+    def request
+      Thread.current[:logstasher_context][:request]
     end
   end
 end
