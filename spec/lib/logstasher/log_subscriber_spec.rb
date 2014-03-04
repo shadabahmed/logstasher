@@ -32,22 +32,15 @@ describe LogStasher::LogSubscriber do
 
   describe '#process_action' do
     let(:timestamp) { ::Time.new.utc.iso8601(3) }
-    let(:controller) { 'users' }
-    let(:action) { 'show' }
-    let(:params) {{ 'foo' => 'bar' }}
-    let(:format) { 'text/plain' }
-    let(:method) { 'method' }
-    let(:path) { '/users/1' }
     let(:duration) { 12.4 }
-    let(:status) { 200 }
     let(:payload) {{
-      :controller => controller,
-      :action     => action,
-      :params     => params,
-      :format     => format,
-      :method     => method,
-      :path       => path,
-      :status     => status
+      :controller => 'users',
+      :action     => 'show',
+      :params     => { 'foo' => 'bar' },
+      :format     => 'text/plain',
+      :method     => 'method',
+      :path       => '/users/1',
+      :status     => 200
     }}
 
     let(:event) { double(:payload => payload, :duration => duration) }
@@ -58,14 +51,14 @@ describe LogStasher::LogSubscriber do
           '@timestamp' => timestamp,
           '@version'   => '1',
           'tags'       => ['request'],
-          'action'     => action,
-          'controller' => controller,
-          'format'     => format,
+          'action'     => payload[:action],
+          'controller' => payload[:controller],
+          'format'     => payload[:format],
           'ip'         => mock_request.remote_ip,
-          'method'     => method,
-          'path'       => path,
-          'route'      => "#{controller}##{action}",
-          'status'     => status,
+          'method'     => payload[:method],
+          'path'       => payload[:path],
+          'route'      => "#{payload[:controller]}##{payload[:action]}",
+          'status'     => payload[:status],
           'duration'   => duration
         })
       end
@@ -92,7 +85,7 @@ describe LogStasher::LogSubscriber do
       ::LogStasher.stub(:log_controller_parameters => true)
 
       logger.should_receive(:<<) do |json|
-        JSON.parse(json)['parameters'].should eq params
+        JSON.parse(json)['parameters'].should eq payload[:params]
       end
 
       subject.process_action(event)
