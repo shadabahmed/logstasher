@@ -1,6 +1,6 @@
-require 'rails/railtie'
-require 'action_view/log_subscriber'
-require 'action_controller/log_subscriber'
+# require 'rails/railtie'
+# require 'action_view/log_subscriber'
+# require 'action_controller/log_subscriber'
 
 module LogStasher
   class Railtie < Rails::Railtie

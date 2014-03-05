@@ -1,11 +1,10 @@
-require 'active_support/core_ext/class/attribute'
-require 'active_support/core_ext/module/attribute_accessors'
-require 'active_support/core_ext/string/inflections'
-require 'active_support/log_subscriber'
-require 'active_support/notifications'
-require 'active_support/ordered_options'
+require 'logger'
+
+require 'rails'
+require 'action_controller'
 require 'action_controller/log_subscriber'
 require 'action_controller/metal/logstasher'
+require 'action_view/log_subscriber'
 require 'logstash/event'
 
 require 'logstasher/version'
