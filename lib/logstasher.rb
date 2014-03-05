@@ -61,8 +61,7 @@ module LogStasher
   end
 
   def configured_to_suppress_app_logs?(app)
-    # This supports both spellings: "suppress_app_log" and "supress_app_log"
-    !!(app.config.logstasher.suppress_app_log.nil? ? app.config.logstasher.supress_app_log : app.config.logstasher.suppress_app_log)
+    !!app.config.logstasher.suppress_app_log
   end
 
   def log(severity, msg)

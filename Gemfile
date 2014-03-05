@@ -4,6 +4,5 @@ source "https://rubygems.org"
 gemspec
 
 group :test do
-  gem 'redis', :require => false
   gem 'timecop'
 end
