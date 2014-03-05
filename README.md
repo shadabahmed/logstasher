@@ -4,7 +4,7 @@
 
 ## History
 
-This is a fork of [shadabahmed/logstasher](https://github.com/shadabahmed/logstasher). It has been updated to use the [latest event schema](https://logstash.jira.com/browse/LOGSTASH-675). It is not backward compatible with the current (0.4.9 as of this writing) version of its progenitor.
+This is a fork of [shadabahmed/logstasher](https://github.com/shadabahmed/logstasher). It has been updated to use the [latest event schema](https://logstash.jira.com/browse/LOGSTASH-675) and customized to better fit my needs. It is not backward compatible with the current (0.4.9 as of this writing) version of its progenitor.
 
 ## Purpose
 
@@ -37,7 +37,7 @@ From there, it's trivial to forward them to your logstash indexer. You can even 
 
 In your Gemfile:
 
-    gem 'logstasher'
+    gem 'dc-logstasher'
 
 ### Configure your `<environment>.rb` e.g. `development.rb`
 
@@ -82,8 +82,7 @@ All versions require Rails 3.0.x and higher and Ruby 1.9.2+. Tested on Rails 4 a
 
 ## Development
  - Run tests - `rake`
- - Generate test coverage report - `rake coverage`. Coverage report path - coverage/index.html
 
 ## Copyright
 
-Copyright (c) 2013 Shadab Ahmed, released under the MIT license
+Copyright (c) 2014 Shadab Ahmed, released under the MIT license
