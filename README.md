@@ -1,28 +1,17 @@
-# Logstasher [![Gem Version](https://badge.fury.io/rb/logstasher.png)](http://badge.fury.io/rb/logstasher) [![Build Status](https://secure.travis-ci.org/shadabahmed/logstasher.png)](https://secure.travis-ci.org/shadabahmed/logstasher)
-### Awesome Logging for Rails !!
+# Logstasher
 
-This gem is heavily inspired from [lograge](https://github.com/roidrage/lograge), but it's focused on one thing and one thing only. That's making your logs awesome like this:
+**Awesome Logging for Rails**
 
-[![Awesome Logs](http://i.imgur.com/zZXWQNp.png)](http://i.imgur.com/zZXWQNp.png)
+## History
 
-How it's done ?
+This is a fork of [shadabahmed/logstasher](https://github.com/shadabahmed/logstasher). It has been updated to use the [latest event schema](https://logstash.jira.com/browse/LOGSTASH-675). It is not backward compatible with the current (0.4.9 as of this writing) version of its progenitor.
 
-By, using these awesome tools:
-* [Logstash](http://logstash.net) - Store and index your logs
-* [Kibana](http://kibana.org/) - for awesome visualization. This is optional though, and you can use any other visualizer
+## Purpose
 
-To know how to setup these tools - visit my [blog](http://shadabahmed.com/blog/2013/04/30/logstasher-for-awesome-rails-logging)
+This gem makes it easy to generate logstash compatible logs for your rails app.
 
-## About logstasher
-
-This gem purely focuses on how to generate logstash compatible logs i.e. *logstash json event format*,  without any overhead. Infact, logstasher logs to a separate log file named `logstash_<environment>.log`.
-The reason for this separation:
- * To have a pure json log file
- * Prevent any logger messages(e.g. info) getting into our pure json logs
-
-Before **logstasher** :
-
-```
+A request that looks like this in your `production.log`:
+```text
 Started GET "/login" for 10.109.10.135 at 2013-04-30 08:59:01 -0400
 Processing by SessionsController#new as HTML
   Rendered sessions/new.html.haml within layouts/application (4.3ms)
@@ -34,16 +23,15 @@ Processing by SessionsController#new as HTML
 Completed 200 OK in 532ms (Views: 62.4ms | ActiveRecord: 0.0ms | ND API: 0.0ms)
 ```
 
-After **logstasher**:
-
-```
-{"@source":"unknown","@tags":["request"],"@fields":{"method":"GET","path":"/","format":"html","controller":"file_servers"
+Will look like this in your `logstash_production.log`:
+```json
+{"tags":["request"],"method":"GET","path":"/","format":"html","controller":"file_servers"
 ,"action":"index","status":200,"duration":28.34,"view":25.96,"db":0.88,"ip":"127.0.0.1","route":"file_servers#index",
 "parameters":"","ndapi_time":null,"uuid":"e81ecd178ed3b591099f4d489760dfb6","user":"shadab_ahmed@abc.com",
-"site":"internal"},"@timestamp":"2013-04-30T13:00:46.354500+00:00"}
+"site":"internal","@timestamp":"2013-04-30T13:00:46.354500+00:00","@version":"1"}
 ```
 
-By default, the older format rails request logs are disabled, though you can enable them.
+From there, it's trivial to forward them to your logstash indexer. You can even use the included redis log device to send the logs directly to a redis broker instead.
 
 ## Installation
 
@@ -56,8 +44,8 @@ In your Gemfile:
     # Enable the logstasher logs for the current environment
     config.logstasher.enabled = true
 
-    # This line is optional if you do not want to suppress app logs in your <environment>.log
-    config.logstasher.suppress_app_log = false
+    # Suppress the standard logging to <environment>.log
+    config.logstasher.suppress_app_log = true
 
 ## Logging params hash
 
