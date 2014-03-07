@@ -59,6 +59,9 @@ In your Gemfile:
     # This line is optional if you do not want to suppress app logs in your <environment>.log
     config.logstasher.suppress_app_log = false
 
+    # This line is optional, it allows you to set a custom value for the @source field of the log event
+    config.logstasher.source = 'your.arbitrary.source'
+
 ## Logging params hash
 
 Logstasher can be configured to log the contents of the params hash.  When enabled, the contents of the params hash (minus the ActionController internal params)
@@ -79,7 +82,7 @@ Since some fields are very specific to your application for e.g. *user_name*, so
 
     if LogStasher.enabled
       LogStasher.add_custom_fields do |fields|
-        # This block is run in application_controller context, 
+        # This block is run in application_controller context,
         # so you have access to all controller methods
         fields[:user] = current_user && current_user.mail
         fields[:site] = request.path =~ /^\/api/ ? 'api' : 'user'
