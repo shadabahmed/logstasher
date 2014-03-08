@@ -1,5 +1,10 @@
+require 'json'
+
+require 'active_support/log_subscriber'
+require 'action_controller/log_subscriber'
+
 module LogStasher
-  class LogSubscriber < ActiveSupport::LogSubscriber
+  class LogSubscriber < ::ActiveSupport::LogSubscriber
 
     INTERNAL_PARAMS = ::ActionController::LogSubscriber::INTERNAL_PARAMS
 
@@ -13,7 +18,7 @@ module LogStasher
       fields.merge! location
       fields.merge! extract_exception(payload)
       fields.merge! extract_parameters(payload)
-      fields.merge! custom_fields
+      fields.merge! appended_fields
 
       event = LogStash::Event.new(fields.merge('tags' => tags))
 
@@ -21,20 +26,20 @@ module LogStasher
     end
 
     def redirect_to(event)
-      Thread.current[:logstasher_location] = event.payload[:location]
+      Thread.current[:logstasher_context][:location] = event.payload[:location]
     end
 
     private
 
-    def controller
-      Thread.current[:logstasher_context][:controller]
-    end
-
-    def custom_fields
-      callback = ::LogStasher.custom_fields_callback
+    def appended_fields
+      callback = ::LogStasher.append_fields_callback
       {}.tap do |fields|
         controller.instance_exec(fields, &callback) if callback
       end
+    end
+
+    def controller
+      Thread.current[:logstasher_context][:controller]
     end
 
     def extract_request(payload)
@@ -87,8 +92,9 @@ module LogStasher
     end
 
     def location
-      if location = Thread.current[:logstasher_location]
-        Thread.current[:logstasher_location] = nil
+      location = Thread.current[:logstasher_context][:location]
+
+      if location
         { :location => location }
       else
         {}
@@ -108,8 +114,8 @@ module LogStasher
     end
 
     def extract_parameters(payload)
-      if LogStasher.log_controller_parameters
-        { :parameters => payload[:params].except(INTERNAL_PARAMS) }
+      if LogStasher.include_parameters?
+        { :params => JSON.generate(payload[:params].except(INTERNAL_PARAMS)) }
       else
         {}
       end
@@ -120,3 +126,5 @@ module LogStasher
     end
   end
 end
+
+::LogStasher::LogSubscriber.attach_to :action_controller

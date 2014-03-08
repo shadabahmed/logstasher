@@ -1,5 +1,5 @@
-module ActionController
-  module LogStasher
+module LogStasher
+  module ContextWrapper
     def process_action(*)
       Thread.current[:logstasher_context] = {
         :controller => self,

@@ -4,5 +4,7 @@ source "https://rubygems.org"
 gemspec
 
 group :test do
+  gem 'pry-nav'
+  gem 'rails'
   gem 'timecop'
 end

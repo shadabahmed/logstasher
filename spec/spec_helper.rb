@@ -8,9 +8,6 @@ require 'bundler/setup'
 
 Bundler.require(:default, :development, :test)
 
-# Set Rails environment as test
-ENV['RAILS_ENV'] = 'test'
-
 require 'logstasher'
 
 RSpec.configure do |config|

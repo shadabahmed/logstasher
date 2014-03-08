@@ -1,6 +1,8 @@
 require 'spec_helper'
 require 'securerandom'
 
+require 'logstasher/log_subscriber'
+
 class MockController
   def user_id
     @user_id ||= SecureRandom.hex(16)
@@ -33,6 +35,7 @@ describe LogStasher::LogSubscriber do
   describe '#process_action' do
     let(:timestamp) { ::Time.new.utc.iso8601(3) }
     let(:duration) { 12.4 }
+    let(:json_params) { JSON.dump(payload[:params]) }
     let(:payload) {{
       :controller => 'users',
       :action     => 'show',
@@ -54,6 +57,7 @@ describe LogStasher::LogSubscriber do
           'action'     => payload[:action],
           'controller' => payload[:controller],
           'format'     => payload[:format],
+          'params'     => json_params,
           'ip'         => mock_request.remote_ip,
           'method'     => payload[:method],
           'path'       => payload[:path],
@@ -66,8 +70,8 @@ describe LogStasher::LogSubscriber do
       subject.process_action(event)
     end
 
-    it 'includes custom fields in the log' do
-      ::LogStasher.add_custom_fields do |fields|
+    it 'appends fields to the log' do
+      ::LogStasher.append_fields do |fields|
         fields['user_id'] = user_id
         fields['other']   = 'stuff'
       end
@@ -81,11 +85,11 @@ describe LogStasher::LogSubscriber do
       subject.process_action(event)
     end
 
-    it 'includes parameters in the log' do
-      ::LogStasher.stub(:log_controller_parameters => true)
+    it 'removes parameters from the log' do
+      ::LogStasher.stub(:include_parameters? => false)
 
       logger.should_receive(:<<) do |json|
-        JSON.parse(json)['parameters'].should eq payload[:params]
+        JSON.parse(json)['params'].should be_nil
       end
 
       subject.process_action(event)
@@ -143,9 +147,9 @@ describe LogStasher::LogSubscriber do
     let(:payload) {{ :location => location }}
     let(:event) { double(:payload => payload) }
 
-    it 'copies the location from the event' do
+    it 'copies the location into the thread local logstasher context' do
       subject.redirect_to(event)
-      Thread.current[:logstasher_location].should eq location
+      Thread.current[:logstasher_context][:location].should eq location
     end
   end
 end
