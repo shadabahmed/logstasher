@@ -13,7 +13,7 @@ By, using these awesome tools:
 
 Update: Logstash now includes Kibana build in, so no need to separately install. Logstasher has been test with **logstash version 1.3.3**
 
-See [quickstart](#quick-setup-for-logstasher) for quickly setting up logstash
+See [quickstart](#quick-setup-for-logstash) for quickly setting up logstash
 
 ## About logstasher
 
