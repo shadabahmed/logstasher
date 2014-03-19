@@ -1,10 +1,6 @@
 require 'logger'
 
 module LogStasher
-  class Logger < ::Logger
-
-  end
-
   class << self
     attr_reader :append_fields_callback
     attr_writer :enabled
