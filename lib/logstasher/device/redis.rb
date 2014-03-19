@@ -51,7 +51,7 @@ module LogStasher
       end
 
       def default_options
-          { key: 'logstash', data_type: 'list' }
+        { key: 'logstash', data_type: 'list' }
       end
 
       def validate_options
