@@ -54,8 +54,16 @@ module LogStasher
       }
     end
 
-    def extract_path(payload)
-      payload[:path].split("?").first
+    # Monkey patching to enable exception logging
+    def extract_exception(payload)
+      if payload[:exception]
+        exception, message = payload[:exception]
+        status = ActionDispatch::ExceptionWrapper.status_code_for_exception(exception)
+        message = "#{exception}\n#{message}\n#{($!.backtrace.join("\n"))}"
+        { :status => status, :error => message }
+      else
+        {}
+      end
     end
 
     def extract_format(payload)
@@ -64,6 +72,18 @@ module LogStasher
       else
         payload[:format]
       end
+    end
+
+    def extract_parameters(payload)
+      if LogStasher.include_parameters?
+        { :params => JSON.generate(payload[:params].except(INTERNAL_PARAMS)) }
+      else
+        {}
+      end
+    end
+
+    def extract_path(payload)
+      payload[:path].split("?").first
     end
 
     def extract_status(payload)
@@ -80,17 +100,6 @@ module LogStasher
       tags
     end
 
-    def runtimes(event)
-      {
-        :duration => event.duration,
-        :view => event.payload[:view_runtime],
-        :db => event.payload[:db_runtime]
-      }.inject({}) do |runtimes, (name, runtime)|
-        runtimes[name] = runtime.to_f.round(2) if runtime
-        runtimes
-      end
-    end
-
     def location
       location = Thread.current[:logstasher_context][:location]
 
@@ -101,28 +110,19 @@ module LogStasher
       end
     end
 
-    # Monkey patching to enable exception logging
-    def extract_exception(payload)
-      if payload[:exception]
-        exception, message = payload[:exception]
-        status = ActionDispatch::ExceptionWrapper.status_code_for_exception(exception)
-        message = "#{exception}\n#{message}\n#{($!.backtrace.join("\n"))}"
-        { :status => status, :error => message }
-      else
-        {}
-      end
-    end
-
-    def extract_parameters(payload)
-      if LogStasher.include_parameters?
-        { :params => JSON.generate(payload[:params].except(INTERNAL_PARAMS)) }
-      else
-        {}
-      end
-    end
-
     def request
       Thread.current[:logstasher_context][:request]
+    end
+
+    def runtimes(event)
+      {
+        :total => event.duration,
+        :view  => event.payload[:view_runtime],
+        :db    => event.payload[:db_runtime]
+      }.inject({:runtime => {}}) do |runtimes, (name, runtime)|
+        runtimes[:runtime][name] = runtime.to_f.round(2) if runtime
+        runtimes
+      end
     end
   end
 end

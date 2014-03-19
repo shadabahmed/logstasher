@@ -63,7 +63,7 @@ describe LogStasher::LogSubscriber do
           'path'       => payload[:path],
           'route'      => "#{payload[:controller]}##{payload[:action]}",
           'status'     => payload[:status],
-          'duration'   => duration
+          'runtime'    => { 'total' => duration }
         })
       end
 
@@ -113,9 +113,9 @@ describe LogStasher::LogSubscriber do
       })
 
       logger.should_receive(:<<) do |json|
-        log = JSON.parse(json)
-        log['view'].should eq 3.3
-        log['db'].should eq 2.1
+        runtime = JSON.parse(json)['runtime']
+        runtime['view'].should eq 3.3
+        runtime['db'].should eq 2.1
       end
 
       subject.process_action(event)
