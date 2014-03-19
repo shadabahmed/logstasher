@@ -34,14 +34,34 @@ describe LogStasher::Device::Syslog do
     device.facility.should eq ::Syslog::LOG_USER
   end
 
+  it 'accepts facility as a string' do
+    device = LogStasher::Device::Syslog.new(:facility => 'LOG_LOCAL7')
+    device.facility.should eq ::Syslog::LOG_LOCAL7
+  end
+
   it 'has a priority' do
     device = LogStasher::Device::Syslog.new(:priority => ::Syslog::LOG_CRIT)
     device.priority.should eq ::Syslog::LOG_CRIT
   end
 
+  it 'accepts priority as a string' do
+    device = LogStasher::Device::Syslog.new(:priority => 'LOG_AUTH')
+    device.priority.should eq ::Syslog::LOG_AUTH
+  end
+
   it 'has flags' do
     device = LogStasher::Device::Syslog.new(:flags => ::Syslog::LOG_NOWAIT)
     device.flags.should eq ::Syslog::LOG_NOWAIT
+  end
+
+  it 'accepts flags as a string' do
+    device = LogStasher::Device::Syslog.new(:flags => 'LOG_NDELAY')
+    device.flags.should eq ::Syslog::LOG_NDELAY
+  end
+
+  it 'accepts flags as an array of strings' do
+    device = LogStasher::Device::Syslog.new(:flags => ['LOG_NOWAIT', 'LOG_ODELAY'])
+    device.flags.should eq(::Syslog::LOG_NOWAIT | ::Syslog::LOG_ODELAY)
   end
 
   describe '#write' do

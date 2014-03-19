@@ -12,7 +12,7 @@ module LogStasher
       attr_reader :options
 
       def initialize(options = {})
-        @options = default_options.merge(options)
+        @options = parse_options(default_options.merge(options))
         @closed  = false
       end
 
@@ -61,6 +61,24 @@ module LogStasher
           :priority => ::Syslog::LOG_INFO,
           :flags    => ::Syslog::LOG_PID | ::Syslog::LOG_CONS
         }
+      end
+
+      def parse_option(value)
+        case value
+        when ::String
+          ::Syslog.const_get(value.to_s)
+        when ::Array
+          value.reduce(0) { |all, current| all |= parse_option(current) }
+        else
+          value
+        end
+      end
+
+      def parse_options(options)
+        options[:facility] = parse_option(options[:facility])
+        options[:priority] = parse_option(options[:priority])
+        options[:flags]    = parse_option(options[:flags])
+        options
       end
 
       def syslog_configured?
