@@ -1,10 +1,18 @@
-require 'json'
-
-require 'active_support/log_subscriber'
 require 'action_controller/log_subscriber'
+require 'active_support/log_subscriber'
+require 'json'
+require 'logstash/event'
+
+# active_support monkeypatches Hash#to_json with a version that does not encode
+# time correctly for LogStash. Using JSON.generate bypasses the monkeypatch.
+class LogStash::Event
+  def to_json
+    return JSON.generate(@data)
+  end
+end
 
 module LogStasher
-  class LogSubscriber < ::ActiveSupport::LogSubscriber
+  class LogSubscriber < ::ActiveSupport::Subscriber
 
     INTERNAL_PARAMS = ::ActionController::LogSubscriber::INTERNAL_PARAMS
 

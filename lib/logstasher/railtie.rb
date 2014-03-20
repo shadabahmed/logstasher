@@ -25,44 +25,31 @@ module LogStasher
 
           include ::LogStasher::ContextWrapper
         end
+      end
+    end
 
-        silence_standard_logging if ::LogStasher.silence_standard_logging?
+    config.after_initialize do
+      if ::LogStasher.enabled? && ::LogStasher.silence_standard_logging?
+        require 'logstasher/silent_logger'
+
+        ::Rails::Rack::Logger.send(:include, ::LogStasher::SilentLogger)
+
+        ::ActiveSupport::LogSubscriber.log_subscribers.each do |subscriber|
+          subscriber.class.send(:include, ::LogStasher::SilentLogger)
+        end
       end
     end
 
     def default_logger
-      path = ::Rails.root.join('log', "logstash_#{::Rails.env}.log")
+      unless @default_logger
+        path = ::Rails.root.join('log', "logstash_#{::Rails.env}.log")
+        ::FileUtils.touch(path) # prevent autocreate messages in log
 
-      ::FileUtils.touch(path) # prevent autocreate messages in log
-      ::Logger.new(path)
-    end
-
-    def silence_standard_logging
-      ::Rails::Rack::Logger.logger = ::Logger.new('/dev/null')
-      ::Rails::Rack::Logger.logger.level = ::Logger::UNKNOWN
-
-      ::ActiveSupport::LogSubscriber.log_subscribers.each do |subscriber|
-        case subscriber.class.name
-        when 'ActionView::LogSubscriber'
-          unsubscribe('action_view', subscriber)
-        when 'ActionController::LogSubscriber'
-          unsubscribe('action_controller', subscriber)
-        end
+        @default_logger =  ::Logger.new(path)
       end
+
+      @default_logger
     end
 
-    def unsubscribe(namespace, subscriber)
-      notifier  = ::ActiveSupport::Notifications.notifier
-
-      subscriber.public_methods(false).each do |event|
-        next if event.to_s == 'call'
-
-        notifier.listeners_for("#{event}.#{namespace}").each do |listener|
-          if listener.instance_variable_get('@delegate') === subscriber
-            notifier.unsubscribe(listener)
-          end
-        end
-      end
-    end
   end
 end

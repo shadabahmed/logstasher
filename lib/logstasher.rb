@@ -18,9 +18,9 @@ module LogStasher
     def include_parameters?
       if @include_parameters.nil?
         @include_parameters = true
-      else
-        @include_parameters
       end
+
+      @include_parameters
     end
 
     def initialize_logger(device = $stdout, level = ::Logger::INFO)
@@ -40,17 +40,10 @@ module LogStasher
     def silence_standard_logging?
       if @silence_standard_logging.nil?
         @silence_standard_logging = false
-      else
-        @silence_standard_logging
       end
-    end
-  end
-end
 
-require 'logstash/event'
-class LogStash::Event
-  def to_json
-    return JSON.generate(@data)
+      @silence_standard_logging
+    end
   end
 end
 
