@@ -34,8 +34,10 @@ module LogStasher
 
         ::Rails::Rack::Logger.send(:include, ::LogStasher::SilentLogger)
 
-        ::ActiveSupport::LogSubscriber.log_subscribers.each do |subscriber|
-          subscriber.class.send(:include, ::LogStasher::SilentLogger)
+        ::ActiveSupport::Subscriber.subscribers.each do |subscriber|
+          if subscriber.is_a?(::ActiveSupport::LogSubscriber)
+            subscriber.class.send(:include, ::LogStasher::SilentLogger)
+          end
         end
       end
     end
@@ -50,6 +52,5 @@ module LogStasher
 
       @default_logger
     end
-
   end
 end
