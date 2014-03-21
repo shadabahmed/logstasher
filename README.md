@@ -8,8 +8,8 @@ This is a fork of
 [shadabahmed/logstasher](https://github.com/shadabahmed/logstasher). It has
 been updated to use the [latest event
 schema](https://logstash.jira.com/browse/LOGSTASH-675) and customized to better
-fit my needs--though it is still general useful. It is not backward compatible
-with the current (0.4.9 as of this writing) version of its progenitor.
+fit the needs of MoneyDesktop--though it is still generally useful. It is not
+backward compatible with its progenitor.
 
 ## Purpose
 
