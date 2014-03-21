@@ -12,7 +12,11 @@ module LogStasher
     end
 
     def enabled?
-      @enabled ||= false
+      if @enabled.nil?
+        @enabled = false
+      end
+
+      @enabled
     end
 
     def include_parameters?
