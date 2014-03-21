@@ -44,51 +44,37 @@ instead.
 
 In your Gemfile:
 
-    gem 'dc-logstasher'
+    gem 'md-logstasher'
 
 ### Configure your `<environment>.rb` e.g. `development.rb`
 
     # Enable the logstasher logs for the current environment
     config.logstasher.enabled = true
 
-    # Suppress the standard logging to <environment>.log
-    config.logstasher.suppress_app_log = true
+    # Optionally silience the standard logging to <environment>.log
+    config.logstasher.silence_standard_logging = true
 
-## Logging params hash
+## Logging params
 
-Logstasher can be configured to log the contents of the params hash.  When
-enabled, the contents of the params hash (minus the ActionController internal
-params) will be added to the log as a deep hash.  This can cause conflicts
-within the Elasticsearch mappings though, so should be enabled with care.
-Conflicts will occur if different actions (or even different applications
-logging to the same Elasticsearch cluster) use the same params key, but with a
-different data type (e.g. a string vs. a hash).  This can lead to lost log
-entries.  Enabling this can also significantly increase the size of the
-Elasticsearch indexes.
+By default, Logstasher will add params as a JSON encoded string. To disable,
+add the following to your `<environment>.rb`
 
-To enable this, add the following to your `<environment>.rb`
-
-    # Enable logging of controller params
-    config.logstasher.log_controller_parameters = true
-
+    # Disable logging of request parameters
+    config.logstasher.include_parameters = false
+    
 ## Adding custom fields to the log
 
-Since some fields are very specific to your application for e.g. *user_name*,
-so it is left upto you, to add them. Here's how to add those fields to the
-logs:
+Since some fields are very specific to your application, e.g., *user_name*,
+it is left upto you to add them. Here's how to do it:
 
     # Create a file - config/initializers/logstasher.rb
 
     if LogStasher.enabled
-      LogStasher.add_custom_fields do |fields|
+      LogStasher.append_fields do |fields|
         # This block is run in application_controller context,
         # so you have access to all controller methods
         fields[:user] = current_user && current_user.mail
         fields[:site] = request.path =~ /^\/api/ ? 'api' : 'user'
-
-        # If you are using custom instrumentation, just add it to logstasher
-        # custom fields
-        LogStasher.custom_fields << :myapi_runtime
       end
     end
 
