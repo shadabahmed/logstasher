@@ -1,18 +1,22 @@
 # inspired by [lumberjack](https://github.com/bdurand/lumberjack_syslog_device)
 
+require 'logstasher/device'
 require 'syslog'
 require 'thread'
 
 module LogStasher
   module Device
     class Syslog
+      include ::LogStasher::Device
 
       SEMAPHORE = Mutex.new
 
       attr_reader :options
 
       def initialize(options = {})
-        @options = parse_options(default_options.merge(options))
+        raw_options = default_options.merge(stringify_keys(options))
+
+        @options = parse_options(raw_options)
         @closed  = false
       end
 
@@ -29,19 +33,19 @@ module LogStasher
       end
 
       def facility
-        options[:facility]
+        options['facility']
       end
 
       def flags
-        options[:flags]
+        options['flags']
       end
 
       def identity
-        options[:identity]
+        options['identity']
       end
 
       def priority
-        options[:priority]
+        options['priority']
       end
 
       def write(log)
@@ -56,10 +60,10 @@ module LogStasher
 
       def default_options
         {
-          :identity => 'logstasher',
-          :facility => ::Syslog::LOG_LOCAL0,
-          :priority => ::Syslog::LOG_INFO,
-          :flags    => ::Syslog::LOG_PID | ::Syslog::LOG_CONS
+          'identity' => 'logstasher',
+          'facility' => ::Syslog::LOG_LOCAL0,
+          'priority' => ::Syslog::LOG_INFO,
+          'flags'    => ::Syslog::LOG_PID | ::Syslog::LOG_CONS
         }
       end
 
@@ -75,9 +79,9 @@ module LogStasher
       end
 
       def parse_options(options)
-        options[:facility] = parse_option(options[:facility])
-        options[:priority] = parse_option(options[:priority])
-        options[:flags]    = parse_option(options[:flags])
+        options['facility'] = parse_option(options['facility'])
+        options['priority'] = parse_option(options['priority'])
+        options['flags']    = parse_option(options['flags'])
         options
       end
 

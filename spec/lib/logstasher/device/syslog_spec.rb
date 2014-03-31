@@ -5,10 +5,10 @@ require 'logstasher/device/syslog'
 describe LogStasher::Device::Syslog do
 
   let(:default_options) {{
-    :identity => 'logstasher',
-    :facility => ::Syslog::LOG_LOCAL0,
-    :priority => ::Syslog::LOG_INFO,
-    :flags    => ::Syslog::LOG_PID | ::Syslog::LOG_CONS
+    'identity' => 'logstasher',
+    'facility' => ::Syslog::LOG_LOCAL0,
+    'priority' => ::Syslog::LOG_INFO,
+    'flags'    => ::Syslog::LOG_PID | ::Syslog::LOG_CONS
   }}
 
   before { ::Syslog.stub(:log) }

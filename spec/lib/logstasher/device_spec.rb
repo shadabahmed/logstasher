@@ -9,15 +9,24 @@ describe LogStasher::Device do
     it "expects a type" do
       expect {
         ::LogStasher::Device.factory(:no => "type given")
-      }.to raise_error(ArgumentError, "No :type given")
+      }.to raise_error(ArgumentError, 'No "type" given')
     end
 
     it "forwards configuration options to the device" do
       ::LogStasher::Device::Redis.should_receive(:new).with(
-        :options => "other", :than => "type"
+        'options' => "other", 'than' => "type"
       )
       ::LogStasher::Device.factory(
-        :type => 'redis', :options => 'other', :than => "type"
+        'type' => 'redis', 'options' => 'other', :than => "type"
+      )
+    end
+
+    it "accepts symbolized configuration keys" do
+      ::LogStasher::Device::Redis.should_receive(:new).with(
+        'options' => "other", 'than' => "type"
+      )
+      ::LogStasher::Device.factory(
+        :type => "redis", :options => "other", :than => "type"
       )
     end
 

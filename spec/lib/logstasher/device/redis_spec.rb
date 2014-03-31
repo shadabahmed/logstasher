@@ -7,8 +7,8 @@ describe LogStasher::Device::Redis do
   let(:redis_mock) { double('Redis') }
 
   let(:default_options) {{
-    key: 'logstash',
-    data_type: 'list'
+    'key'       => 'logstash',
+    'data_type' => 'list'
   }}
 
   it 'has default options' do
@@ -22,9 +22,9 @@ describe LogStasher::Device::Redis do
   end
 
   it 'assumes unknown options are for redis' do
-    ::Redis.should_receive(:new).with(hash_including(db: '0'))
+    ::Redis.should_receive(:new).with(hash_including('db' => '0'))
     device = LogStasher::Device::Redis.new(db: '0')
-    device.redis_options.should eq(db: '0')
+    device.redis_options.should eq('db' => '0')
   end
 
   it 'has a key' do

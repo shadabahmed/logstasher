@@ -1,23 +1,26 @@
+require 'logstasher/device'
 require 'redis'
 
 module LogStasher
   module Device
     class Redis
+      include ::LogStasher::Device
 
       attr_reader :options, :redis
 
       def initialize(options = {})
-        @options = default_options.merge(options)
+        @options = default_options.merge(stringify_keys(options))
+
         validate_options
         configure_redis
       end
 
       def data_type
-        options[:data_type]
+        options['data_type']
       end
 
       def key
-        options[:key]
+        options['key']
       end
 
       def redis_options
@@ -51,12 +54,12 @@ module LogStasher
       end
 
       def default_options
-        { key: 'logstash', data_type: 'list' }
+        { 'key' => 'logstash', 'data_type' => 'list' }
       end
 
       def validate_options
-        unless ['list', 'channel'].include?(options[:data_type])
-          fail 'Expected :data_type to be either "list" or "channel"'
+        unless ['list', 'channel'].include?(options['data_type'])
+          fail 'Expected data_type to be either "list" or "channel"'
         end
       end
     end
