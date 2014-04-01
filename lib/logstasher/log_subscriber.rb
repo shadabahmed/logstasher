@@ -12,7 +12,7 @@ class LogStash::Event
 end
 
 module LogStasher
-  class LogSubscriber < ::ActiveSupport::Subscriber
+  class LogSubscriber < ::ActiveSupport::LogSubscriber
 
     INTERNAL_PARAMS = ::ActionController::LogSubscriber::INTERNAL_PARAMS
 
