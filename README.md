@@ -3,7 +3,7 @@
 
 This gem is heavily inspired from [lograge](https://github.com/roidrage/lograge), but it's focused on one thing and one thing only. That's making your logs awesome like this:
 
-[![Awesome Logs](http://i.imgur.com/zZXWQNp.png)](http://i.imgur.com/zZXWQNp.png)
+[![Awesome Logs](https://f.cloud.github.com/assets/830679/2407078/dcde03e8-aa82-11e3-85ac-8c5b3a86676e.png)](https://f.cloud.github.com/assets/830679/2407078/dcde03e8-aa82-11e3-85ac-8c5b3a86676e.png)
 
 How it's done ?
 
@@ -11,7 +11,9 @@ By, using these awesome tools:
 * [Logstash](http://logstash.net) - Store and index your logs
 * [Kibana](http://kibana.org/) - for awesome visualization. This is optional though, and you can use any other visualizer
 
-To know how to setup these tools - visit my [blog](http://shadabahmed.com/blog/2013/04/30/logstasher-for-awesome-rails-logging)
+Update: Logstash now includes Kibana build in, so no need to separately install. Logstasher has been test with **logstash version 1.3.3**
+
+See [quickstart](#quick-setup-for-logstash) for quickly setting up logstash
 
 ## About logstasher
 
@@ -59,6 +61,9 @@ In your Gemfile:
     # This line is optional if you do not want to suppress app logs in your <environment>.log
     config.logstasher.suppress_app_log = false
 
+    # This line is optional, it allows you to set a custom value for the @source field of the log event
+    config.logstasher.source = 'your.arbitrary.source'
+
 ## Logging params hash
 
 Logstasher can be configured to log the contents of the params hash.  When enabled, the contents of the params hash (minus the ActionController internal params)
@@ -79,7 +84,7 @@ Since some fields are very specific to your application for e.g. *user_name*, so
 
     if LogStasher.enabled
       LogStasher.add_custom_fields do |fields|
-        # This block is run in application_controller context, 
+        # This block is run in application_controller context,
         # so you have access to all controller methods
         fields[:user] = current_user && current_user.mail
         fields[:site] = request.path =~ /^\/api/ ? 'api' : 'user'
@@ -88,6 +93,17 @@ Since some fields are very specific to your application for e.g. *user_name*, so
         LogStasher.custom_fields << :myapi_runtime
       end
     end
+
+## Quick Setup for Logstash
+
+* Download logstash from [logstash.net](http://www.logstash.net/)
+* Use this sample config file: [quickstart.conf](https://github.com/shadabahmed/logstasher/raw/master/sample_logstash_configurations/quickstart.conf) 
+* Start logstash with the following command:
+```
+java -jar logstash-1.3.3-flatjar.jar agent -f quickstart.conf -- web
+```
+* Visit http://localhost:9292/ to see the Kibana interface and your parsed logs
+* For advanced options see the latest logstash documentation at [logstash.net](http://www.logstash.net/) or visit my blog at (shadabahmed.com)[http://shadabahmed.com/blog/2013/04/30/logstasher-for-awesome-rails-logging] (slightly outdated but will sure give you ideas for distributed setup etc.)
 
 ## Versions
 All versions require Rails 3.0.x and higher and Ruby 1.9.2+. Tested on Rails 4 and Ruby 2.0
@@ -99,3 +115,7 @@ All versions require Rails 3.0.x and higher and Ruby 1.9.2+. Tested on Rails 4 a
 ## Copyright
 
 Copyright (c) 2013 Shadab Ahmed, released under the MIT license
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/shadabahmed/logstasher/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+

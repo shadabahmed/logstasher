@@ -66,14 +66,16 @@ describe LogStasher do
     end
   end
 
-  describe '.setup' do
+  shared_examples 'setup' do
     let(:logger) { double }
-    let(:logstasher_config) { double(:logger => logger,:log_level => 'warn',:log_controller_parameters => nil) }
+    let(:logstasher_config) { double(:logger => logger, :log_level => 'warn', :log_controller_parameters => nil, :source => logstasher_source) }
     let(:config) { double(:logstasher => logstasher_config) }
     let(:app) { double(:config => config) }
     before do
+      @previous_source = LogStasher.source
       config.stub(:action_dispatch => double(:rack_cache => false))
     end
+    after { LogStasher.source = @previous_source } # Need to restore old source for specs
     it 'defines a method in ActionController::Base' do
       LogStasher.should_receive(:require).with('logstasher/rails_ext/action_controller/metal/instrumentation')
       LogStasher.should_receive(:require).with('logstash-event')
@@ -81,9 +83,22 @@ describe LogStasher do
       LogStasher::RequestLogSubscriber.should_receive(:attach_to).with(:action_controller)
       logger.should_receive(:level=).with('warn')
       LogStasher.setup(app)
+      LogStasher.source.should == (logstasher_source || 'unknown')
       LogStasher.enabled.should be_true
       LogStasher.custom_fields.should == []
       LogStasher.log_controller_parameters.should == false
+    end
+  end
+
+  describe '.setup' do
+    describe 'with source set' do
+      let(:logstasher_source) { 'foo' }
+      it_behaves_like 'setup'
+    end
+
+    describe 'without source set (default behaviour)' do
+      let(:logstasher_source) { nil }
+      it_behaves_like 'setup'
     end
   end
 
@@ -139,6 +154,16 @@ describe LogStasher do
       logger.should_receive(:send).with('warn?').and_return(true)
       logger.should_receive(:send).with('warn',"{\"tags\":[\"log\"],\"message\":\"WARNING\",\"level\":\"warn\"},\"@timestamp\":\"timestamp\"}")
       LogStasher.log('warn', 'WARNING')
+    end
+    context 'with a source specified' do
+      before :each do
+        LogStasher.source = 'foo'
+      end
+      it 'sets the correct source' do
+        logger.should_receive(:send).with('warn?').and_return(true)
+        logger.should_receive(:send).with('warn',"{\"@source\":\"foo\",\"@tags\":[\"log\"],\"@fields\":{\"message\":\"WARNING\",\"level\":\"warn\"},\"@timestamp\":\"timestamp\"}")
+        LogStasher.log('warn', 'WARNING')
+      end
     end
   end
 

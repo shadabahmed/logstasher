@@ -6,7 +6,9 @@ require 'active_support/ordered_options'
 
 module LogStasher
   extend self
-  attr_accessor :logger, :enabled, :log_controller_parameters
+  attr_accessor :logger, :enabled, :log_controller_parameters, :source
+  # Setting the default to 'unknown' to define the default behaviour
+  @source = 'unknown'
 
   def remove_existing_log_subscriptions
     ActiveSupport::LogSubscriber.log_subscribers.each do |subscriber|
@@ -54,6 +56,7 @@ module LogStasher
     LogStasher::RequestLogSubscriber.attach_to :action_controller
     self.logger = app.config.logstasher.logger || new_logger("#{Rails.root}/log/logstash_#{Rails.env}.log")
     self.logger.level = app.config.logstasher.log_level || Logger::WARN
+    self.source = app.config.logstasher.source unless app.config.logstasher.source.nil?
     self.enabled = true
     self.log_controller_parameters = !! app.config.logstasher.log_controller_parameters
   end
@@ -78,11 +81,10 @@ module LogStasher
     Thread.current[:logstasher_custom_fields] = val
   end
 
-  # Actually writes the log?
+
   def log(severity, msg)
     if self.logger && self.logger.send("#{severity}?")
-      #event = LogStash::Event.new('@fields' => {:message => msg, :level => severity},'@tags' => ['log'])
-      event = LogStash::Event.new(:message => msg, :level => severity, :tags => ['log'])
+      event = LogStash::Event.new(:message => msg, :level => severity, :tags => ['log'], :source => @source)
       self.logger.send severity, event.to_json
     end
   end
@@ -99,7 +101,7 @@ module LogStasher
 
   def new_logger(path)
     FileUtils.touch path # prevent autocreate messages in log
-    Logger.new path
+    Logger.new(path, 10, 1000*1024*1024)
   end
 end
 

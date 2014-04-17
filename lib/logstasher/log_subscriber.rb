@@ -16,6 +16,7 @@ module LogStasher
       tags = ['request']
       tags.push('exception') if payload[:exception]
       data.merge!({:tags => tags})
+      data.merge!({:source => LogStasher.source})
       event = LogStash::Event.new(data)
       LogStasher.logger << event.to_json + "\n"
     end
