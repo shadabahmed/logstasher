@@ -101,7 +101,7 @@ module LogStasher
 
   def new_logger(path)
     FileUtils.touch path # prevent autocreate messages in log
-    Logger.new(path, 10, 1000*1024*1024)
+    Logger.new(path, 10, 250*1024*1024)
   end
 end
 
