@@ -152,7 +152,7 @@ describe LogStasher do
     end
     it 'adds to log with specified level' do
       logger.should_receive(:send).with('warn?').and_return(true)
-      logger.should_receive(:send).with('warn',"{\"@source\":\"unknown\",\"@tags\":[\"log\"],\"@fields\":{\"message\":\"WARNING\",\"level\":\"warn\"},\"@timestamp\":\"timestamp\"}")
+      logger.should_receive(:send).with('warn',"{\"tags\":[\"log\"],\"message\":\"WARNING\",\"level\":\"warn\"},\"@timestamp\":\"timestamp\"}")
       LogStasher.log('warn', 'WARNING')
     end
     context 'with a source specified' do

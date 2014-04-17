@@ -81,9 +81,10 @@ module LogStasher
     Thread.current[:logstasher_custom_fields] = val
   end
 
+
   def log(severity, msg)
     if self.logger && self.logger.send("#{severity}?")
-      event = LogStash::Event.new('@source' => self.source, '@fields' => {:message => msg, :level => severity}, '@tags' => ['log'])
+      event = LogStash::Event.new(:message => msg, :level => severity, :tags => ['log'], :source => @source)
       self.logger.send severity, event.to_json
     end
   end
@@ -100,7 +101,7 @@ module LogStasher
 
   def new_logger(path)
     FileUtils.touch path # prevent autocreate messages in log
-    Logger.new path
+    Logger.new(path, 10, 250*1024*1024)
   end
 end
 
