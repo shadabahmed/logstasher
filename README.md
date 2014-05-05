@@ -94,10 +94,42 @@ Since some fields are very specific to your application for e.g. *user_name*, so
       end
     end
 
+## Listening to `ActiveSupport::Notifications` events
+
+It is possible to listen to any `ActiveSupport::Notifications` events and store arbitrary data to be included in the final JSON log entry:
+
+    # In config/initializers/logstasher.rb
+
+    # Watch calls the block with the same arguments than any ActiveSupport::Notification, plus a store
+    LogStasher.watch('some.activesupport.notification') do |name, start, finish, id, payload, store|
+      # Do something
+      store[:count] = 42
+    end
+
+Would change the log entry to:
+
+```
+{"@source":"unknown","@tags":["request"],"@fields":{"method":"GET","path":"/","format":"html","controller":"file_servers","action":"index","status":200,"duration":28.34,"view":25.96,"db":0.88,"ip":"127.0.0.1","route":"file_servers#index", "parameters":"","ndapi_time":null,"uuid":"e81ecd178ed3b591099f4d489760dfb6","user":"shadab_ahmed@abc.com", "site":"internal","some.activesupport.notification":{"count":42}},"@timestamp":"2013-04-30T13:00:46.354500+00:00"}
+```
+
+The store exposed to the blocked passed to `watch` is thread-safe, and reset after each request.
+By default, the store is only shared between occurences of the same event.
+You can easily share the same store between different types of notifications, by assigning them to the same event group:
+
+    # In config/initializers/logstasher.rb
+
+    LogStasher.watch('foo.notification', event_group: 'notification') do |*args, store|
+      # Shared store with 'bar.notification'
+    end
+
+    LogStasher.watch('bar.notification', event_group: 'notification') do |*args, store|
+      # Shared store with 'foo.notification'
+    end
+
 ## Quick Setup for Logstash
 
 * Download logstash from [logstash.net](http://www.logstash.net/)
-* Use this sample config file: [quickstart.conf](https://github.com/shadabahmed/logstasher/raw/master/sample_logstash_configurations/quickstart.conf) 
+* Use this sample config file: [quickstart.conf](https://github.com/shadabahmed/logstasher/raw/master/sample_logstash_configurations/quickstart.conf)
 * Start logstash with the following command:
 ```
 java -jar logstash-1.3.3-flatjar.jar agent -f quickstart.conf -- web

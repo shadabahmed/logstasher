@@ -16,7 +16,7 @@ module ActionController
 
       ActiveSupport::Notifications.instrument("process_action.action_controller", raw_payload) do |payload|
         result = super
-        
+
         if self.respond_to?(:logtasher_add_custom_fields_to_payload)
           before_keys = raw_payload.keys.clone
           logtasher_add_custom_fields_to_payload(raw_payload)
@@ -24,9 +24,12 @@ module ActionController
           # Store all extra keys added to payload hash in payload itself. This is a thread safe way
           LogStasher.custom_fields += after_keys - before_keys
         end
-        
+
         payload[:status] = response.status
         append_info_to_payload(payload)
+        LogStasher.store.each do |key, value|
+          payload[key] = value
+        end
         result
       end
     end

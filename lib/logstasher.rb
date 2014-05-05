@@ -1,11 +1,14 @@
 require 'logstasher/version'
 require 'logstasher/log_subscriber'
+require 'request_store'
 require 'active_support/core_ext/module/attribute_accessors'
 require 'active_support/core_ext/string/inflections'
 require 'active_support/ordered_options'
 
 module LogStasher
   extend self
+  STORE_KEY = :logstasher_data
+
   attr_accessor :logger, :enabled, :log_controller_parameters, :source
   # Setting the default to 'unknown' to define the default behaviour
   @source = 'unknown'
@@ -43,8 +46,12 @@ module LogStasher
   end
 
   def add_custom_fields(&block)
-    ActionController::Metal.send(:define_method, :logtasher_add_custom_fields_to_payload, &block)
-    ActionController::Base.send(:define_method, :logtasher_add_custom_fields_to_payload, &block)
+    wrapped_block = lambda do |fields|
+      LogStasher.custom_fields.concat(LogStasher.store.keys)
+      block.call(fields)
+    end
+    ActionController::Metal.send(:define_method, :logtasher_add_custom_fields_to_payload, &wrapped_block)
+    ActionController::Base.send(:define_method, :logtasher_add_custom_fields_to_payload, &wrapped_block)
   end
 
   def setup(app)
@@ -85,6 +92,22 @@ module LogStasher
     if self.logger && self.logger.send("#{severity}?")
       event = LogStash::Event.new('@source' => self.source, '@fields' => {:message => msg, :level => severity}, '@tags' => ['log'])
       self.logger.send severity, event.to_json
+    end
+  end
+
+  def store
+    if RequestStore.store[STORE_KEY].nil?
+      # Get each store it's own private Hash instance.
+      RequestStore.store[STORE_KEY] = Hash.new { |hash, key| hash[key] = {} }
+    end
+    RequestStore.store[STORE_KEY]
+  end
+
+  def watch(event, opts = {}, &block)
+    event_group = opts[:event_group] || event
+    ActiveSupport::Notifications.subscribe(event) do |*args|
+      # Calling the processing block with the Notification args and the store
+      block.call(*args, store[event_group])
     end
   end
 

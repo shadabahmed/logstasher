@@ -176,4 +176,40 @@ describe LogStasher do
       end
     end
   end
+
+  describe '.store' do
+    it "returns a new Hash for each key" do
+      expect(LogStasher.store['a'].object_id).to_not be(LogStasher.store['b'].object_id)
+    end
+
+    it "returns the same store if called several time with the same key" do
+      expect(LogStasher.store['a'].object_id).to be(LogStasher.store['a'].object_id)
+    end
+
+  end
+
+  describe ".watch" do
+    before(:each) { LogStasher.custom_fields = [] }
+
+    it "subscribes to the required event" do
+      ActiveSupport::Notifications.should_receive(:subscribe).with('event_name')
+      LogStasher.watch('event_name')
+    end
+
+    it 'executes the block when receiving an event' do
+      probe = lambda {}
+      LogStasher.watch('custom.event.foo', &probe)
+      expect(probe).to receive(:call)
+      ActiveSupport::Notifications.instrument('custom.event.foo', {})
+    end
+
+    describe "store" do
+      it 'stores the events in a store with the event\'s name' do
+        probe = lambda { |*args, store| store[:foo] = :bar }
+        LogStasher.watch('custom.event.bar', &probe)
+        ActiveSupport::Notifications.instrument('custom.event.bar', {})
+        LogStasher.store['custom.event.bar'].should == {:foo => :bar}
+      end
+    end
+  end
 end
