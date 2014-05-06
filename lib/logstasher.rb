@@ -46,9 +46,9 @@ module LogStasher
   end
 
   def add_custom_fields(&block)
-    wrapped_block = lambda do |fields|
+    wrapped_block = Proc.new do |fields|
       LogStasher.custom_fields.concat(LogStasher.store.keys)
-      block.call(fields)
+      instance_exec(fields, &block)
     end
     ActionController::Metal.send(:define_method, :logtasher_add_custom_fields_to_payload, &wrapped_block)
     ActionController::Base.send(:define_method, :logtasher_add_custom_fields_to_payload, &wrapped_block)
