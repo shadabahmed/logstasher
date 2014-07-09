@@ -68,7 +68,7 @@ describe LogStasher do
 
   shared_examples 'setup' do
     let(:logstasher_source) { nil }
-    let(:logstasher_config) { double(:logger => logger, :log_level => 'warn', :log_controller_parameters => nil, :source => logstasher_source) }
+    let(:logstasher_config) { double(:logger => logger, :log_level => 'warn', :log_controller_parameters => nil, :source => logstasher_source, :logger_path => logger_path) }
     let(:config) { double(:logstasher => logstasher_config) }
     let(:app) { double(:config => config) }
     before do
@@ -91,14 +91,15 @@ describe LogStasher do
   end
 
   describe '.setup' do
+    let(:logger) { double }
+    let(:logger_path) { nil }
+
     describe 'with source set' do
-      let(:logger) { double }
       let(:logstasher_source) { 'foo' }
       it_behaves_like 'setup'
     end
 
     describe 'without source set (default behaviour)' do
-      let(:logger) { double }
       let(:logstasher_source) { nil }
       it_behaves_like 'setup'
     end
@@ -108,6 +109,13 @@ describe LogStasher do
 
       context 'with no logger passed in' do
         before { LogStasher.should_receive(:new_logger).with('/log/logstash_test.log') }
+        it_behaves_like 'setup'
+      end
+
+      context 'with custom logger path passed in' do
+        let(:logger_path) { double }
+
+        before { LogStasher.should_receive(:new_logger).with(logger_path) }
         it_behaves_like 'setup'
       end
     end

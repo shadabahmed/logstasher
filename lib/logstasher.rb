@@ -9,7 +9,7 @@ module LogStasher
   extend self
   STORE_KEY = :logstasher_data
 
-  attr_accessor :logger, :enabled, :log_controller_parameters, :source
+  attr_accessor :logger, :logger_path, :enabled, :log_controller_parameters, :source
   # Setting the default to 'unknown' to define the default behaviour
   @source = 'unknown'
 
@@ -61,7 +61,8 @@ module LogStasher
     require 'logstash-event'
     self.suppress_app_logs(app)
     LogStasher::RequestLogSubscriber.attach_to :action_controller
-    self.logger = app.config.logstasher.logger || new_logger("#{Rails.root}/log/logstash_#{Rails.env}.log")
+    self.logger_path = app.config.logstasher.logger_path || "#{Rails.root}/log/logstash_#{Rails.env}.log"
+    self.logger = app.config.logstasher.logger || new_logger(self.logger_path)
     self.logger.level = app.config.logstasher.log_level || Logger::WARN
     self.source = app.config.logstasher.source unless app.config.logstasher.source.nil?
     self.enabled = true
