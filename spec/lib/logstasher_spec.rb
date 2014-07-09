@@ -59,7 +59,7 @@ describe LogStasher do
   end
 
   describe '.append_custom_params' do
-    let(:block) { ->{} }
+    let(:block) { ->(_, _){} }
     it 'defines a method in ActionController::Base' do
       ActionController::Base.should_receive(:send).with(:define_method, :logtasher_add_custom_fields_to_payload, &block)
       LogStasher.add_custom_fields(&block)
@@ -84,7 +84,7 @@ describe LogStasher do
       logger.should_receive(:level=).with('warn')
       LogStasher.setup(app)
       LogStasher.source.should == (logstasher_source || 'unknown')
-      LogStasher.enabled.should be_true
+      LogStasher.enabled.should == true
       LogStasher.custom_fields.should == []
       LogStasher.log_controller_parameters.should == false
     end
