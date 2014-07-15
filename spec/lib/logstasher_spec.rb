@@ -59,7 +59,7 @@ describe LogStasher do
   end
 
   describe '.append_custom_params' do
-    let(:block) { ->{} }
+    let(:block) { ->(_, _){} }
     it 'defines a method in ActionController::Base' do
       ActionController::Base.should_receive(:send).with(:define_method, :logtasher_add_custom_fields_to_payload, &block)
       LogStasher.add_custom_fields(&block)
@@ -67,8 +67,8 @@ describe LogStasher do
   end
 
   shared_examples 'setup' do
-    let(:logger) { double }
-    let(:logstasher_config) { double(:logger => logger, :log_level => 'warn', :log_controller_parameters => nil, :source => logstasher_source) }
+    let(:logstasher_source) { nil }
+    let(:logstasher_config) { double(:logger => logger, :log_level => 'warn', :log_controller_parameters => nil, :source => logstasher_source, :logger_path => logger_path) }
     let(:config) { double(:logstasher => logstasher_config) }
     let(:app) { double(:config => config) }
     before do
@@ -84,13 +84,16 @@ describe LogStasher do
       logger.should_receive(:level=).with('warn')
       LogStasher.setup(app)
       LogStasher.source.should == (logstasher_source || 'unknown')
-      LogStasher.enabled.should be_true
+      LogStasher.enabled.should == true
       LogStasher.custom_fields.should == []
       LogStasher.log_controller_parameters.should == false
     end
   end
 
   describe '.setup' do
+    let(:logger) { double }
+    let(:logger_path) { nil }
+
     describe 'with source set' do
       let(:logstasher_source) { 'foo' }
       it_behaves_like 'setup'
@@ -99,6 +102,22 @@ describe LogStasher do
     describe 'without source set (default behaviour)' do
       let(:logstasher_source) { nil }
       it_behaves_like 'setup'
+    end
+
+    describe 'with customized logging' do
+      let(:logger) { nil }
+
+      context 'with no logger passed in' do
+        before { LogStasher.should_receive(:new_logger).with('/log/logstash_test.log') }
+        it_behaves_like 'setup'
+      end
+
+      context 'with custom logger path passed in' do
+        let(:logger_path) { double }
+
+        before { LogStasher.should_receive(:new_logger).with(logger_path) }
+        it_behaves_like 'setup'
+      end
     end
   end
 
