@@ -64,47 +64,47 @@ describe LogStasher::RequestLogSubscriber do
 
     it "should contain request tag" do
       subscriber.process_action(event)
-      log_output.json['@tags'].should include 'request'
+      expect(log_output.json['@tags']).to include 'request'
     end
 
     it "should contain HTTP method" do
       subscriber.process_action(event)
-      log_output.json['@fields']['method'].should == 'GET'
+      expect(log_output.json['@fields']['method']).to eq 'GET'
     end
 
     it "should include the path in the log output" do
       subscriber.process_action(event)
-      log_output.json['@fields']['path'].should == '/home'
+      expect(log_output.json['@fields']['path']).to eq '/home'
     end
 
     it "should include the format in the log output" do
       subscriber.process_action(event)
-      log_output.json['@fields']['format'].should == 'application/json'
+      expect(log_output.json['@fields']['format']).to eq 'application/json'
     end
 
     it "should include the status code" do
       subscriber.process_action(event)
-      log_output.json['@fields']['status'].should == 200
+      expect(log_output.json['@fields']['status']).to eq 200
     end
 
     it "should include the controller" do
       subscriber.process_action(event)
-      log_output.json['@fields']['controller'].should == 'home'
+      expect(log_output.json['@fields']['controller']).to eq 'home'
     end
 
     it "should include the action" do
       subscriber.process_action(event)
-      log_output.json['@fields']['action'].should == 'index'
+      expect(log_output.json['@fields']['action']).to eq 'index'
     end
 
     it "should include the view rendering time" do
       subscriber.process_action(event)
-      log_output.json['@fields']['view'].should == 0.01
+      expect(log_output.json['@fields']['view']).to eq 0.01
     end
 
     it "should include the database rendering time" do
       subscriber.process_action(event)
-      log_output.json['@fields']['db'].should == 0.02
+      expect(log_output.json['@fields']['db']).to eq 0.02
     end
 
     it "should add a valid status when an exception occurred" do
