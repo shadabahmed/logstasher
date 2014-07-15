@@ -40,6 +40,7 @@ require 'active_support/core_ext/hash/slice'
 require 'active_support/core_ext/string'
 require 'active_support/core_ext/time/zones'
 require 'abstract_controller/base'
+require 'action_mailer'
 require 'logger'
 require 'logstash-event'
 
