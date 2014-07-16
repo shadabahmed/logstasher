@@ -188,3 +188,66 @@ describe LogStasher::RequestLogSubscriber do
     end
   end
 end
+
+describe LogStasher::MailerLogSubscriber do
+  let(:log_output) {StringIO.new}
+  let(:logger) {
+    logger = Logger.new(log_output)
+    logger.formatter = ->(_, _, _, msg) {
+      msg
+    }
+    def log_output.json
+      JSON.parse! self.string
+    end
+    logger
+  }
+
+  before :all do
+    SampleMailer.delivery_method = :test
+    LogStasher::MailerLogSubscriber.attach_to(:action_mailer)
+  end
+
+  before do
+    LogStasher.logger = logger
+  end
+
+  let :message do
+    Mail.new do
+      from 'some-dude@example.com'
+      to 'some-other-dude@example.com'
+      subject 'Goodbye'
+      body 'LOL'
+    end
+  end
+
+  it 'receive an e-mail' do
+    SampleMailer.receive(message.encoded)
+    log_output.json.tap do |json|
+      json['@source'].should == LogStasher.source
+      json['@tags'].should == ['mailer', 'receive']
+      json['@fields'].tap do |fields|
+        fields['mailer'].should == 'SampleMailer'
+        fields['from'].should == ['some-dude@example.com']
+        fields['to'].should == ['some-other-dude@example.com']
+        fields['subject'].should == 'Goodbye'
+        fields['message_id'].should == message.message_id
+      end
+    end
+  end
+
+  it 'deliver an outgoing e-mail' do
+    SampleMailer.welcome.deliver
+    log_output.json.tap do |json|
+      json['@source'].should == LogStasher.source
+      json['@tags'].should == ['mailer', 'deliver']
+      json['@fields'].tap do |fields|
+        fields['mailer'].should == 'SampleMailer'
+        fields['from'].should == ['some-dude@example.com']
+        fields['to'].should == ['some-other-dude@example.com']
+        fields['subject'].should == 'Hello, there'
+        # Message-Id appears not to be yet available at this point in time.
+        fields['message_id'].should be_nil
+      end
+    end
+  end
+end
