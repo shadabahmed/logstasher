@@ -23,6 +23,8 @@ require 'bundler/setup'
 # part of Rails. You can say :require => false in gemfile to always use explicit requiring
 Bundler.require(:default, :test)
 
+Dir[File.join("./spec/support/**/*.rb")].each { |f| require f }
+
 # Set Rails environment as test
 ENV['RAILS_ENV'] = 'test'
 

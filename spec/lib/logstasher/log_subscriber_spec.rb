@@ -189,15 +189,6 @@ describe LogStasher::RequestLogSubscriber do
   end
 end
 
-class SampleMailer < ActionMailer::Base
-  def welcome
-    mail(from: 'some-dude@example.com', to: 'some-other-dude@example.com', subject: 'Hello, there')
-  end
-
-  def receive(email)
-  end
-end
-
 describe LogStasher::MailerLogSubscriber do
   let(:log_output) {StringIO.new}
   let(:logger) {
