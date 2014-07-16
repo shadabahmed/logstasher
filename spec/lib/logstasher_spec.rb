@@ -5,6 +5,7 @@ describe LogStasher do
     after do
       ActionController::LogSubscriber.attach_to :action_controller
       ActionView::LogSubscriber.attach_to :action_view
+      ActionMailer::LogSubscriber.attach_to :action_mailer
     end
 
     it "should remove subscribers for controller events" do
@@ -20,6 +21,14 @@ describe LogStasher do
         LogStasher.remove_existing_log_subscriptions
       }.to change {
         ActiveSupport::Notifications.notifier.listeners_for('render_template.action_view')
+      }
+    end
+
+    it "should remove subscribsers for mailer events" do
+      expect {
+        LogStasher.remove_existing_log_subscriptions
+      }.to change {
+        ActiveSupport::Notifications.notifier.listeners_for('deliver.action_mailer')
       }
     end
 
@@ -81,6 +90,7 @@ describe LogStasher do
       LogStasher.should_receive(:require).with('logstash-event')
       LogStasher.should_receive(:suppress_app_logs).with(app)
       LogStasher::RequestLogSubscriber.should_receive(:attach_to).with(:action_controller)
+      LogStasher::MailerLogSubscriber.should_receive(:attach_to).with(:action_mailer)
       logger.should_receive(:level=).with('warn')
       LogStasher.setup(app)
       LogStasher.source.should == (logstasher_source || 'unknown')

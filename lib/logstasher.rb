@@ -20,6 +20,8 @@ module LogStasher
           unsubscribe(:action_view, subscriber)
         when ActionController::LogSubscriber
           unsubscribe(:action_controller, subscriber)
+        when ActionMailer::LogSubscriber
+          unsubscribe(:action_mailer, subscriber)
       end
     end
   end
@@ -61,6 +63,7 @@ module LogStasher
     require 'logstash-event'
     self.suppress_app_logs(app)
     LogStasher::RequestLogSubscriber.attach_to :action_controller
+    LogStasher::MailerLogSubscriber.attach_to :action_mailer
     self.logger_path = app.config.logstasher.logger_path || "#{Rails.root}/log/logstash_#{Rails.env}.log"
     self.logger = app.config.logstasher.logger || new_logger(self.logger_path)
     self.logger.level = app.config.logstasher.log_level || Logger::WARN
