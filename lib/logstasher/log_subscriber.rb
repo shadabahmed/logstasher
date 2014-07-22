@@ -95,6 +95,8 @@ module LogStasher
   end
 
   class MailerLogSubscriber < ActiveSupport::LogSubscriber
+    MAILER_FIELDS = [:mailer, :action, :message_id, :from, :to]
+
     def deliver(event)
       process_event(event, ['mailer', 'deliver'])
     end
@@ -103,15 +105,19 @@ module LogStasher
       process_event(event, ['mailer', 'receive'])
     end
 
+    def process(event)
+      process_event(event, ['mailer', 'process'])
+    end
+
     private
     def process_event(event, tags)
-      data = extract_metadata(event.payload)
+      data = LogStasher.request_context.merge(extract_metadata(event.payload))
       event = LogStash::Event.new('@source' => LogStasher.source, '@fields' => data, '@tags' => tags)
       logger << event.to_json + "\n"
     end
 
     def extract_metadata(payload)
-      payload.slice(:mailer, :message_id, :from, :to, :subject)
+      payload.slice(*MAILER_FIELDS)
     end
 
     def logger
