@@ -94,6 +94,15 @@ Since some fields are very specific to your application for e.g. *user_name*, so
       end
     end
 
+## Logging ActionMailer events
+
+Logstasher can easily log messages from `ActionMailer`, such as incoming/outgoing e-mails and e-mail content generation (Rails >= 4.1).
+This functionality is automatically enabled. Since the relationship between a concrete HTTP request and a mailer invocation is lost
+once in an `ActionMailer` instance method, global (per-request) state is kept to correlate HTTP requests and events from other parts
+of rails, such as `ActionMailer`. Every time a request is invoked, a `request_id` key is added which is present on every `ActionMailer` event.
+
+Note: Since mailers are executed within the lifetime of a request, they will show up in logs prior to the actual request.
+
 ## Listening to `ActiveSupport::Notifications` events
 
 It is possible to listen to any `ActiveSupport::Notifications` events and store arbitrary data to be included in the final JSON log entry:

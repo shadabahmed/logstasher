@@ -12,9 +12,16 @@ module ActionController
 
       LogStasher.add_default_fields_to_payload(raw_payload, request)
 
+      LogStasher.clear_request_context
+      LogStasher.add_default_fields_to_request_context(request)
+
       ActiveSupport::Notifications.instrument("start_processing.action_controller", raw_payload.dup)
 
       ActiveSupport::Notifications.instrument("process_action.action_controller", raw_payload) do |payload|
+        if self.respond_to?(:logstasher_add_custom_fields_to_request_context)
+          logstasher_add_custom_fields_to_request_context(LogStasher.request_context)
+        end
+
         result = super
 
         if self.respond_to?(:logtasher_add_custom_fields_to_payload)
@@ -28,6 +35,10 @@ module ActionController
         payload[:status] = response.status
         append_info_to_payload(payload)
         LogStasher.store.each do |key, value|
+          payload[key] = value
+        end
+
+        LogStasher.request_context.each do |key, value|
           payload[key] = value
         end
         result

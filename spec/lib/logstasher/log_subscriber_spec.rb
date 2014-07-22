@@ -152,7 +152,7 @@ describe LogStasher::RequestLogSubscriber do
   end
 
   describe "with append_custom_params block specified" do
-    let(:request) { double(:remote_ip => '10.0.0.1')}
+    let(:request) { double(:remote_ip => '10.0.0.1', :env => {})}
     it "should add default custom data to the output" do
       request.stub(:params => event.payload[:params])
       LogStasher.add_default_fields_to_payload(event.payload, request)
@@ -197,7 +197,7 @@ describe LogStasher::MailerLogSubscriber do
       msg
     }
     def log_output.json
-      JSON.parse! self.string
+      JSON.parse!(self.string.split("\n").last)
     end
     logger
   }
@@ -209,6 +209,7 @@ describe LogStasher::MailerLogSubscriber do
 
   before do
     LogStasher.logger = logger
+    LogStasher.request_context.should_receive(:merge).at_most(2).times.and_call_original
   end
 
   let :message do
@@ -229,14 +230,26 @@ describe LogStasher::MailerLogSubscriber do
         fields['mailer'].should == 'SampleMailer'
         fields['from'].should == ['some-dude@example.com']
         fields['to'].should == ['some-other-dude@example.com']
-        fields['subject'].should == 'Goodbye'
         fields['message_id'].should == message.message_id
       end
     end
   end
 
   it 'deliver an outgoing e-mail' do
-    SampleMailer.welcome.deliver
+    email = SampleMailer.welcome
+
+    if version = ENV['RAILS_VERSION'] and version >= '4.1'
+      log_output.json.tap do |json|
+        json['@source'].should == LogStasher.source
+        json['@tags'].should == ['mailer', 'process']
+        json['@fields'].tap do |fields|
+          fields['mailer'].should == 'SampleMailer'
+          fields['action'].should == 'welcome'
+        end
+      end 
+    end
+
+    email.deliver
     log_output.json.tap do |json|
       json['@source'].should == LogStasher.source
       json['@tags'].should == ['mailer', 'deliver']
@@ -244,7 +257,6 @@ describe LogStasher::MailerLogSubscriber do
         fields['mailer'].should == 'SampleMailer'
         fields['from'].should == ['some-dude@example.com']
         fields['to'].should == ['some-other-dude@example.com']
-        fields['subject'].should == 'Hello, there'
         # Message-Id appears not to be yet available at this point in time.
         fields['message_id'].should be_nil
       end
