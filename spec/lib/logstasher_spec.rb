@@ -37,7 +37,7 @@ describe LogStasher do
       ActiveSupport::Notifications.subscribe("process_action.action_controller", &blk)
       LogStasher.remove_existing_log_subscriptions
       listeners = ActiveSupport::Notifications.notifier.listeners_for('process_action.action_controller')
-      listeners.size.should > 0
+      expect(listeners).to_not be_empty
     end
   end
 
@@ -53,24 +53,24 @@ describe LogStasher do
       LogStasher.log_controller_parameters = true
       LogStasher.custom_fields = []
       LogStasher.add_default_fields_to_payload(payload, request)
-      payload[:ip].should == '10.0.0.1'
-      payload[:route].should == 'test#action'
-      payload[:parameters].should == {'a' => '1', 'b' => 2}
-      LogStasher.custom_fields.should == [:ip, :route, :request_id, :parameters]
+      expect(payload[:ip]).to eq '10.0.0.1'
+      expect(payload[:route]).to eq 'test#action'
+      expect(payload[:parameters]).to eq 'a' => '1', 'b' => 2
+      expect(LogStasher.custom_fields).to eq [:ip, :route, :request_id, :parameters]
     end
 
     it 'does not include parameters when not configured to' do
       LogStasher.custom_fields = []
       LogStasher.add_default_fields_to_payload(payload, request)
-      payload.should_not have_key(:parameters)
-      LogStasher.custom_fields.should == [:ip, :route, :request_id]
+      expect(payload).to_not have_key(:parameters)
+      expect(LogStasher.custom_fields).to eq [:ip, :route, :request_id]
     end
   end
 
   describe '.append_custom_params' do
     let(:block) { ->(_, _){} }
     it 'defines a method in ActionController::Base' do
-      ActionController::Base.should_receive(:send).with(:define_method, :logtasher_add_custom_fields_to_payload, &block)
+      expect(ActionController::Base).to receive(:send).with(:define_method, :logtasher_add_custom_fields_to_payload, &block)
       LogStasher.add_custom_fields(&block)
     end
   end
@@ -78,8 +78,8 @@ describe LogStasher do
   describe '.add_custom_fields_to_request_context' do
     let(:block) { ->(_, _){} }
     it 'defines a method in ActionController::Base' do
-      ActionController::Base.should_receive(:send).with(:define_method, :logstasher_add_custom_fields_to_request_context, &block)
-      ActionController::Metal.should_receive(:send).with(:define_method, :logstasher_add_custom_fields_to_request_context, &block)
+      expect(ActionController::Base).to receive(:send).with(:define_method, :logstasher_add_custom_fields_to_request_context, &block)
+      expect(ActionController::Metal).to receive(:send).with(:define_method, :logstasher_add_custom_fields_to_request_context, &block)
       LogStasher.add_custom_fields_to_request_context(&block)
     end
   end
@@ -88,7 +88,7 @@ describe LogStasher do
     it 'adds a request_id to the request context' do
       LogStasher.clear_request_context
       LogStasher.add_default_fields_to_request_context(double(env: {'action_dispatch.request_id' => 'lol'}))
-      LogStasher.request_context.should == { request_id: 'lol' }
+      expect(LogStasher.request_context).to eq({ request_id: 'lol' })
     end
   end
 
@@ -99,21 +99,22 @@ describe LogStasher do
     let(:app) { double(:config => config) }
     before do
       @previous_source = LogStasher.source
-      config.stub(:action_dispatch => double(:rack_cache => false))
+      allow(config).to receive_messages(:action_dispatch => double(:rack_cache => false))
+      allow_message_expectations_on_nil
     end
     after { LogStasher.source = @previous_source } # Need to restore old source for specs
     it 'defines a method in ActionController::Base' do
-      LogStasher.should_receive(:require).with('logstasher/rails_ext/action_controller/metal/instrumentation')
-      LogStasher.should_receive(:require).with('logstash-event')
-      LogStasher.should_receive(:suppress_app_logs).with(app)
-      LogStasher::RequestLogSubscriber.should_receive(:attach_to).with(:action_controller)
-      LogStasher::MailerLogSubscriber.should_receive(:attach_to).with(:action_mailer)
-      logger.should_receive(:level=).with('warn')
+      expect(LogStasher).to receive(:require).with('logstasher/rails_ext/action_controller/metal/instrumentation')
+      expect(LogStasher).to receive(:require).with('logstash-event')
+      expect(LogStasher).to receive(:suppress_app_logs).with(app)
+      expect(LogStasher::RequestLogSubscriber).to receive(:attach_to).with(:action_controller)
+      expect(LogStasher::MailerLogSubscriber).to receive(:attach_to).with(:action_mailer)
+      expect(logger).to receive(:level=).with('warn')
       LogStasher.setup(app)
-      LogStasher.source.should == (logstasher_source || 'unknown')
-      LogStasher.enabled.should == true
-      LogStasher.custom_fields.should == []
-      LogStasher.log_controller_parameters.should == false
+      expect(LogStasher.source).to eq (logstasher_source || 'unknown')
+      expect(LogStasher).to be_enabled
+      expect(LogStasher.custom_fields).to be_empty
+      expect(LogStasher.log_controller_parameters).to eq false
     end
   end
 
@@ -135,14 +136,14 @@ describe LogStasher do
       let(:logger) { nil }
 
       context 'with no logger passed in' do
-        before { LogStasher.should_receive(:new_logger).with('/log/logstash_test.log') }
+        before { expect(LogStasher).to receive(:new_logger).with('/log/logstash_test.log') }
         it_behaves_like 'setup'
       end
 
       context 'with custom logger path passed in' do
         let(:logger_path) { double }
 
-        before { LogStasher.should_receive(:new_logger).with(logger_path) }
+        before { expect(LogStasher).to receive(:new_logger).with(logger_path) }
         it_behaves_like 'setup'
       end
     end
@@ -152,15 +153,15 @@ describe LogStasher do
     let(:logstasher_config){ double(:logstasher => double(:suppress_app_log => true))}
     let(:app){ double(:config => logstasher_config)}
     it 'removes existing subscription if enabled' do
-      LogStasher.should_receive(:require).with('logstasher/rails_ext/rack/logger')
-      LogStasher.should_receive(:remove_existing_log_subscriptions)
+      expect(LogStasher).to receive(:require).with('logstasher/rails_ext/rack/logger')
+      expect(LogStasher).to receive(:remove_existing_log_subscriptions)
       LogStasher.suppress_app_logs(app)
     end
 
     context 'when disabled' do
       let(:logstasher_config){ double(:logstasher => double(:suppress_app_log => false)) }
       it 'does not remove existing subscription' do
-        LogStasher.should_not_receive(:remove_existing_log_subscriptions)
+        expect(LogStasher).to_not receive(:remove_existing_log_subscriptions)
         LogStasher.suppress_app_logs(app)
       end
 
@@ -168,7 +169,7 @@ describe LogStasher do
         context 'with spelling "supress_app_log"' do
           let(:logstasher_config){ double(:logstasher => double(:suppress_app_log => nil, :supress_app_log => false)) }
           it 'does not remove existing subscription' do
-            LogStasher.should_not_receive(:remove_existing_log_subscriptions)
+            expect(LogStasher).to_not receive(:remove_existing_log_subscriptions)
             LogStasher.suppress_app_logs(app)
           end
         end
@@ -179,14 +180,14 @@ describe LogStasher do
   describe '.appended_params' do
     it 'returns the stored var in current thread' do
       Thread.current[:logstasher_custom_fields] = :test
-      LogStasher.custom_fields.should == :test
+      expect(LogStasher.custom_fields).to eq :test
     end
   end
 
   describe '.appended_params=' do
     it 'returns the stored var in current thread' do
       LogStasher.custom_fields = :test
-      Thread.current[:logstasher_custom_fields].should == :test
+      expect(Thread.current[:logstasher_custom_fields]).to eq :test
     end
   end
 
@@ -194,11 +195,12 @@ describe LogStasher do
     let(:logger) { double() }
     before do
       LogStasher.logger = logger
-      LogStash::Time.stub(:now => 'timestamp')
+      allow(LogStash::Time).to receive_messages(:now => 'timestamp')
+      allow_message_expectations_on_nil
     end
     it 'adds to log with specified level' do
-      logger.should_receive(:send).with('warn?').and_return(true)
-      logger.should_receive(:send).with('warn',"{\"@source\":\"unknown\",\"@tags\":[\"log\"],\"@fields\":{\"message\":\"WARNING\",\"level\":\"warn\"},\"@timestamp\":\"timestamp\"}")
+      expect(logger).to receive(:send).with('warn?').and_return(true)
+      expect(logger).to receive(:send).with('warn',"{\"@source\":\"unknown\",\"@tags\":[\"log\"],\"@fields\":{\"message\":\"WARNING\",\"level\":\"warn\"},\"@timestamp\":\"timestamp\"}")
       LogStasher.log('warn', 'WARNING')
     end
     context 'with a source specified' do
@@ -206,8 +208,8 @@ describe LogStasher do
         LogStasher.source = 'foo'
       end
       it 'sets the correct source' do
-        logger.should_receive(:send).with('warn?').and_return(true)
-        logger.should_receive(:send).with('warn',"{\"@source\":\"foo\",\"@tags\":[\"log\"],\"@fields\":{\"message\":\"WARNING\",\"level\":\"warn\"},\"@timestamp\":\"timestamp\"}")
+        expect(logger).to receive(:send).with('warn?').and_return(true)
+        expect(logger).to receive(:send).with('warn',"{\"@source\":\"foo\",\"@tags\":[\"log\"],\"@fields\":{\"message\":\"WARNING\",\"level\":\"warn\"},\"@timestamp\":\"timestamp\"}")
         LogStasher.log('warn', 'WARNING')
       end
     end
@@ -217,7 +219,7 @@ describe LogStasher do
     describe ".#{severity}" do
       let(:message) { "This is a #{severity} message" }
       it 'should log with specified level' do
-        LogStasher.should_receive(:log).with(severity.to_sym, message)
+        expect(LogStasher).to receive(:log).with(severity.to_sym, message)
         LogStasher.send(severity, message )
       end
     end
@@ -238,7 +240,7 @@ describe LogStasher do
     before(:each) { LogStasher.custom_fields = [] }
 
     it "subscribes to the required event" do
-      ActiveSupport::Notifications.should_receive(:subscribe).with('event_name')
+      expect(ActiveSupport::Notifications).to receive(:subscribe).with('event_name')
       LogStasher.watch('event_name')
     end
 
@@ -254,7 +256,7 @@ describe LogStasher do
         probe = lambda { |*args, store| store[:foo] = :bar }
         LogStasher.watch('custom.event.bar', &probe)
         ActiveSupport::Notifications.instrument('custom.event.bar', {})
-        LogStasher.store['custom.event.bar'].should == {:foo => :bar}
+        expect(LogStasher.store['custom.event.bar']).to eq :foo => :bar
       end
     end
   end
