@@ -15,7 +15,7 @@ module LogStasher
 
       tags = ['request']
       tags.push('exception') if payload[:exception]
-      event = LogStash::Event.new('@fields' => data, '@tags' => tags)
+      event = LogStash::Event.new('@source' => LogStasher.source, '@fields' => data, '@tags' => tags)
       LogStasher.logger << event.to_json + "\n"
     end
 
@@ -91,6 +91,37 @@ module LogStasher
       custom_fields = (!LogStasher.custom_fields.empty? && payload.extract!(*LogStasher.custom_fields)) || {}
       LogStasher.custom_fields.clear
       custom_fields
+    end
+  end
+
+  class MailerLogSubscriber < ActiveSupport::LogSubscriber
+    MAILER_FIELDS = [:mailer, :action, :message_id, :from, :to]
+
+    def deliver(event)
+      process_event(event, ['mailer', 'deliver'])
+    end
+
+    def receive(event)
+      process_event(event, ['mailer', 'receive'])
+    end
+
+    def process(event)
+      process_event(event, ['mailer', 'process'])
+    end
+
+    private
+    def process_event(event, tags)
+      data = LogStasher.request_context.merge(extract_metadata(event.payload))
+      event = LogStash::Event.new('@source' => LogStasher.source, '@fields' => data, '@tags' => tags)
+      logger << event.to_json + "\n"
+    end
+
+    def extract_metadata(payload)
+      payload.slice(*MAILER_FIELDS)
+    end
+
+    def logger
+      LogStasher.logger
     end
   end
 end

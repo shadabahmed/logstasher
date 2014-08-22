@@ -14,7 +14,11 @@ describe LogStasher::RequestLogSubscriber do
   }
   before do
     LogStasher.logger = logger
+    LogStasher.log_controller_parameters = true
     LogStasher.custom_fields = []
+  end
+  after do
+    LogStasher.log_controller_parameters = false
   end
 
   let(:subscriber) {LogStasher::RequestLogSubscriber.new}
@@ -112,7 +116,7 @@ describe LogStasher::RequestLogSubscriber do
         event.payload[:exception] = ['AbstractController::ActionNotFound', 'Route not found']
         subscriber.process_action(event)
         log_output.json['@fields']['status'].should >= 400
-        log_output.json['@fields']['error'].should =~ /AbstractController::ActionNotFound.*Route not found.*logstasher\/spec\/logstasher_logsubscriber_spec\.rb/m
+        log_output.json['@fields']['error'].should =~ /AbstractController::ActionNotFound.*Route not found.*logstasher.*\/spec\/lib\/logstasher\/log_subscriber_spec\.rb/m
         log_output.json['@tags'].should include 'request'
         log_output.json['@tags'].should include 'exception'
       end
@@ -148,14 +152,14 @@ describe LogStasher::RequestLogSubscriber do
   end
 
   describe "with append_custom_params block specified" do
-    let(:request) { double(:remote_ip => '10.0.0.1')}
+    let(:request) { double(:remote_ip => '10.0.0.1', :env => {})}
     it "should add default custom data to the output" do
       request.stub(:params => event.payload[:params])
       LogStasher.add_default_fields_to_payload(event.payload, request)
       subscriber.process_action(event)
       log_output.json['@fields']['ip'].should == '10.0.0.1'
       log_output.json['@fields']['route'].should == 'home#index'
-      log_output.json['@fields']['parameters'].should == "foo=bar\n"
+      log_output.json['@fields']['parameters'].should == {'foo' => 'bar'}
     end
   end
 
@@ -181,6 +185,81 @@ describe LogStasher::RequestLogSubscriber do
     it "should store the location in a thread local variable" do
       subscriber.redirect_to(redirect)
       Thread.current[:logstasher_location].should == "http://example.com"
+    end
+  end
+end
+
+describe LogStasher::MailerLogSubscriber do
+  let(:log_output) {StringIO.new}
+  let(:logger) {
+    logger = Logger.new(log_output)
+    logger.formatter = ->(_, _, _, msg) {
+      msg
+    }
+    def log_output.json
+      JSON.parse!(self.string.split("\n").last)
+    end
+    logger
+  }
+
+  before :all do
+    SampleMailer.delivery_method = :test
+    LogStasher::MailerLogSubscriber.attach_to(:action_mailer)
+  end
+
+  before do
+    LogStasher.logger = logger
+    LogStasher.request_context.should_receive(:merge).at_most(2).times.and_call_original
+  end
+
+  let :message do
+    Mail.new do
+      from 'some-dude@example.com'
+      to 'some-other-dude@example.com'
+      subject 'Goodbye'
+      body 'LOL'
+    end
+  end
+
+  it 'receive an e-mail' do
+    SampleMailer.receive(message.encoded)
+    log_output.json.tap do |json|
+      json['@source'].should == LogStasher.source
+      json['@tags'].should == ['mailer', 'receive']
+      json['@fields'].tap do |fields|
+        fields['mailer'].should == 'SampleMailer'
+        fields['from'].should == ['some-dude@example.com']
+        fields['to'].should == ['some-other-dude@example.com']
+        fields['message_id'].should == message.message_id
+      end
+    end
+  end
+
+  it 'deliver an outgoing e-mail' do
+    email = SampleMailer.welcome
+
+    if version = ENV['RAILS_VERSION'] and version >= '4.1'
+      log_output.json.tap do |json|
+        json['@source'].should == LogStasher.source
+        json['@tags'].should == ['mailer', 'process']
+        json['@fields'].tap do |fields|
+          fields['mailer'].should == 'SampleMailer'
+          fields['action'].should == 'welcome'
+        end
+      end 
+    end
+
+    email.deliver
+    log_output.json.tap do |json|
+      json['@source'].should == LogStasher.source
+      json['@tags'].should == ['mailer', 'deliver']
+      json['@fields'].tap do |fields|
+        fields['mailer'].should == 'SampleMailer'
+        fields['from'].should == ['some-dude@example.com']
+        fields['to'].should == ['some-other-dude@example.com']
+        # Message-Id appears not to be yet available at this point in time.
+        fields['message_id'].should be_nil
+      end
     end
   end
 end

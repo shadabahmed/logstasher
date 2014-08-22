@@ -40,3 +40,11 @@ else
     Rake::Task['spec'].execute
   end
 end
+
+task :console do
+  require 'irb'
+  require 'irb/completion'
+  require 'logstasher'
+  ARGV.clear
+  IRB.start
+end

@@ -1,3 +1,3 @@
 module LogStasher
-  VERSION = "0.3.1"
+  VERSION = "0.5.3"
 end
