@@ -5,6 +5,7 @@ describe LogStasher do
     after do
       ActionController::LogSubscriber.attach_to :action_controller
       ActionView::LogSubscriber.attach_to :action_view
+      ActionMailer::LogSubscriber.attach_to :action_mailer
     end
 
     it "should remove subscribers for controller events" do
@@ -23,6 +24,14 @@ describe LogStasher do
       }
     end
 
+    it "should remove subscribsers for mailer events" do
+      expect {
+        LogStasher.remove_existing_log_subscriptions
+      }.to change {
+        ActiveSupport::Notifications.notifier.listeners_for('deliver.action_mailer')
+      }
+    end
+
     it "shouldn't remove subscribers that aren't from Rails" do
       blk = -> {}
       ActiveSupport::Notifications.subscribe("process_action.action_controller", &blk)
@@ -35,7 +44,7 @@ describe LogStasher do
   describe '.appened_default_info_to_payload' do
     let(:params)  { {'a' => '1', 'b' => 2, 'action' => 'action', 'controller' => 'test'}.with_indifferent_access }
     let(:payload) { {:params => params} }
-    let(:request) { double(:params => params, :remote_ip => '10.0.0.1')}
+    let(:request) { double(:params => params, :remote_ip => '10.0.0.1', :env => {})}
     after do
       LogStasher.custom_fields = []
       LogStasher.log_controller_parameters = false
@@ -47,14 +56,14 @@ describe LogStasher do
       payload[:ip].should == '10.0.0.1'
       payload[:route].should == 'test#action'
       payload[:parameters].should == {'a' => '1', 'b' => 2}
-      LogStasher.custom_fields.should == [:ip, :route, :parameters]
+      LogStasher.custom_fields.should == [:ip, :route, :request_id, :parameters]
     end
 
     it 'does not include parameters when not configured to' do
       LogStasher.custom_fields = []
       LogStasher.add_default_fields_to_payload(payload, request)
       payload.should_not have_key(:parameters)
-      LogStasher.custom_fields.should == [:ip, :route]
+      LogStasher.custom_fields.should == [:ip, :route, :request_id]
     end
   end
 
@@ -63,6 +72,23 @@ describe LogStasher do
     it 'defines a method in ActionController::Base' do
       ActionController::Base.should_receive(:send).with(:define_method, :logtasher_add_custom_fields_to_payload, &block)
       LogStasher.add_custom_fields(&block)
+    end
+  end
+
+  describe '.add_custom_fields_to_request_context' do
+    let(:block) { ->(_, _){} }
+    it 'defines a method in ActionController::Base' do
+      ActionController::Base.should_receive(:send).with(:define_method, :logstasher_add_custom_fields_to_request_context, &block)
+      ActionController::Metal.should_receive(:send).with(:define_method, :logstasher_add_custom_fields_to_request_context, &block)
+      LogStasher.add_custom_fields_to_request_context(&block)
+    end
+  end
+
+  describe '.add_default_fields_to_request_context' do
+    it 'adds a request_id to the request context' do
+      LogStasher.clear_request_context
+      LogStasher.add_default_fields_to_request_context(double(env: {'action_dispatch.request_id' => 'lol'}))
+      LogStasher.request_context.should == { request_id: 'lol' }
     end
   end
 
@@ -81,6 +107,7 @@ describe LogStasher do
       LogStasher.should_receive(:require).with('logstash-event')
       LogStasher.should_receive(:suppress_app_logs).with(app)
       LogStasher::RequestLogSubscriber.should_receive(:attach_to).with(:action_controller)
+      LogStasher::MailerLogSubscriber.should_receive(:attach_to).with(:action_mailer)
       logger.should_receive(:level=).with('warn')
       LogStasher.setup(app)
       LogStasher.source.should == (logstasher_source || 'unknown')

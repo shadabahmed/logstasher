@@ -8,6 +8,7 @@ require 'active_support/ordered_options'
 module LogStasher
   extend self
   STORE_KEY = :logstasher_data
+  REQUEST_CONTEXT_KEY = :logstasher_request_context
 
   attr_accessor :logger, :logger_path, :enabled, :log_controller_parameters, :source
   # Setting the default to 'unknown' to define the default behaviour
@@ -20,6 +21,8 @@ module LogStasher
           unsubscribe(:action_view, subscriber)
         when ActionController::LogSubscriber
           unsubscribe(:action_controller, subscriber)
+        when ActionMailer::LogSubscriber
+          unsubscribe(:action_mailer, subscriber)
       end
     end
   end
@@ -38,7 +41,8 @@ module LogStasher
   def add_default_fields_to_payload(payload, request)
     payload[:ip] = request.remote_ip
     payload[:route] = "#{request.params[:controller]}##{request.params[:action]}"
-    self.custom_fields += [:ip, :route]
+    payload[:request_id] = request.env['action_dispatch.request_id']
+    self.custom_fields += [:ip, :route, :request_id]
     if self.log_controller_parameters
       payload[:parameters] = payload[:params].except(*ActionController::LogSubscriber::INTERNAL_PARAMS)
       self.custom_fields += [:parameters]
@@ -54,6 +58,23 @@ module LogStasher
     ActionController::Base.send(:define_method, :logtasher_add_custom_fields_to_payload, &wrapped_block)
   end
 
+  def add_custom_fields_to_request_context(&block)
+    wrapped_block = Proc.new do |fields|
+      instance_exec(fields, &block)
+      LogStasher.custom_fields.concat(fields.keys)
+    end
+    ActionController::Metal.send(:define_method, :logstasher_add_custom_fields_to_request_context, &wrapped_block)
+    ActionController::Base.send(:define_method, :logstasher_add_custom_fields_to_request_context, &wrapped_block)
+  end
+
+  def add_default_fields_to_request_context(request)
+    request_context[:request_id] = request.env['action_dispatch.request_id']
+  end
+
+  def clear_request_context
+    request_context.clear
+  end
+
   def setup(app)
     app.config.action_dispatch.rack_cache[:verbose] = false if app.config.action_dispatch.rack_cache
     # Path instrumentation class to insert our hook
@@ -61,6 +82,7 @@ module LogStasher
     require 'logstash-event'
     self.suppress_app_logs(app)
     LogStasher::RequestLogSubscriber.attach_to :action_controller
+    LogStasher::MailerLogSubscriber.attach_to :action_mailer
     self.logger_path = app.config.logstasher.logger_path || "#{Rails.root}/log/logstash_#{Rails.env}.log"
     self.logger = app.config.logstasher.logger || new_logger(self.logger_path)
     self.logger.level = app.config.logstasher.log_level || Logger::WARN
@@ -102,6 +124,10 @@ module LogStasher
       RequestStore.store[STORE_KEY] = Hash.new { |hash, key| hash[key] = {} }
     end
     RequestStore.store[STORE_KEY]
+  end
+
+  def request_context
+    RequestStore.store[REQUEST_CONTEXT_KEY] ||= {}
   end
 
   def watch(event, opts = {}, &block)
