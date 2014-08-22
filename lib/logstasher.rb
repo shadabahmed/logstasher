@@ -146,6 +146,10 @@ module LogStasher
     EOM
   end
 
+  def enabled?
+    self.enabled
+  end
+
   private
 
   def new_logger(path)

@@ -13,22 +13,22 @@ describe ActionController::Base do
 
   describe ".process_action" do
     it "adds default fields to payload" do
-      LogStasher.should_receive(:add_default_fields_to_payload).once
-      LogStasher.should_receive(:add_default_fields_to_request_context).once
+      expect(LogStasher).to receive(:add_default_fields_to_payload).once
+      expect(LogStasher).to receive(:add_default_fields_to_request_context).once
       subject.process_action(:index)
     end
 
     it "creates the request context before processing" do
       LogStasher.request_context[:some_key] = 'value'
-      LogStasher.should_receive(:clear_request_context).once.and_call_original
+      expect(LogStasher).to receive(:clear_request_context).once.and_call_original
       expect {
         subject.process_action(:index)
       }.to change { LogStasher.request_context }
     end
 
     it "notifies rails of a request coming in" do
-      ActiveSupport::Notifications.should_receive(:instrument).with("start_processing.action_controller", anything).once
-      ActiveSupport::Notifications.should_receive(:instrument).with("process_action.action_controller", anything).once
+      expect(ActiveSupport::Notifications).to receive(:instrument).with("start_processing.action_controller", anything).once
+      expect(ActiveSupport::Notifications).to receive(:instrument).with("process_action.action_controller", anything).once
       subject.process_action(:index)
     end
 
@@ -48,7 +48,7 @@ describe ActionController::Base do
       end
 
       after :each do
-        @payload[:some_field].should == 'value'
+        expect(@payload[:some_field]).to eq('value')
 
         ActionController::Metal.class_eval do
           undef logstasher_add_custom_fields_to_request_context

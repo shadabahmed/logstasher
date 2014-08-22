@@ -21,7 +21,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "request_store"
 
   # specify any dependencies here; for example:
-  s.add_development_dependency "rspec"
+  s.add_development_dependency "rspec", [">= 2.14"]
   s.add_development_dependency("bundler", [">= 1.0.0"])
   s.add_development_dependency("rails", [">= 3.0"])
 end
