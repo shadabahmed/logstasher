@@ -221,6 +221,12 @@ describe LogStasher::MailerLogSubscriber do
     end
   end
 
+  describe "#logger" do
+    it "returns an instance of Logstash::Logger" do
+      LogStasher::MailerLogSubscriber.new.logger.should == logger
+    end
+  end
+
   it 'receive an e-mail' do
     SampleMailer.receive(message.encoded)
     log_output.json.tap do |json|
@@ -246,7 +252,7 @@ describe LogStasher::MailerLogSubscriber do
           expect(fields['mailer']).to eq('SampleMailer')
           expect(fields['action']).to eq('welcome')
         end
-      end 
+      end
     end
 
     email.deliver

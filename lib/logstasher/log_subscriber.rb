@@ -109,7 +109,12 @@ module LogStasher
       process_event(event, ['mailer', 'process'])
     end
 
+    def logger
+      LogStasher.logger
+    end
+
     private
+
     def process_event(event, tags)
       data = LogStasher.request_context.merge(extract_metadata(event.payload))
       event = LogStash::Event.new('@source' => LogStasher.source, '@fields' => data, '@tags' => tags)
@@ -118,10 +123,6 @@ module LogStasher
 
     def extract_metadata(payload)
       payload.slice(*MAILER_FIELDS)
-    end
-
-    def logger
-      LogStasher.logger
     end
   end
 end
