@@ -116,7 +116,7 @@ describe LogStasher::RequestLogSubscriber do
         event.payload[:exception] = ['AbstractController::ActionNotFound', 'Route not found']
         subscriber.process_action(event)
         expect(log_output.json['@fields']['status']).to be >= 400
-        expect(log_output.json['@fields']['error']).to be =~ /AbstractController::ActionNotFound.*Route not found.*logstasher\/spec\/lib\/logstasher\/log_subscriber_spec\.rb/m
+        expect(log_output.json['@fields']['error']).to be =~ /AbstractController::ActionNotFound.*Route not found.*logstasher.*\/spec\/lib\/logstasher\/log_subscriber_spec\.rb/m
         expect(log_output.json['@tags']).to include 'request'
         expect(log_output.json['@tags']).to include 'exception'
       end
