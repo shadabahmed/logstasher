@@ -223,7 +223,7 @@ describe LogStasher::MailerLogSubscriber do
 
   describe "#logger" do
     it "returns an instance of Logstash::Logger" do
-      LogStasher::MailerLogSubscriber.new.logger.should == logger
+      expect(LogStasher::MailerLogSubscriber.new.logger).to eq logger
     end
   end
 
