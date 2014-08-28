@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.summary     = s.description = 'Awesome rails logs'
   s.license     = 'MIT'
 
-  s.files         = `git ls-files lib`.split('\n')
+  s.files         = `git ls-files lib`.split("\n")
 
   s.add_runtime_dependency 'logstash-event', '~> 1.1.0'
   s.add_runtime_dependency 'request_store'
