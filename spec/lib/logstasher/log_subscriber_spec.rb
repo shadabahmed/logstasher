@@ -39,6 +39,7 @@ describe LogStasher::RequestLogSubscriber do
   }
 
   describe '.process_action' do
+    Time.stub!(:now).and_return(LogStash::Event.new.to_hash['@timestamp'].iso8601(3))
     let!(:request_subscriber) { @request_subscriber ||= LogStasher::RequestLogSubscriber.new() }
     let(:payload) { {} }
     let(:event)   { double(:payload => payload) }
