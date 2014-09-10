@@ -13,6 +13,7 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'logstash-event', '~> 1.1.0'
   s.add_runtime_dependency 'request_store'
+  s.add_runtime_dependency 'activesupport', '>= 3.0'
 
   s.add_development_dependency('rspec', '>= 2.14')
   s.add_development_dependency('bundler', '>= 1.0.0')
