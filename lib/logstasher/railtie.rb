@@ -3,6 +3,7 @@ module LogStasher
     config.logstasher = ::ActiveSupport::OrderedOptions.new
     config.logstasher.enabled = false
     config.logstasher.include_parameters = true
+    config.logstasher.serialize_parameters = true
     config.logstasher.silence_standard_logging = false
     config.logstasher.logger = nil
     config.logstasher.log_level = ::Logger::INFO
@@ -12,6 +13,7 @@ module LogStasher
 
       ::LogStasher.enabled                  = options.enabled
       ::LogStasher.include_parameters       = options.include_parameters
+      ::LogStasher.serialize_parameters     = options.serialize_parameters
       ::LogStasher.silence_standard_logging = options.silence_standard_logging
       ::LogStasher.logger                   = options.logger || default_logger
       ::LogStasher.logger.level             = options.log_level

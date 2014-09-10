@@ -13,7 +13,7 @@ describe LogStasher::Device do
     end
 
     it "forwards configuration options to the device" do
-      ::LogStasher::Device::Redis.should_receive(:new).with(
+      expect(::LogStasher::Device::Redis).to receive(:new).with(
         'options' => "other", 'than' => "type"
       )
       ::LogStasher::Device.factory(
@@ -22,7 +22,7 @@ describe LogStasher::Device do
     end
 
     it "accepts symbolized configuration keys" do
-      ::LogStasher::Device::Redis.should_receive(:new).with(
+      expect(::LogStasher::Device::Redis).to receive(:new).with(
         'options' => "other", 'than' => "type"
       )
       ::LogStasher::Device.factory(
@@ -31,19 +31,21 @@ describe LogStasher::Device do
     end
 
     it "can create redis devices" do
-      ::LogStasher::Device.should_receive(:require)
-                          .with("logstasher/device/redis")
+      expect(
+        ::LogStasher::Device
+      ).to receive(:require).with("logstasher/device/redis")
 
       device = ::LogStasher::Device.factory(:type => "redis")
-      device.should be_a_kind_of(::LogStasher::Device::Redis)
+      expect(device).to be_a_kind_of(::LogStasher::Device::Redis)
     end
 
     it "can create syslog devices" do
-      ::LogStasher::Device.should_receive(:require)
-                          .with("logstasher/device/syslog")
+      expect(
+        ::LogStasher::Device
+       ).to receive(:require).with("logstasher/device/syslog")
 
       device = ::LogStasher::Device.factory(:type => "syslog")
-      device.should be_a_kind_of(::LogStasher::Device::Syslog)
+      expect(device).to be_a_kind_of(::LogStasher::Device::Syslog)
     end
 
     it "fails to create unknown devices" do

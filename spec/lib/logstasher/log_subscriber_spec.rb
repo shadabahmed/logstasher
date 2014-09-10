@@ -49,8 +49,8 @@ describe LogStasher::LogSubscriber do
     let(:event) { double(:payload => payload, :duration => duration) }
 
     it 'logs the event in logstash format' do
-      logger.should_receive(:<<) do |json|
-        JSON.parse(json).should eq({
+      expect(logger).to receive(:<<) do |json|
+        expect(JSON.parse(json)).to eq({
           '@timestamp' => timestamp,
           '@version'   => '1',
           'tags'       => ['request'],
@@ -76,20 +76,30 @@ describe LogStasher::LogSubscriber do
         fields['other']   = 'stuff'
       end
 
-      logger.should_receive(:<<) do |json|
+      expect(logger).to receive(:<<) do |json|
         fields = JSON.parse(json)
-        fields['user_id'].should eq mock_controller.user_id
-        fields['other'].should eq 'stuff'
+        expect(fields['user_id']).to eq mock_controller.user_id
+        expect(fields['other']).to eq 'stuff'
       end
 
       subject.process_action(event)
     end
 
-    it 'removes parameters from the log' do
-      ::LogStasher.stub(:include_parameters? => false)
+    it 'can be configured to remove parameters from the log' do
+      allow(::LogStasher).to receive(:include_parameters?).and_return(false)
 
-      logger.should_receive(:<<) do |json|
-        JSON.parse(json)['params'].should be_nil
+      expect(logger).to receive(:<<) do |json|
+        expect(JSON.parse(json)['params']).to be_nil
+      end
+
+      subject.process_action(event)
+    end
+
+    it 'can be configured to skip parameter serialization' do
+      expect(::LogStasher).to receive(:serialize_parameters?).and_return(false)
+
+      expect(logger).to receive(:<<) do |json|
+        expect(JSON.parse(json)['params']).to eq payload[:params]
       end
 
       subject.process_action(event)
@@ -99,8 +109,8 @@ describe LogStasher::LogSubscriber do
       redirect_event = double(:payload => {:location => 'new/location'})
       subject.redirect_to(redirect_event)
 
-      logger.should_receive(:<<) do |json|
-        JSON.parse(json)['location'].should eq 'new/location'
+      expect(logger).to receive(:<<) do |json|
+        expect(JSON.parse(json)['location']).to eq 'new/location'
       end
 
       subject.process_action(event)
@@ -112,10 +122,10 @@ describe LogStasher::LogSubscriber do
         :db_runtime =>  2.1
       })
 
-      logger.should_receive(:<<) do |json|
+      expect(logger).to receive(:<<) do |json|
         runtime = JSON.parse(json)['runtime']
-        runtime['view'].should eq 3.3
-        runtime['db'].should eq 2.1
+        expect(runtime['view']).to eq 3.3
+        expect(runtime['db']).to eq 2.1
       end
 
       subject.process_action(event)
@@ -130,11 +140,11 @@ describe LogStasher::LogSubscriber do
           :exception => ['RuntimeError', 'it no work']
         })
 
-        logger.should_receive(:<<) do |json|
+        expect(logger).to receive(:<<) do |json|
           log = JSON.parse(json)
-          log['error'].should match /^RuntimeError\nit no work\n.+/m
-          log['status'].should eq 500
-          log['tags'].should include('exception')
+          expect(log['error']).to match /^RuntimeError\nit no work\n.+/m
+          expect(log['status']).to eq 500
+          expect(log['tags']).to include('exception')
         end
 
         subject.process_action(event)
@@ -149,7 +159,7 @@ describe LogStasher::LogSubscriber do
 
     it 'copies the location into the thread local logstasher context' do
       subject.redirect_to(event)
-      Thread.current[:logstasher_context][:location].should eq location
+      expect(Thread.current[:logstasher_context][:location]).to eq location
     end
   end
 end

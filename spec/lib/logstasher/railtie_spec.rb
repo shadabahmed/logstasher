@@ -26,17 +26,19 @@ describe ::LogStasher::Railtie do
     end
 
     it 'should configure LogStasher' do
-      config.logger                   =  ::Logger.new('/dev/null')
+      config.logger                   = ::Logger.new('/dev/null')
       config.log_level                = "log_level"
       config.enabled                  = "enabled"
       config.include_parameters       = "include_parameters"
+      config.serialize_parameters     = "serialize_parameters"
       config.silence_standard_logging = "silence_standard_logging"
 
-      ::LogStasher.should_receive(:enabled=).with("enabled")
-      ::LogStasher.should_receive(:include_parameters=).with("include_parameters")
-      ::LogStasher.should_receive(:silence_standard_logging=).with("silence_standard_logging")
-      ::LogStasher.should_receive(:logger=).with(config.logger).and_call_original
-      config.logger.should_receive(:level=).with("log_level")
+      expect(::LogStasher).to receive(:enabled=).with("enabled")
+      expect(::LogStasher).to receive(:include_parameters=).with("include_parameters")
+      expect(::LogStasher).to receive(:serialize_parameters=).with("serialize_parameters")
+      expect(::LogStasher).to receive(:silence_standard_logging=).with("silence_standard_logging")
+      expect(::LogStasher).to receive(:logger=).with(config.logger).and_call_original
+      expect(config.logger).to receive(:level=).with("log_level")
 
       subject.run
     end
@@ -51,19 +53,19 @@ describe ::LogStasher::Railtie do
 
     context 'when logstasher is disabled' do
       it 'does nothing' do
-        ::ActiveSupport.should_not_receive(:on_load)
+        expect(::ActiveSupport).not_to receive(:on_load)
 
         subject.run
       end
     end
 
     context 'when logstasher is enabled' do
-      before { ::LogStasher.stub(:enabled?) { true } }
+      before { allow(::LogStasher).to receive(:enabled?) { true } }
 
       it 'should load LogStasher into ActionController' do
-        ::ActionController.should_receive(:require).with('logstasher/log_subscriber')
-        ::ActionController.should_receive(:require).with('logstasher/context_wrapper')
-        ::ActionController.should_receive(:include).with(::LogStasher::ContextWrapper)
+        expect(::ActionController).to receive(:require).with('logstasher/log_subscriber')
+        expect(::ActionController).to receive(:require).with('logstasher/context_wrapper')
+        expect(::ActionController).to receive(:include).with(::LogStasher::ContextWrapper)
 
         subject.run
         ::ActiveSupport.run_load_hooks(:action_controller, ::ActionController)
@@ -73,52 +75,52 @@ describe ::LogStasher::Railtie do
 
   describe 'config.after_initialize' do
     context 'when logstasher is enabled' do
-      before { ::LogStasher.stub(:enabled?) { true } }
+      before { allow(::LogStasher).to receive(:enabled?) { true } }
 
       context 'and silence_standard_logging is enabled' do
-        before { ::LogStasher.stub(:silence_standard_logging?) { true } }
+        before { allow(::LogStasher).to receive(:silence_standard_logging?) { true } }
 
         it 'should not silence standard logging' do
-          ::ActionController::LogSubscriber.should_receive(:include).with(::LogStasher::SilentLogger)
-          ::ActionView::LogSubscriber.should_receive(:include).with(::LogStasher::SilentLogger)
-          ::Rails::Rack::Logger.should_receive(:include).with(::LogStasher::SilentLogger)
+          expect(::ActionController::LogSubscriber).to receive(:include).with(::LogStasher::SilentLogger)
+          expect(::ActionView::LogSubscriber).to receive(:include).with(::LogStasher::SilentLogger)
+          expect(::Rails::Rack::Logger).to receive(:include).with(::LogStasher::SilentLogger)
           ::ActiveSupport.run_load_hooks(:after_initialize, ::LogStasher::RailtieApp)
         end
       end
 
       context 'and silence_standard_logging is disabled' do
-        before { ::LogStasher.stub(:silence_standard_logging?) { false } }
+        before { allow(::LogStasher).to receive(:silence_standard_logging?) { false } }
 
         it 'should not silence standard logging' do
-          ::ActionController.should_not_receive(:include).with(::LogStasher::SilentLogger)
-          ::ActionView.should_not_receive(:include).with(::LogStasher::SilentLogger)
-          ::Rails::Rack::Logger.should_not_receive(:include).with(::LogStasher::SilentLogger)
+          expect(::ActionController).not_to receive(:include).with(::LogStasher::SilentLogger)
+          expect(::ActionView).not_to receive(:include).with(::LogStasher::SilentLogger)
+          expect(::Rails::Rack::Logger).not_to receive(:include).with(::LogStasher::SilentLogger)
           ::ActiveSupport.run_load_hooks(:after_initialize, ::LogStasher::RailtieApp)
         end
       end
     end
 
     context 'when logstasher is disabled' do
-      before { ::LogStasher.stub(:enabled?) { false } }
+      before { allow(::LogStasher).to receive(:enabled?) { false } }
 
       context 'and silence_standard_logging is enabled' do
-        before { ::LogStasher.stub(:silence_standard_logging?) { true } }
+        before { allow(::LogStasher).to receive(:silence_standard_logging?) { true } }
 
         it 'should not silence standard logging' do
-          ::ActionController::LogSubscriber.should_not_receive(:include).with(::LogStasher::SilentLogger)
-          ::ActionView::LogSubscriber.should_not_receive(:include).with(::LogStasher::SilentLogger)
-          ::Rails::Rack::Logger.should_not_receive(:include).with(::LogStasher::SilentLogger)
+          expect(::ActionController::LogSubscriber).not_to receive(:include).with(::LogStasher::SilentLogger)
+          expect(::ActionView::LogSubscriber).not_to receive(:include).with(::LogStasher::SilentLogger)
+          expect(::Rails::Rack::Logger).not_to receive(:include).with(::LogStasher::SilentLogger)
           ::ActiveSupport.run_load_hooks(:after_initialize, ::LogStasher::RailtieApp)
         end
       end
 
       context 'and silence_standard_logging is disabled' do
-        before { ::LogStasher.stub(:silence_standard_logging?) { false } }
+        before { allow(::LogStasher).to receive(:silence_standard_logging?) { false } }
 
         it 'should not silence standard logging' do
-          ::ActionController.should_not_receive(:include).with(::LogStasher::SilentLogger)
-          ::ActionView.should_not_receive(:include).with(::LogStasher::SilentLogger)
-          ::Rails::Rack::Logger.should_not_receive(:include).with(::LogStasher::SilentLogger)
+          expect(::ActionController).not_to receive(:include).with(::LogStasher::SilentLogger)
+          expect(::ActionView).not_to receive(:include).with(::LogStasher::SilentLogger)
+          expect(::Rails::Rack::Logger).not_to receive(:include).with(::LogStasher::SilentLogger)
           ::ActiveSupport.run_load_hooks(:after_initialize, ::LogStasher::RailtieApp)
         end
       end
