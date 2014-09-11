@@ -16,12 +16,12 @@ module LogStasher
 
   def remove_existing_log_subscriptions
     ActiveSupport::LogSubscriber.log_subscribers.each do |subscriber|
-      case subscriber
-        when ActionView::LogSubscriber
+      case subscriber.class.name
+        when 'ActionView::LogSubscriber'
           unsubscribe(:action_view, subscriber)
-        when ActionController::LogSubscriber
+        when 'ActionController::LogSubscriber'
           unsubscribe(:action_controller, subscriber)
-        when ActionMailer::LogSubscriber
+        when 'ActionMailer::LogSubscriber'
           unsubscribe(:action_mailer, subscriber)
       end
     end
