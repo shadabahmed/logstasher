@@ -64,6 +64,9 @@ In your Gemfile:
     # This line is optional, it allows you to set a custom value for the @source field of the log event
     config.logstasher.source = 'your.arbitrary.source'
 
+    # This line is optional if you do not want to log the backtrace of exceptions
+    config.logstasher.backtrace = false
+
 ## Logging params hash
 
 Logstasher can be configured to log the contents of the params hash.  When enabled, the contents of the params hash (minus the ActionController internal params)

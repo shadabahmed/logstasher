@@ -10,9 +10,11 @@ module LogStasher
   STORE_KEY = :logstasher_data
   REQUEST_CONTEXT_KEY = :logstasher_request_context
 
-  attr_accessor :logger, :logger_path, :enabled, :log_controller_parameters, :source
+  attr_accessor :logger, :logger_path, :enabled, :log_controller_parameters, :source, :backtrace
   # Setting the default to 'unknown' to define the default behaviour
   @source = 'unknown'
+  # By default log the backtrace of exceptions
+  @backtrace = true
 
   def remove_existing_log_subscriptions
     ActiveSupport::LogSubscriber.log_subscribers.each do |subscriber|
@@ -89,6 +91,7 @@ module LogStasher
     self.source = app.config.logstasher.source unless app.config.logstasher.source.nil?
     self.enabled = true
     self.log_controller_parameters = !! app.config.logstasher.log_controller_parameters
+    self.backtrace = !! app.config.logstasher.backtrace unless app.config.logstasher.backtrace.nil?
   end
 
   def suppress_app_logs(app)
