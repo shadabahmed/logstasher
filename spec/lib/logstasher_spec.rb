@@ -94,7 +94,7 @@ describe LogStasher do
 
   shared_examples 'setup' do
     let(:logstasher_source) { nil }
-    let(:logstasher_config) { double(:logger => logger, :log_level => 'warn', :log_controller_parameters => nil, :source => logstasher_source, :logger_path => logger_path) }
+    let(:logstasher_config) { double(:logger => logger, :log_level => 'warn', :log_controller_parameters => nil, :source => logstasher_source, :logger_path => logger_path, :backtrace => true) }
     let(:config) { double(:logstasher => logstasher_config) }
     let(:app) { double(:config => config) }
     before do
