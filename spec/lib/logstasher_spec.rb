@@ -200,7 +200,7 @@ describe LogStasher do
     end
     it 'adds to log with specified level' do
       expect(logger).to receive(:send).with('warn?').and_return(true)
-      expect(logger).to receive(:send).with('warn',"{\"@source\":\"unknown\",\"@tags\":[\"log\"],\"@fields\":{\"message\":\"WARNING\",\"level\":\"warn\"},\"@timestamp\":\"timestamp\"}")
+      expect(logger).to receive(:<<).with("{\"@source\":\"unknown\",\"@tags\":[\"log\"],\"@fields\":{\"message\":\"WARNING\",\"level\":\"warn\"},\"@timestamp\":\"timestamp\"}\n")
       LogStasher.log('warn', 'WARNING')
     end
     context 'with a source specified' do
@@ -209,7 +209,7 @@ describe LogStasher do
       end
       it 'sets the correct source' do
         expect(logger).to receive(:send).with('warn?').and_return(true)
-        expect(logger).to receive(:send).with('warn',"{\"@source\":\"foo\",\"@tags\":[\"log\"],\"@fields\":{\"message\":\"WARNING\",\"level\":\"warn\"},\"@timestamp\":\"timestamp\"}")
+        expect(logger).to receive(:<<).with("{\"@source\":\"foo\",\"@tags\":[\"log\"],\"@fields\":{\"message\":\"WARNING\",\"level\":\"warn\"},\"@timestamp\":\"timestamp\"}\n")
         LogStasher.log('warn', 'WARNING')
       end
     end
