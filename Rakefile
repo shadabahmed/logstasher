@@ -15,7 +15,7 @@ end
 # Run the rdoc task to generate rdocs for this gem
 require 'rdoc/task'
 RDoc::Task.new do |rdoc|
-  require "logstasher/version"
+  require File.expand_path("../lib/logstasher/version", __FILE__)
   version = LogStasher::VERSION
 
   rdoc.rdoc_dir = 'rdoc'
