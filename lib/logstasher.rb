@@ -119,7 +119,7 @@ module LogStasher
 
       event = LogStash::Event.new(
         :message => msg,
-        :severity => severity,
+        :level => severity,
         :source => self.source,
         :tags => ['log']
       )
