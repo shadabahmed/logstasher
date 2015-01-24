@@ -202,7 +202,7 @@ describe LogStasher do
       expect(logger).to receive(:send).with('warn?').and_return(true)
       expect(logger).to receive(:<<).with(
         { "message"    => "WARNING",
-          "level"      => "warn",
+          "severity"      => "warn",
           "source"    => "unknown",
           "tags"      => ["log"],
           "@timestamp" => "timestamp",
@@ -219,7 +219,7 @@ describe LogStasher do
         expect(logger).to receive(:send).with('warn?').and_return(true)
         expect(logger).to receive(:<<).with(
           { "message"    => "WARNING",
-            "level"      => "warn",
+            "severity"      => "warn",
             "source"    => "foo",
             "tags"      => ["log"],
             "@timestamp" => "timestamp",

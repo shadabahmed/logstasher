@@ -12,7 +12,7 @@ module LogStasher
 
   attr_accessor :logger, :logger_path, :enabled, :log_controller_parameters, :source, :backtrace
   # Setting the default to 'unknown' to define the default behaviour
-  @source = nil
+  @source = "unknown"
   # By default log the backtrace of exceptions
   @backtrace = true
 

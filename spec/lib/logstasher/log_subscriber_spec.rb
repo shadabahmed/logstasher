@@ -44,14 +44,15 @@ describe LogStasher::RequestLogSubscriber do
     let(:event)   { double(:payload => payload) }
     let(:logger)  { double }
     let(:json)    {
-      { "request" => true,
+      {
+        "source" => "unknown",
+        "tags" => ["request"],
+        "request" => true,
         "status" => true,
         "runtimes" => true,
         "location" => true,
         "exception" => true,
         "custom" => true,
-        "source" => "unknown",
-        "tags" => ["request"],
         "@timestamp" => "timestamp",
         "@version" => "1"
       }.to_json + "\n"
