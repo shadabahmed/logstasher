@@ -39,10 +39,10 @@ Completed 200 OK in 532ms (Views: 62.4ms | ActiveRecord: 0.0ms | ND API: 0.0ms)
 After **logstasher**:
 
 ```
-{"@source":"unknown","@tags":["request"],"@fields":{"method":"GET","path":"/","format":"html","controller":"file_servers"
+{"@source":"unknown","@tags":["request"],"method":"GET","path":"/","format":"html","controller":"file_servers"
 ,"action":"index","status":200,"duration":28.34,"view":25.96,"db":0.88,"ip":"127.0.0.1","route":"file_servers#index",
-"parameters":"","ndapi_time":null,"uuid":"e81ecd178ed3b591099f4d489760dfb6","user":"shadab_ahmed@abc.com",
-"site":"internal"},"@timestamp":"2013-04-30T13:00:46.354500+00:00"}
+"parameters":"","uuid":"e81ecd178ed3b591099f4d489760dfb6","user":"shadab_ahmed@abc.com",
+"site":"internal","@timestamp":"2013-04-30T13:00:46.354500+00:00"}
 ```
 
 By default, the older format rails request logs are disabled, though you can enable them.
@@ -121,7 +121,7 @@ It is possible to listen to any `ActiveSupport::Notifications` events and store 
 Would change the log entry to:
 
 ```
-{"@source":"unknown","@tags":["request"],"@fields":{"method":"GET","path":"/","format":"html","controller":"file_servers","action":"index","status":200,"duration":28.34,"view":25.96,"db":0.88,"ip":"127.0.0.1","route":"file_servers#index", "parameters":"","ndapi_time":null,"uuid":"e81ecd178ed3b591099f4d489760dfb6","user":"shadab_ahmed@abc.com", "site":"internal","some.activesupport.notification":{"count":42}},"@timestamp":"2013-04-30T13:00:46.354500+00:00"}
+{"@source":"unknown","@tags":["request"],"method":"GET","path":"/","format":"html","controller":"file_servers","action":"index","status":200,"duration":28.34,"view":25.96,"db":0.88,"ip":"127.0.0.1","route":"file_servers#index", "parameters":"","uuid":"e81ecd178ed3b591099f4d489760dfb6","user":"shadab_ahmed@abc.com", "site":"internal","some.activesupport.notification":{"count":42},"@timestamp":"2013-04-30T13:00:46.354500+00:00"}
 ```
 
 The store exposed to the blocked passed to `watch` is thread-safe, and reset after each request.
