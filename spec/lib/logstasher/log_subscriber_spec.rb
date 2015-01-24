@@ -50,8 +50,8 @@ describe LogStasher::RequestLogSubscriber do
         "location" => true,
         "exception" => true,
         "custom" => true,
-        "@source" => "unknown",
-        "@tags" => ["request"],
+        "source" => "unknown",
+        "tags" => ["request"],
         "@timestamp" => "timestamp",
         "@version" => "1"
       }.to_json + "\n"
@@ -76,7 +76,7 @@ describe LogStasher::RequestLogSubscriber do
 
     it "should contain request tag" do
       subscriber.process_action(event)
-      expect(log_output.json['@tags']).to include 'request'
+      expect(log_output.json['tags']).to include 'request'
     end
 
     it "should contain HTTP method" do
@@ -129,8 +129,8 @@ describe LogStasher::RequestLogSubscriber do
         subscriber.process_action(event)
         expect(log_output.json['status']).to be >= 400
         expect(log_output.json['error']).to be =~ /AbstractController::ActionNotFound.*Route not found.*logstasher.*\/spec\/lib\/logstasher\/log_subscriber_spec\.rb/m
-        expect(log_output.json['@tags']).to include 'request'
-        expect(log_output.json['@tags']).to include 'exception'
+        expect(log_output.json['tags']).to include 'request'
+        expect(log_output.json['tags']).to include 'exception'
       end
     end
 
@@ -242,8 +242,8 @@ describe LogStasher::MailerLogSubscriber do
   it 'receive an e-mail' do
     SampleMailer.receive(message.encoded)
     log_output.json.tap do |json|
-      expect(json['@source']).to eq(LogStasher.source)
-      expect(json['@tags']).to eq(['mailer', 'receive'])
+      expect(json['source']).to eq(LogStasher.source)
+      expect(json['tags']).to eq(['mailer', 'receive'])
       expect(json['mailer']).to eq('SampleMailer')
       expect(json['from']).to eq(['some-dude@example.com'])
       expect(json['to']).to eq(['some-other-dude@example.com'])
@@ -256,8 +256,8 @@ describe LogStasher::MailerLogSubscriber do
 
     if version = ENV['RAILS_VERSION'] and version >= '4.1'
       log_output.json.tap do |json|
-        expect(json['@source']).to eq(LogStasher.source)
-        expect(json['@tags']).to eq(['mailer', 'process'])
+        expect(json['source']).to eq(LogStasher.source)
+        expect(json['tags']).to eq(['mailer', 'process'])
         expect(json['mailer']).to eq('SampleMailer')
         expect(json['action']).to eq('welcome')
       end
@@ -265,8 +265,8 @@ describe LogStasher::MailerLogSubscriber do
 
     email.deliver
     log_output.json.tap do |json|
-      expect(json['@source']).to eq(LogStasher.source)
-      expect(json['@tags']).to eq(['mailer', 'deliver'])
+      expect(json['source']).to eq(LogStasher.source)
+      expect(json['tags']).to eq(['mailer', 'deliver'])
       expect(json['mailer']).to eq('SampleMailer')
       expect(json['from']).to eq(['some-dude@example.com'])
       expect(json['to']).to eq(['some-other-dude@example.com'])

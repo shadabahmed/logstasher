@@ -203,8 +203,8 @@ describe LogStasher do
       expect(logger).to receive(:<<).with(
         { "message"    => "WARNING",
           "level"      => "warn",
-          "@source"    => "unknown",
-          "@tags"      => ["log"],
+          "source"    => "unknown",
+          "tags"      => ["log"],
           "@timestamp" => "timestamp",
           "@version"   => "1"
         }.to_json + "\n"
@@ -220,8 +220,8 @@ describe LogStasher do
         expect(logger).to receive(:<<).with(
           { "message"    => "WARNING",
             "level"      => "warn",
-            "@source"    => "foo",
-            "@tags"      => ["log"],
+            "source"    => "foo",
+            "tags"      => ["log"],
             "@timestamp" => "timestamp",
             "@version"   => "1"
           }.to_json + "\n"

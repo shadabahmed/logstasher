@@ -39,7 +39,7 @@ Completed 200 OK in 532ms (Views: 62.4ms | ActiveRecord: 0.0ms | ND API: 0.0ms)
 After **logstasher**:
 
 ```
-{"@source":"unknown","@tags":["request"],"method":"GET","path":"/","format":"html","controller":"file_servers"
+{"source":"unknown","tags":["request"],"method":"GET","path":"/","format":"html","controller":"file_servers"
 ,"action":"index","status":200,"duration":28.34,"view":25.96,"db":0.88,"ip":"127.0.0.1","route":"file_servers#index",
 "parameters":"","uuid":"e81ecd178ed3b591099f4d489760dfb6","user":"shadab_ahmed@abc.com",
 "site":"internal","@timestamp":"2013-04-30T13:00:46.354500+00:00"}
@@ -61,7 +61,7 @@ In your Gemfile:
     # This line is optional if you do not want to suppress app logs in your <environment>.log
     config.logstasher.suppress_app_log = false
 
-    # This line is optional, it allows you to set a custom value for the @source field of the log event
+    # This line is optional, it allows you to set a custom value for the source field of the log event
     config.logstasher.source = 'your.arbitrary.source'
 
     # This line is optional if you do not want to log the backtrace of exceptions
@@ -121,7 +121,7 @@ It is possible to listen to any `ActiveSupport::Notifications` events and store 
 Would change the log entry to:
 
 ```
-{"@source":"unknown","@tags":["request"],"method":"GET","path":"/","format":"html","controller":"file_servers","action":"index","status":200,"duration":28.34,"view":25.96,"db":0.88,"ip":"127.0.0.1","route":"file_servers#index", "parameters":"","uuid":"e81ecd178ed3b591099f4d489760dfb6","user":"shadab_ahmed@abc.com", "site":"internal","some.activesupport.notification":{"count":42},"@timestamp":"2013-04-30T13:00:46.354500+00:00"}
+{"source":"unknown","tags":["request"],"method":"GET","path":"/","format":"html","controller":"file_servers","action":"index","status":200,"duration":28.34,"view":25.96,"db":0.88,"ip":"127.0.0.1","route":"file_servers#index", "parameters":"","uuid":"e81ecd178ed3b591099f4d489760dfb6","user":"shadab_ahmed@abc.com", "site":"internal","some.activesupport.notification":{"count":42},"@timestamp":"2013-04-30T13:00:46.354500+00:00"}
 ```
 
 The store exposed to the blocked passed to `watch` is thread-safe, and reset after each request.

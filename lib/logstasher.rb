@@ -12,7 +12,7 @@ module LogStasher
 
   attr_accessor :logger, :logger_path, :enabled, :log_controller_parameters, :source, :backtrace
   # Setting the default to 'unknown' to define the default behaviour
-  @source = 'unknown'
+  @source = nil
   # By default log the backtrace of exceptions
   @backtrace = true
 
@@ -119,9 +119,9 @@ module LogStasher
 
       event = LogStash::Event.new(
         :message => msg,
-        :level => severity,
-        '@source' => self.source,
-        '@tags' => ['log']
+        :severity => severity,
+        :source => self.source,
+        :tags => ['log']
       )
 
       self.logger << event.to_json + "\n"

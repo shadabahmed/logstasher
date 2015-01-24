@@ -17,7 +17,7 @@ module LogStasher
       tags.push('exception') if payload[:exception]
 
       event = LogStash::Event.new(
-        data.reverse_merge! '@source' => LogStasher.source, '@tags' => tags
+        { :source => LogStasher.source, :tags => tags }.merge(data)
       )
 
       LogStasher.logger << event.to_json + "\n"
@@ -128,7 +128,7 @@ module LogStasher
       data = LogStasher.request_context.merge(extract_metadata(event.payload))
 
       event = LogStash::Event.new(
-        data.reverse_merge! '@source' => LogStasher.source, '@tags' => tags
+        { :source => LogStasher.source, :tags => tags }.merge(data)
       )
 
       logger << event.to_json + "\n"
