@@ -66,6 +66,9 @@ In your Gemfile:
 
     # This line is optional if you do not want to log the backtrace of exceptions
     config.logstasher.backtrace = false
+    
+    # This line is optional, defaults to log/logstasher_<environment>.log
+    config.logstasher.logger_path = 'log/logstasher.log'
 
 ## Logging params hash
 
