@@ -43,10 +43,23 @@ describe LogStasher::RequestLogSubscriber do
     let(:payload) { {} }
     let(:event)   { double(:payload => payload) }
     let(:logger)  { double }
-    let(:json)    { "{\"@source\":\"unknown\",\"@tags\":[\"request\"],\"@fields\":{\"request\":true,\"status\":true,\"runtimes\":true,\"location\":true,\"exception\":true,\"custom\":true},\"@timestamp\":\"timestamp\"}\n" }
+    let(:json)    {
+      {
+        "source" => "unknown",
+        "tags" => ["request"],
+        "request" => true,
+        "status" => true,
+        "runtimes" => true,
+        "location" => true,
+        "exception" => true,
+        "custom" => true,
+        "@timestamp" => "timestamp",
+        "@version" => "1"
+      }.to_json + "\n"
+    }
     before do
       allow(LogStasher).to receive(:logger).and_return(logger)
-      allow(LogStash::Time).to receive(:now).and_return('timestamp')
+      allow(Time).to receive_message_chain(:now, :utc).and_return('timestamp')
     end
     it 'calls all extractors and outputs the json' do
       expect(request_subscriber).to receive(:extract_request).with(payload).and_return({:request => true})
@@ -64,47 +77,47 @@ describe LogStasher::RequestLogSubscriber do
 
     it "should contain request tag" do
       subscriber.process_action(event)
-      expect(log_output.json['@tags']).to include 'request'
+      expect(log_output.json['tags']).to include 'request'
     end
 
     it "should contain HTTP method" do
       subscriber.process_action(event)
-      expect(log_output.json['@fields']['method']).to eq 'GET'
+      expect(log_output.json['method']).to eq 'GET'
     end
 
     it "should include the path in the log output" do
       subscriber.process_action(event)
-      expect(log_output.json['@fields']['path']).to eq '/home'
+      expect(log_output.json['path']).to eq '/home'
     end
 
     it "should include the format in the log output" do
       subscriber.process_action(event)
-      expect(log_output.json['@fields']['format']).to eq 'application/json'
+      expect(log_output.json['format']).to eq 'application/json'
     end
 
     it "should include the status code" do
       subscriber.process_action(event)
-      expect(log_output.json['@fields']['status']).to eq 200
+      expect(log_output.json['status']).to eq 200
     end
 
     it "should include the controller" do
       subscriber.process_action(event)
-      expect(log_output.json['@fields']['controller']).to eq 'home'
+      expect(log_output.json['controller']).to eq 'home'
     end
 
     it "should include the action" do
       subscriber.process_action(event)
-      expect(log_output.json['@fields']['action']).to eq 'index'
+      expect(log_output.json['action']).to eq 'index'
     end
 
     it "should include the view rendering time" do
       subscriber.process_action(event)
-      expect(log_output.json['@fields']['view']).to eq 0.01
+      expect(log_output.json['view']).to eq 0.01
     end
 
     it "should include the database rendering time" do
       subscriber.process_action(event)
-      expect(log_output.json['@fields']['db']).to eq 0.02
+      expect(log_output.json['db']).to eq 0.02
     end
 
     it "should add a valid status when an exception occurred" do
@@ -115,10 +128,10 @@ describe LogStasher::RequestLogSubscriber do
         event.payload[:status] = nil
         event.payload[:exception] = ['AbstractController::ActionNotFound', 'Route not found']
         subscriber.process_action(event)
-        expect(log_output.json['@fields']['status']).to be >= 400
-        expect(log_output.json['@fields']['error']).to be =~ /AbstractController::ActionNotFound.*Route not found.*logstasher.*\/spec\/lib\/logstasher\/log_subscriber_spec\.rb/m
-        expect(log_output.json['@tags']).to include 'request'
-        expect(log_output.json['@tags']).to include 'exception'
+        expect(log_output.json['status']).to be >= 400
+        expect(log_output.json['error']).to be =~ /AbstractController::ActionNotFound.*Route not found.*logstasher.*\/spec\/lib\/logstasher\/log_subscriber_spec\.rb/m
+        expect(log_output.json['tags']).to include 'request'
+        expect(log_output.json['tags']).to include 'exception'
       end
     end
 
@@ -126,7 +139,7 @@ describe LogStasher::RequestLogSubscriber do
       event.payload[:status] = nil
       event.payload[:exception] = nil
       subscriber.process_action(event)
-      expect(log_output.json['@fields']['status']).to eq 0
+      expect(log_output.json['status']).to eq 0
     end
 
     describe "with a redirect" do
@@ -136,7 +149,7 @@ describe LogStasher::RequestLogSubscriber do
 
       it "should add the location to the log line" do
         subscriber.process_action(event)
-        expect(log_output.json['@fields']['location']).to eq 'http://www.example.com'
+        expect(log_output.json['location']).to eq 'http://www.example.com'
       end
 
       it "should remove the thread local variable" do
@@ -147,7 +160,7 @@ describe LogStasher::RequestLogSubscriber do
 
     it "should not include a location by default" do
       subscriber.process_action(event)
-      expect(log_output.json['@fields']['location']).to be_nil
+      expect(log_output.json['location']).to be_nil
     end
   end
 
@@ -157,9 +170,9 @@ describe LogStasher::RequestLogSubscriber do
       allow(request).to receive_messages(:params => event.payload[:params])
       LogStasher.add_default_fields_to_payload(event.payload, request)
       subscriber.process_action(event)
-      expect(log_output.json['@fields']['ip']).to eq '10.0.0.1'
-      expect(log_output.json['@fields']['route']).to eq'home#index'
-      expect(log_output.json['@fields']['parameters']).to eq 'foo' => 'bar'
+      expect(log_output.json['ip']).to eq '10.0.0.1'
+      expect(log_output.json['route']).to eq'home#index'
+      expect(log_output.json['parameters']).to eq 'foo' => 'bar'
     end
   end
 
@@ -177,7 +190,7 @@ describe LogStasher::RequestLogSubscriber do
     it "should add the custom data to the output" do
       @block.call(event.payload)
       subscriber.process_action(event)
-      expect(log_output.json['@fields']['user']).to eq 'user'
+      expect(log_output.json['user']).to eq 'user'
     end
   end
 
@@ -223,21 +236,19 @@ describe LogStasher::MailerLogSubscriber do
 
   describe "#logger" do
     it "returns an instance of Logstash::Logger" do
-      LogStasher::MailerLogSubscriber.new.logger.should == logger
+      expect(LogStasher::MailerLogSubscriber.new.logger).to eq(logger)
     end
   end
 
   it 'receive an e-mail' do
     SampleMailer.receive(message.encoded)
     log_output.json.tap do |json|
-      expect(json['@source']).to eq(LogStasher.source)
-      expect(json['@tags']).to eq(['mailer', 'receive'])
-      json['@fields'].tap do |fields|
-        expect(fields['mailer']).to eq('SampleMailer')
-        expect(fields['from']).to eq(['some-dude@example.com'])
-        expect(fields['to']).to eq(['some-other-dude@example.com'])
-        expect(fields['message_id']).to eq(message.message_id)
-      end
+      expect(json['source']).to eq(LogStasher.source)
+      expect(json['tags']).to eq(['mailer', 'receive'])
+      expect(json['mailer']).to eq('SampleMailer')
+      expect(json['from']).to eq(['some-dude@example.com'])
+      expect(json['to']).to eq(['some-other-dude@example.com'])
+      expect(json['message_id']).to eq(message.message_id)
     end
   end
 
@@ -246,26 +257,22 @@ describe LogStasher::MailerLogSubscriber do
 
     if version = ENV['RAILS_VERSION'] and version >= '4.1'
       log_output.json.tap do |json|
-        expect(json['@source']).to eq(LogStasher.source)
-        expect(json['@tags']).to eq(['mailer', 'process'])
-        json['@fields'].tap do |fields|
-          expect(fields['mailer']).to eq('SampleMailer')
-          expect(fields['action']).to eq('welcome')
-        end
+        expect(json['source']).to eq(LogStasher.source)
+        expect(json['tags']).to eq(['mailer', 'process'])
+        expect(json['mailer']).to eq('SampleMailer')
+        expect(json['action']).to eq('welcome')
       end
     end
 
     email.deliver
     log_output.json.tap do |json|
-      expect(json['@source']).to eq(LogStasher.source)
-      expect(json['@tags']).to eq(['mailer', 'deliver'])
-      json['@fields'].tap do |fields|
-        expect(fields['mailer']).to eq('SampleMailer')
-        expect(fields['from']).to eq(['some-dude@example.com'])
-        expect(fields['to']).to eq(['some-other-dude@example.com'])
-        # Message-Id appears not to be yet available at this point in time.
-        expect(fields['message_id']).to be_nil
-      end
+      expect(json['source']).to eq(LogStasher.source)
+      expect(json['tags']).to eq(['mailer', 'deliver'])
+      expect(json['mailer']).to eq('SampleMailer')
+      expect(json['from']).to eq(['some-dude@example.com'])
+      expect(json['to']).to eq(['some-other-dude@example.com'])
+      # Message-Id appears not to be yet available at this point in time.
+      expect(json['message_id']).to be_nil
     end
   end
 end

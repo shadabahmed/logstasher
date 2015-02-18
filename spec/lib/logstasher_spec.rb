@@ -195,12 +195,20 @@ describe LogStasher do
     let(:logger) { double() }
     before do
       LogStasher.logger = logger
-      allow(LogStash::Time).to receive_messages(:now => 'timestamp')
+      allow(Time).to receive_message_chain(:now, :utc).and_return('timestamp')
       allow_message_expectations_on_nil
     end
     it 'adds to log with specified level' do
       expect(logger).to receive(:send).with('warn?').and_return(true)
-      expect(logger).to receive(:<<).with("{\"@source\":\"unknown\",\"@tags\":[\"log\"],\"@fields\":{\"message\":\"WARNING\",\"level\":\"warn\"},\"@timestamp\":\"timestamp\"}\n")
+      expect(logger).to receive(:<<).with(
+        { "message"    => "WARNING",
+          "level"      => "warn",
+          "source"    => "unknown",
+          "tags"      => ["log"],
+          "@timestamp" => "timestamp",
+          "@version"   => "1"
+        }.to_json + "\n"
+      )
       LogStasher.log('warn', 'WARNING')
     end
     context 'with a source specified' do
@@ -209,7 +217,15 @@ describe LogStasher do
       end
       it 'sets the correct source' do
         expect(logger).to receive(:send).with('warn?').and_return(true)
-        expect(logger).to receive(:<<).with("{\"@source\":\"foo\",\"@tags\":[\"log\"],\"@fields\":{\"message\":\"WARNING\",\"level\":\"warn\"},\"@timestamp\":\"timestamp\"}\n")
+        expect(logger).to receive(:<<).with(
+          { "message"    => "WARNING",
+            "level"      => "warn",
+            "source"    => "foo",
+            "tags"      => ["log"],
+            "@timestamp" => "timestamp",
+            "@version"   => "1"
+          }.to_json + "\n"
+        )
         LogStasher.log('warn', 'WARNING')
       end
     end
