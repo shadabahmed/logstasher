@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
 
   s.files         = `git ls-files lib`.split("\n")
 
-  s.add_runtime_dependency 'logstash-event', '~> 1.1.0'
+  s.add_runtime_dependency 'logstash-event', '~> 1.2.0'
   s.add_runtime_dependency 'request_store'
 
   s.add_development_dependency('rspec', '>= 2.14')

@@ -46,6 +46,14 @@ require 'action_mailer'
 require 'logger'
 require 'logstash-event'
 
+
+$test_timestamp = case Rails.version
+when /^3\./
+  '1970-01-01T00:00:00Z'
+else
+  '1970-01-01T00:00:00.000Z'
+end
+
 RSpec.configure do |config|
   config.run_all_when_everything_filtered = true
   config.filter_run :focus
