@@ -156,7 +156,9 @@ module LogStasher
   private
 
   def new_logger(path)
-    FileUtils.touch path # prevent autocreate messages in log
+    if path.is_a? String
+      FileUtils.touch path # prevent autocreate messages in log
+    end
     Logger.new path
   end
 end
