@@ -11,7 +11,7 @@ By, using these awesome tools:
 * [Logstash](http://logstash.net) - Store and index your logs
 * [Kibana](http://kibana.org/) - for awesome visualization. This is optional though, and you can use any other visualizer
 
-Update: Logstash now includes Kibana build in, so no need to separately install. Logstasher has been test with **logstash version 1.3.3**
+Update: Logstash now includes Kibana build in, so no need to separately install. Logstasher has been tested with **logstash version 1.4.2** with `file input` and `json codec`.
 
 See [quickstart](#quick-setup-for-logstash) for quickly setting up logstash
 
