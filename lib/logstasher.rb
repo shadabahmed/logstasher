@@ -1,5 +1,6 @@
 require 'logstasher/version'
-require 'logstasher/log_subscriber'
+require 'logstasher/active_support/log_subscriber'
+require 'logstasher/active_support/mailer_log_subscriber'
 require 'request_store'
 require 'active_support/core_ext/module/attribute_accessors'
 require 'active_support/core_ext/string/inflections'
@@ -17,7 +18,7 @@ module LogStasher
   @backtrace = true
 
   def remove_existing_log_subscriptions
-    ActiveSupport::LogSubscriber.log_subscribers.each do |subscriber|
+    ::ActiveSupport::LogSubscriber.log_subscribers.each do |subscriber|
       case subscriber.class.name
         when 'ActionView::LogSubscriber'
           unsubscribe(:action_view, subscriber)
@@ -32,9 +33,9 @@ module LogStasher
   def unsubscribe(component, subscriber)
     events = subscriber.public_methods(false).reject{ |method| method.to_s == 'call' }
     events.each do |event|
-      ActiveSupport::Notifications.notifier.listeners_for("#{event}.#{component}").each do |listener|
+      ::ActiveSupport::Notifications.notifier.listeners_for("#{event}.#{component}").each do |listener|
         if listener.instance_variable_get('@delegate') == subscriber
-          ActiveSupport::Notifications.unsubscribe listener
+          ::ActiveSupport::Notifications.unsubscribe listener
         end
       end
     end
@@ -83,8 +84,8 @@ module LogStasher
     require 'logstasher/rails_ext/action_controller/metal/instrumentation'
     require 'logstash-event'
     self.suppress_app_logs(app)
-    LogStasher::RequestLogSubscriber.attach_to :action_controller
-    LogStasher::MailerLogSubscriber.attach_to :action_mailer
+    LogStasher::ActiveSupport::LogSubscriber.attach_to :action_controller
+    LogStasher::ActiveSupport::MailerLogSubscriber.attach_to :action_mailer
     self.logger_path = app.config.logstasher.logger_path || "#{Rails.root}/log/logstash_#{Rails.env}.log"
     self.logger = app.config.logstasher.logger || new_logger(self.logger_path)
     self.logger.level = app.config.logstasher.log_level || Logger::WARN
@@ -135,7 +136,7 @@ module LogStasher
 
   def watch(event, opts = {}, &block)
     event_group = opts[:event_group] || event
-    ActiveSupport::Notifications.subscribe(event) do |*args|
+    ::ActiveSupport::Notifications.subscribe(event) do |*args|
       # Calling the processing block with the Notification args and the store
       block.call(*args, store[event_group])
     end
