@@ -200,8 +200,13 @@ describe LogStasher do
     end
     it 'adds to log with specified level' do
       expect(logger).to receive(:send).with('warn?').and_return(true)
-      expect(logger).to receive(:<<).with("{\"@source\":\"unknown\",\"@fields\":{\"message\":\"WARNING\",\"level\":\"warn\"},\"@tags\":[\"log\"],\"@timestamp\":\"#{$test_timestamp}\",\"@version\":\"1\"}\n")
+      expect(logger).to receive(:<<).with('{"message":"WARNING","source":"unknown","tags":["log"],"@timestamp":"1970-01-01T00:00:00Z","@version":"1"}'+"\n")
       LogStasher.log('warn', 'WARNING')
+    end
+    it 'logs a message responding to to_hash with keys at top level' do
+      expect(logger).to receive(:send).with('warn?').and_return(true)
+      expect(logger).to receive(:<<).with('{"foo":"bar","baz":"quux","source":"unknown","tags":["log"],"@timestamp":"1970-01-01T00:00:00Z","@version":"1"}'+"\n")
+      LogStasher.log('warn', {foo: 'bar', baz: 'quux'})
     end
     context 'with a source specified' do
       before :each do
@@ -209,7 +214,7 @@ describe LogStasher do
       end
       it 'sets the correct source' do
         expect(logger).to receive(:send).with('warn?').and_return(true)
-        expect(logger).to receive(:<<).with("{\"@source\":\"foo\",\"@fields\":{\"message\":\"WARNING\",\"level\":\"warn\"},\"@tags\":[\"log\"],\"@timestamp\":\"#{$test_timestamp}\",\"@version\":\"1\"}\n")
+        expect(logger).to receive(:<<).with('{"message":"WARNING","source":"foo","tags":["log"],"@timestamp":"1970-01-01T00:00:00Z","@version":"1"}'+"\n")
         LogStasher.log('warn', 'WARNING')
       end
     end

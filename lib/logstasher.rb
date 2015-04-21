@@ -116,9 +116,18 @@ module LogStasher
 
   def log(severity, msg)
     if self.logger && self.logger.send("#{severity}?")
-      event = LogStash::Event.new('@source' => self.source, '@fields' => {:message => msg, :level => severity}, '@tags' => ['log'])
-      self.logger << event.to_json + "\n"
+      data = {}
+      if msg.respond_to?(:to_hash)
+        data.merge!(msg.to_hash)
+      else
+        data['message'] = msg
+      end
+      self.logger << build_logstash_event(data, ['log']).to_json + "\n"
     end
+  end
+
+  def build_logstash_event(data, tags)
+    LogStash::Event.new(data.merge('source' => self.source, 'tags' => tags))
   end
 
   def store
