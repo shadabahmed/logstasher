@@ -116,7 +116,7 @@ module LogStasher
 
   def log(severity, msg)
     if self.logger && self.logger.send("#{severity}?")
-      data = {}
+      data = {'level' => severity}
       if msg.respond_to?(:to_hash)
         data.merge!(msg.to_hash)
       else
