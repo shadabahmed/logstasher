@@ -12,6 +12,4 @@ group :test do
   gem 'rcov', :platforms => :mri_18
   gem 'redis', :require => false
   gem 'simplecov', :platforms => :mri_19, :require => false
-  gem 'pry'
-  gem 'pry-byebug'
 end
