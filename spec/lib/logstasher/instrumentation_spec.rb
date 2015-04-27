@@ -2,7 +2,15 @@ require 'spec_helper'
 require 'logstasher/rails_ext/action_controller/metal/instrumentation'
 
 describe ActionController::Base do
+  before do
+    module ActionController              # Revert the monkey patch again
+      module Instrumentation
+        alias :process_action :logstasher_process_action
+      end
+    end
+  end
   before :each do
+
     subject.request = ActionDispatch::TestRequest.new
     subject.response = ActionDispatch::TestResponse.new
 
