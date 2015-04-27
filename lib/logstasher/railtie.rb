@@ -4,7 +4,7 @@ require 'action_controller/log_subscriber'
 
 module LogStasher
   class Railtie < Rails::Railtie
-    config.logstasher = ActiveSupport::OrderedOptions.new
+    config.logstasher = ::ActiveSupport::OrderedOptions.new
     config.logstasher.enabled = false
 
     initializer :logstasher, :before => :load_config_initializers do |app|
