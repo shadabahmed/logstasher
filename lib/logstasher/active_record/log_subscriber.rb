@@ -6,7 +6,7 @@ module LogStasher
     class LogSubscriber < ::ActiveRecord::LogSubscriber
       def identity(event)
         event = logstash_event(event)
-        if event
+        if logger && event
           logger << event.to_json + "\n"
         end
       end
@@ -21,7 +21,7 @@ module LogStasher
       def logstash_event(event)
         data = event.payload
 
-        return unless LogStasher.logger.debug?
+        return unless logger.debug?
         return if 'SCHEMA' == data[:name]
 
         data.merge! runtimes(event)
