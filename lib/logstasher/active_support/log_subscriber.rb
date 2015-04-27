@@ -17,22 +17,26 @@ module LogStasher
         tags = ['request']
         tags.push('exception') if payload[:exception]
         event = LogStash::Event.new(data.merge('source' => LogStasher.source, 'tags' => tags))
-        LogStasher.logger << event.to_json + "\n"
+        logger << event.to_json + "\n"
       end
 
       def redirect_to(event)
         Thread.current[:logstasher_location] = event.payload[:location]
       end
 
+      def logger
+        LogStasher.logger
+      end
+
       private
 
       def extract_request(payload)
         {
-          :method => payload[:method],
-          :path => extract_path(payload),
-          :format => extract_format(payload),
-          :controller => payload[:params]['controller'],
-          :action => payload[:params]['action']
+          method: payload[:method],
+          path: extract_path(payload),
+          format: extract_format(payload),
+          controller: payload[:params]['controller'],
+          action: payload[:params]['action']
         }
       end
 
