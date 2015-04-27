@@ -1,5 +1,6 @@
 module ActionController
   module Instrumentation
+    alias :orig_process_action :process_action
     def process_action(*args)
       raw_payload = {
           :controller => self.class.name,
@@ -44,6 +45,7 @@ module ActionController
         result
       end
     end
+    alias :logstasher_process_action :process_action
 
   end
 end
