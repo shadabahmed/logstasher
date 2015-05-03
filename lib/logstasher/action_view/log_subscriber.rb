@@ -23,7 +23,7 @@ module LogStasher
         data.merge! runtimes(event)
         data.merge! extract_data(data)
         data.merge! request_context
-        data.merge! store
+#        data.merge! store
         data.merge! extract_custom_fields(data)
 
         ls_event = LogStash::Event.new(data.merge('source' => LogStasher.source))
