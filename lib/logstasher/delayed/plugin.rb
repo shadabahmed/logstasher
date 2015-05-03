@@ -8,6 +8,9 @@ module LogStasher
           ::LogStasher.source = "Delayed::Job"
           # perhaps handler#object.first_line and method_name would be interesting too (in store??)
         end
+        lifecycle.after(:invoke_job) do |job, *args, &block|
+          ::LogStasher.request_context[:request_id] = nil
+        end
       end
     end
   end
