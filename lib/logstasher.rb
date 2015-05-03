@@ -82,55 +82,69 @@ module LogStasher
     request_context.clear
   end
 
-  def setup(app)
-    app.config.action_dispatch.rack_cache[:verbose] = false if app.config.action_dispatch.rack_cache
-    # Path instrumentation class to insert our hook
-    if app.config.logstasher.controller_monkey_patch || true
-      require 'logstasher/rails_ext/action_controller/metal/instrumentation'
-    end
+  def setup_before(config)
     require 'logstash-event'
-    self.delayed_plugin(app)
-    self.suppress_app_logs(app)
+    self.enabled = config.enabled || false
     LogStasher::ActiveSupport::LogSubscriber.attach_to :action_controller
     LogStasher::ActiveSupport::MailerLogSubscriber.attach_to :action_mailer
     LogStasher::ActiveRecord::LogSubscriber.attach_to :active_record
     LogStasher::ActionView::LogSubscriber.attach_to :action_view
-    self.logger_path = app.config.logstasher.logger_path || "#{Rails.root}/log/logstash_#{Rails.env}.log"
-    self.logger = app.config.logstasher.logger || new_logger(self.logger_path)
-    self.logger.level = app.config.logstasher.log_level || Logger::WARN
-    self.source = app.config.logstasher.source unless app.config.logstasher.source.nil?
-    self.enabled = true
-    self.log_controller_parameters = !! app.config.logstasher.log_controller_parameters
-    self.backtrace = !! app.config.logstasher.backtrace unless app.config.logstasher.backtrace.nil?
-    set_data_for_rake if called_as_rake?
+  end
+
+  def setup(config)
+    # Path instrumentation class to insert our hook
+    if (! config.controller_monkey_patch && config.controller_monkey_patch != false) || config.controller_monkey_path == true 
+      require 'logstasher/rails_ext/action_controller/metal/instrumentation'
+    end
+    self.delayed_plugin(config)
+    self.suppress_app_logs(config)
+    self.logger_path = config.logger_path || "#{Rails.root}/log/logstash_#{Rails.env}.log"
+    self.logger = config.logger || new_logger(self.logger_path)
+    self.logger.level = config.log_level || Logger::WARN
+    self.source = config.source unless config.source.nil?
+    self.log_controller_parameters = !! config.log_controller_parameters
+    self.backtrace = !! config.backtrace unless config.backtrace.nil?
+    if called_as_rake?
+      set_data_for_rake
+    elsif called_as_console?
+      set_data_for_console
+    end
   end
 
   def set_data_for_rake
-    self.request_context["request_id"] = Rake.application.top_level_tasks
+    self.request_context['request_id'] = Rake.application.top_level_tasks
     self.source = "rake"
+  end
+
+  def set_data_for_console
+    self.request_context['request_id'] = "console@#{Process.pid}"
   end
 
   def called_as_rake?
     File.basename($0) == 'rake'
   end
 
-  def delayed_plugin(app)
-    if app.config.logstasher.delayed_jobs_support || false
+  def called_as_console?
+    defined?(Rails::Console)
+  end
+
+  def delayed_plugin(config)
+    if config.delayed_jobs_support || false
       require 'logstasher/delayed/plugin'
       ::Delayed::Worker.plugins << ::LogStasher::Delayed::Plugin
     end
   end
 
-  def suppress_app_logs(app)
-    if configured_to_suppress_app_logs?(app)
+  def suppress_app_logs(config)
+    if configured_to_suppress_app_logs?(config)
       require 'logstasher/rails_ext/rack/logger'
       LogStasher.remove_existing_log_subscriptions
     end
   end
 
-  def configured_to_suppress_app_logs?(app)
+  def configured_to_suppress_app_logs?(config)
     # This supports both spellings: "suppress_app_log" and "supress_app_log"
-    !!(app.config.logstasher.suppress_app_log.nil? ? app.config.logstasher.supress_app_log : app.config.logstasher.suppress_app_log)
+    !!(config.suppress_app_log.nil? ? config.supress_app_log : config.suppress_app_log)
   end
 
   def custom_fields
