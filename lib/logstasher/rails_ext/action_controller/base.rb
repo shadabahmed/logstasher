@@ -11,6 +11,7 @@ module LogStasher
       
       private
 
+      # this method is called from within super of process_action.
       def append_info_to_payload(payload) #:nodoc:
         LogStasher.add_default_fields_to_payload(payload, request)
         if self.respond_to?(:logstasher_add_custom_fields_to_request_context)
