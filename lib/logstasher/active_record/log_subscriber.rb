@@ -29,7 +29,7 @@ module LogStasher
         data.merge! request_context
         data.merge! extract_custom_fields(data)
 
-        ::LogStash::Event.new(data.merge('source' => LogStasher.source))
+        ::LogStash::Event.new(data.merge(source: LogStasher.source))
       end
 
       def request_context
@@ -37,11 +37,10 @@ module LogStasher
       end
 
       def runtimes(event)
-        {
-          :duration => event.duration,
-        }.inject({}) do |runtimes, (name, runtime)|
-          runtimes[name] = runtime.to_f.round(2) if runtime
-          runtimes
+        if event.duration
+          { duration: event.duration.to_f.round(2) }
+        else
+          {  }
         end
       end
 
