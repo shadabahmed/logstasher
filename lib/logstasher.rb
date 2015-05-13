@@ -113,11 +113,10 @@ module LogStasher
 
   def set_data_for_rake
     self.request_context['request_id'] = Rake.application.top_level_tasks
-    self.source = "rake"
   end
 
   def set_data_for_console
-    self.request_context['request_id'] = "console@#{Process.pid}"
+    self.request_context['request_id'] = Process.pid
   end
 
   def called_as_rake?
