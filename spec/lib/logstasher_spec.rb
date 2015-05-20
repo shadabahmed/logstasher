@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'active_record'
 require 'delayed_job'
+require 'rake'
 
 describe LogStasher do
   describe "when removing Rails' log subscribers" do
@@ -91,14 +92,14 @@ describe LogStasher do
       LogStasher.clear_request_context
       LogStasher.add_default_fields_to_request_context(double(env: {'action_dispatch.request_id' => 'lol'}))
       expect(LogStasher.request_context).to eq({ request_id: 'lol' })
+      LogStasher.clear_request_context
     end
   end
 
-  shared_examples 'setup' do
+  shared_examples 'setup_before' do
     let(:logstasher_source) { nil }
-    let(:logstasher_config) { double(:logger => logger, :log_level => 'warn', :log_controller_parameters => nil,
-                                     :source => logstasher_source, :logger_path => logger_path, :backtrace => true,
-                                     :controller_monkey_patch => true, :delayed_jobs_support => false) }
+    let(:logstasher_config) { double(:enabled => true) }
+
     let(:config) { double(:logstasher => logstasher_config) }
     let(:app) { double(:config => config) }
     before do
@@ -107,18 +108,40 @@ describe LogStasher do
       allow_message_expectations_on_nil
     end
     after { LogStasher.source = @previous_source } # Need to restore old source for specs
-    it 'defines a method in ActionController::Base' do
-      expect(LogStasher).to receive(:require).with('logstasher/rails_ext/action_controller/metal/instrumentation')
-      expect(LogStasher).to receive(:require).with('logstash-event')
-      expect(LogStasher).to receive(:suppress_app_logs).with(app)
+    it 'subscribes to LogSubscriber for action_controller' do
       expect(LogStasher::ActiveSupport::LogSubscriber).to receive(:attach_to).with(:action_controller)
       expect(LogStasher::ActiveSupport::MailerLogSubscriber).to receive(:attach_to).with(:action_mailer)
+      expect(LogStasher::ActiveRecord::LogSubscriber).to receive(:attach_to).with(:active_record)
+      expect(LogStasher::ActionView::LogSubscriber).to receive(:attach_to).with(:action_view)
+      expect(LogStasher).to receive(:require).with('logstash-event')
+    end
+    
+  end
+  shared_examples 'setup' do
+    let(:logstasher_source) { nil }
+    let(:logstasher_config) { double(:enabled => true, 
+                                     :logger => logger, :log_level => 'warn', :log_controller_parameters => nil,
+                                     :source => logstasher_source, :logger_path => logger_path, :backtrace => true,
+                                     :controller_monkey_patch => true, :delayed_jobs_support => false) }
+    let(:config) { double(:logstasher => logstasher_config) }
+    let(:app) { double(:config => config) }
+    before do
+      @previous_source = LogStasher.source
+      allow(config).to receive_messages(:action_dispatch => double(:rack_cache => false))
+      allow_message_expectations_on_nil
+      LogStasher.setup_before(config.logstasher)
+    end
+    after { LogStasher.source = @previous_source } # Need to restore old source for specs
+    it 'defines a method in ActionController::Base' do
+      expect(LogStasher).to receive(:require).with('logstasher/rails_ext/action_controller/metal/instrumentation')
+      expect(LogStasher).to receive(:suppress_app_logs).with(config.logstasher)
       expect(logger).to receive(:level=).with('warn')
-      LogStasher.setup(app)
+      LogStasher.setup(config.logstasher)
       expect(LogStasher.source).to eq (logstasher_source || 'unknown')
       expect(LogStasher).to be_enabled
       expect(LogStasher.custom_fields).to be_empty
       expect(LogStasher.log_controller_parameters).to eq false
+      expect(LogStasher.request_context).to be_empty
     end
   end
 
@@ -159,14 +182,14 @@ describe LogStasher do
     it 'removes existing subscription if enabled' do
       expect(LogStasher).to receive(:require).with('logstasher/rails_ext/rack/logger')
       expect(LogStasher).to receive(:remove_existing_log_subscriptions)
-      LogStasher.suppress_app_logs(app)
+      LogStasher.suppress_app_logs(app.config.logstasher)
     end
 
     context 'when disabled' do
       let(:logstasher_config){ double(:logstasher => double(:suppress_app_log => false)) }
       it 'does not remove existing subscription' do
         expect(LogStasher).to_not receive(:remove_existing_log_subscriptions)
-        LogStasher.suppress_app_logs(app)
+        LogStasher.suppress_app_logs(app.config.logstasher)
       end
 
       describe "backward compatibility" do
@@ -174,7 +197,7 @@ describe LogStasher do
           let(:logstasher_config){ double(:logstasher => double(:suppress_app_log => nil, :supress_app_log => false)) }
           it 'does not remove existing subscription' do
             expect(LogStasher).to_not receive(:remove_existing_log_subscriptions)
-            LogStasher.suppress_app_logs(app)
+            LogStasher.suppress_app_logs(app.config.logstasher)
           end
         end
       end
@@ -186,14 +209,14 @@ describe LogStasher do
     let(:app){ double(:config => logstasher_config)}
 
     it 'loades the delayed job plugin' do
-      LogStasher.delayed_plugin(app)
+      LogStasher.delayed_plugin(app.config.logstasher)
       expect(Delayed::Worker.plugins).to include(::LogStasher::Delayed::Plugin)
     end
     context 'when disabled' do
       let(:logstasher_config){ double(:logstasher => double(:delayed_jobs_support => false))}
       it 'does not load the delayed job plugin' do
         expect(LogStasher).to_not receive(:require).with('logstasher/delayed/plugin')
-        LogStasher.delayed_plugin(app)
+        LogStasher.delayed_plugin(app.config.logstasher)
       end
     end
   end
@@ -281,4 +304,66 @@ describe LogStasher do
       end
     end
   end
+  
+  describe ".enabled?" do
+    it "returns false if not enabled" do
+      expect(LogStasher).to receive(:enabled).and_return(false)
+      expect(LogStasher.enabled?).to be false
+    end
+    it "returns true if enabled" do
+      expect(LogStasher.enabled?).to be true
+    end
+  end
+  
+  describe ".called_as_rake?" do
+    it "returns false if not called as rake" do
+      expect(LogStasher.called_as_rake?).to be false
+    end
+    
+    it "returns true if called as rake" do
+      expect(File).to receive(:basename).with($0).and_return('rake')
+      expect(LogStasher.called_as_rake?).to be true
+    end
+  end
+
+  describe ".set_data_for_rake" do
+    it "does not touch request_context if not called as rake" do
+      expect(LogStasher.request_context).to be_empty
+    end
+    
+    it "sets request_context accordingly if called as rake" do
+      expect(LogStasher).to receive(:called_as_rake?).and_return(true)
+      expect(Rake.application).to receive(:top_level_tasks).and_return(['mytask'])
+      LogStasher.set_data_for_rake
+      expect(LogStasher.request_context).to eq({ "request_id" => ['mytask'] })
+      LogStasher.clear_request_context
+    end
+  end
+
+  describe ".called_as_console?" do
+    it "returns false if not called as console" do
+      expect(LogStasher.called_as_console?).to be false
+    end
+    
+    it "returns true if called as rake" do
+      require 'rails/commands/console'
+      expect(LogStasher.called_as_console?).to be true
+    end
+  end
+
+  describe ".set_data_for_console" do
+    it "does not touch request_context if not called as console" do
+      expect(LogStasher.request_context).to be_empty
+    end
+    
+    it "sets request_context accordingly if called as console" do
+      require 'rails/commands/console'
+      expect(LogStasher).to receive(:called_as_console?).and_return(true)
+      expect(Process).to receive(:pid).and_return(1234)
+      LogStasher.set_data_for_console
+      expect(LogStasher.request_context).to eq({ "request_id" => "1234" })
+      LogStasher.clear_request_context
+    end
+  end
+
 end
