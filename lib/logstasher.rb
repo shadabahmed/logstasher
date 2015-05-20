@@ -84,7 +84,7 @@ module LogStasher
 
   def setup_before(config)
     require 'logstash-event'
-    self.enabled = config.enabled || false
+    self.enabled = config.enabled
     LogStasher::ActiveSupport::LogSubscriber.attach_to :action_controller
     LogStasher::ActiveSupport::MailerLogSubscriber.attach_to :action_mailer
     LogStasher::ActiveRecord::LogSubscriber.attach_to :active_record
@@ -93,7 +93,7 @@ module LogStasher
 
   def setup(config)
     # Path instrumentation class to insert our hook
-    if (! config.controller_monkey_patch && config.controller_monkey_patch != false) || config.controller_monkey_path == true 
+    if (! config.controller_monkey_patch && config.controller_monkey_patch != false) || config.controller_monkey_patch == true 
       require 'logstasher/rails_ext/action_controller/metal/instrumentation'
     end
     self.delayed_plugin(config)
@@ -104,19 +104,16 @@ module LogStasher
     self.source = config.source unless config.source.nil?
     self.log_controller_parameters = !! config.log_controller_parameters
     self.backtrace = !! config.backtrace unless config.backtrace.nil?
-    if called_as_rake?
-      set_data_for_rake
-    elsif called_as_console?
-      set_data_for_console
-    end
+    self.set_data_for_rake
+    self.set_data_for_console
   end
 
   def set_data_for_rake
-    self.request_context['request_id'] = Rake.application.top_level_tasks
+    self.request_context['request_id'] = ::Rake.application.top_level_tasks if self.called_as_rake?
   end
 
   def set_data_for_console
-    self.request_context['request_id'] = Process.pid
+    self.request_context['request_id'] = "#{Process.pid}" if self.called_as_console?
   end
 
   def called_as_rake?
@@ -124,7 +121,7 @@ module LogStasher
   end
 
   def called_as_console?
-    defined?(Rails::Console)
+    defined?(Rails::Console) && true || false
   end
 
   def delayed_plugin(config)
@@ -190,7 +187,7 @@ module LogStasher
   end
 
   def enabled?
-    self.enabled
+    self.enabled || false
   end
 
   private
