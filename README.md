@@ -88,7 +88,7 @@ Since some fields are very specific to your application for e.g. *user_name*, so
 
     # Create a file - config/initializers/logstasher.rb
 
-    if LogStasher.enabled
+    if LogStasher.enabled?
       LogStasher.add_custom_fields do |fields|
         # This block is run in application_controller context,
         # so you have access to all controller methods
