@@ -1,5 +1,6 @@
 require 'action_controller/log_subscriber'
 require 'active_support/log_subscriber'
+require 'active_support/core_ext/hash/except'
 require 'json'
 require 'logstash/event'
 
