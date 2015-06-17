@@ -86,7 +86,7 @@ describe LogStasher::Device::Syslog do
     end
 
     it 'writes the log to syslog' do
-      expect(::Syslog).to receive(:log).with(subject.facility, '%s', 'a log')
+      expect(::Syslog).to receive(:log).with(subject.priority, '%s', 'a log')
       subject.write('a log')
     end
 
