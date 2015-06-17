@@ -52,7 +52,7 @@ module LogStasher
         fail ::RuntimeError, 'Cannot write. The device has been closed.' if closed?
 
         with_syslog_open do
-          ::Syslog.log(facility, '%s', log)
+          ::Syslog.log(priority, '%s', log)
         end
       end
 
