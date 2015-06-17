@@ -61,7 +61,14 @@ add the following to your `<environment>.rb`
 
     # Disable logging of request parameters
     config.logstasher.include_parameters = false
-    
+
+If you want the parameters to be sent unserialized, so they are indexed and
+searchable individually in elasticsearch, skip the serialization step.
+
+    # Log parameters individually
+    config.logstasher.serialize_parameters = false
+
+
 ## Adding custom fields to the log
 
 Since some fields are very specific to your application, e.g., *user_name*,
@@ -71,8 +78,8 @@ it is left upto you to add them. Here's how to do it:
 
     if LogStasher.enabled
       LogStasher.append_fields do |fields|
-        # This block is run in application_controller context,
-        # so you have access to all controller methods
+        # This block is run within the context of the controller handling the
+        # request, so you have access to all its methods and instance variables
         fields[:user] = current_user && current_user.mail
         fields[:site] = request.path =~ /^\/api/ ? 'api' : 'user'
       end
