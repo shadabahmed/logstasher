@@ -26,6 +26,7 @@ describe LogStasher::LogSubscriber do
   around do |example|
     backup_logger = LogStasher.logger
     LogStasher.logger = logger
+    LogStasher.append_fields { }
     Thread.current[:logstasher_context] = context
     Timecop.freeze { example.run }
     Thread.current[:logstasher_context] = nil
