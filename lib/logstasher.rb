@@ -1,4 +1,5 @@
 require 'logger'
+require 'logstash-event'
 
 module LogStasher
   class << self
