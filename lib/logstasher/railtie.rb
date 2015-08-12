@@ -8,7 +8,7 @@ module LogStasher
     config.logstasher.logger = nil
     config.logstasher.log_level = ::Logger::INFO
 
-    initializer 'logstasher.configure' do
+    config.before_initialize do
       options = config.logstasher
 
       ::LogStasher.enabled                  = options.enabled
