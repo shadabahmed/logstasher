@@ -149,7 +149,7 @@ You can easily share the same store between different types of notifications, by
 ```
 java -jar logstash-1.3.3-flatjar.jar agent -f quickstart.conf -- web
 ```
-* Visit http://localhost:9292/ to see the Kibana interface and your parsed logs
+* Visit [http://localhost:9292/](http://localhost:9292/) to see the Kibana interface and your parsed logs
 * For advanced options see the latest logstash documentation at [logstash.net](http://www.logstash.net/) or visit my blog at [shadabahmed.com](http://shadabahmed.com/blog/2013/04/30/logstasher-for-awesome-rails-logging) (slightly outdated but will sure give you ideas for distributed setup etc.)
 
 ## Versions
