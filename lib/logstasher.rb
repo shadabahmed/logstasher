@@ -14,7 +14,7 @@ module LogStasher
   STORE_KEY = :logstasher_data
   REQUEST_CONTEXT_KEY = :logstasher_request_context
 
-  attr_accessor :logger, :logger_path, :enabled, :log_controller_parameters, :source, :backtrace, 
+  attr_accessor :logger, :logger_path, :enabled, :log_controller_parameters, :source, :backtrace,
     :delayed_jobs_support, :controller_monkey_patch
   # Setting the default to 'unknown' to define the default behaviour
   @source = 'unknown'
@@ -93,7 +93,7 @@ module LogStasher
 
   def setup(config)
     # Path instrumentation class to insert our hook
-    if (! config.controller_monkey_patch && config.controller_monkey_patch != false) || config.controller_monkey_patch == true 
+    if (! config.controller_monkey_patch && config.controller_monkey_patch != false) || config.controller_monkey_patch == true
       require 'logstasher/rails_ext/action_controller/metal/instrumentation'
     end
     self.delayed_plugin(config)
@@ -151,15 +151,33 @@ module LogStasher
     Thread.current[:logstasher_custom_fields] = val
   end
 
-  def log(severity, msg)
+  # Log an arbitrary message.
+  #
+  # Usually invoked by the level-based wrapper methods defined below.
+  #
+  # Examples
+  #
+  #   LogStasher.info("message")
+  #   LogStasher.info("message", tags:"tag1")
+  #   LogStasher.info("message", tags:["tag1", "tag2"])
+  #   LogStasher.info("message", timing:1234)
+  #   LogStasher.info(custom1:"yes", custom2:"no")
+  def log(severity, message, additional_fields={})
     if self.logger && self.logger.send("#{severity}?")
+
       data = {'level' => severity}
-      if msg.respond_to?(:to_hash)
-        data.merge!(msg.to_hash)
+      if message.respond_to?(:to_hash)
+        data.merge!(message.to_hash)
       else
-        data['message'] = msg
+        data['message'] = message
       end
-      self.logger << build_logstash_event(data, ['log']).to_json + "\n"
+
+      # tags get special handling
+      tags = Array(additional_fields.delete(:tags) || 'log')
+
+      data.merge!(additional_fields)
+      self.logger << build_logstash_event(data, tags).to_json + "\n"
+
     end
   end
 
@@ -189,8 +207,8 @@ module LogStasher
 
   %w( fatal error warn info debug unknown ).each do |severity|
     eval <<-EOM, nil, __FILE__, __LINE__ + 1
-      def #{severity}(msg)
-        self.log(:#{severity}, msg)
+      def #{severity}(message=nil, additional_fields={})
+        self.log(:#{severity}, message, additional_fields)
       end
     EOM
   end
