@@ -16,8 +16,7 @@ module LogStasher
 
         tags = ['request']
         tags.push('exception') if payload[:exception]
-        event = LogStash::Event.new(data.merge('source' => LogStasher.source, 'tags' => tags))
-        logger << event.to_json + "\n"
+        logger << LogStasher.build_logstash_event(data, tags).to_json + "\n"
       end
 
       def redirect_to(event)

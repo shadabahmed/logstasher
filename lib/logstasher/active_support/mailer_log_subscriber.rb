@@ -26,8 +26,7 @@ module LogStasher
 
       def process_event(event, tags)
         data = LogStasher.request_context.merge(extract_metadata(event.payload))
-        event = LogStash::Event.new(data.merge('source' => LogStasher.source, 'tags' => tags))
-        logger << event.to_json + "\n"
+        logger << LogStasher.build_logstash_event(data, tags).to_json + "\n"
       end
 
       def extract_metadata(payload)

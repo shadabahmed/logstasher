@@ -5,9 +5,8 @@ module LogStasher
   module ActiveRecord
     class LogSubscriber < ::ActiveRecord::LogSubscriber
       def identity(event)
-        event = logstash_event(event)
-        if logger && event
-          logger << event.to_json + "\n"
+        if logger
+          logger << logstash_event(event).to_json + "\n"
         end
       end
       alias :sql :identity
@@ -29,7 +28,9 @@ module LogStasher
         data.merge! request_context
         data.merge! extract_custom_fields(data)
 
-        ::LogStash::Event.new(data.merge(source: LogStasher.source))
+        tags = ['request']
+        tags.push('exception') if payload[:exception]
+        LogStasher.build_logstash_event(data, tags)
       end
 
       def request_context
