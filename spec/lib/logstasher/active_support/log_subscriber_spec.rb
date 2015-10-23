@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe LogStasher::RequestLogSubscriber do
+describe LogStasher::ActiveSupport::LogSubscriber do
   let(:log_output) {StringIO.new}
   let(:logger) {
     logger = Logger.new(log_output)
@@ -21,7 +21,7 @@ describe LogStasher::RequestLogSubscriber do
     LogStasher.log_controller_parameters = false
   end
 
-  let(:subscriber) {LogStasher::RequestLogSubscriber.new}
+  let(:subscriber) {LogStasher::ActiveSupport::LogSubscriber.new}
   let(:event) {
     ActiveSupport::Notifications::Event.new(
       'process_action.action_controller', Time.now, Time.now, 2, {
@@ -39,7 +39,7 @@ describe LogStasher::RequestLogSubscriber do
   }
 
   describe '.process_action' do
-    let!(:request_subscriber) { @request_subscriber ||= LogStasher::RequestLogSubscriber.new() }
+    let!(:request_subscriber) { @request_subscriber ||= LogStasher::ActiveSupport::LogSubscriber.new() }
     let(:payload) { {} }
     let(:event)   { double(:payload => payload) }
     let(:logger)  { double }
@@ -116,7 +116,7 @@ describe LogStasher::RequestLogSubscriber do
         event.payload[:exception] = ['AbstractController::ActionNotFound', 'Route not found']
         subscriber.process_action(event)
         expect(log_output.json['status']).to be >= 400
-        expect(log_output.json['error']).to be =~ /AbstractController::ActionNotFound.*Route not found.*logstasher.*\/spec\/lib\/logstasher\/log_subscriber_spec\.rb/m
+        expect(log_output.json['error']).to be =~ /AbstractController::ActionNotFound.*Route not found.*logstasher.*\/spec\/lib\/logstasher\/active_support\/log_subscriber_spec\.rb/m
         expect(log_output.json['tags']).to include 'request'
         expect(log_output.json['tags']).to include 'exception'
       end
@@ -185,81 +185,6 @@ describe LogStasher::RequestLogSubscriber do
     it "should store the location in a thread local variable" do
       subscriber.redirect_to(redirect)
       expect(Thread.current[:logstasher_location]).to eq "http://example.com"
-    end
-  end
-end
-
-describe LogStasher::MailerLogSubscriber do
-  let(:log_output) {StringIO.new}
-  let(:logger) {
-    logger = Logger.new(log_output)
-    logger.formatter = ->(_, _, _, msg) {
-      msg
-    }
-    def log_output.json
-      JSON.parse!(self.string.split("\n").last)
-    end
-    logger
-  }
-
-  before :all do
-    SampleMailer.delivery_method = :test
-    LogStasher::MailerLogSubscriber.attach_to(:action_mailer)
-  end
-
-  before do
-    LogStasher.logger = logger
-    expect(LogStasher.request_context).to receive(:merge).at_most(2).times.and_call_original
-  end
-
-  let :message do
-    Mail.new do
-      from 'some-dude@example.com'
-      to 'some-other-dude@example.com'
-      subject 'Goodbye'
-      body 'LOL'
-    end
-  end
-
-  describe "#logger" do
-    it "returns an instance of Logstash::Logger" do
-      expect(LogStasher::MailerLogSubscriber.new.logger).to eq logger
-    end
-  end
-
-  it 'receive an e-mail' do
-    SampleMailer.receive(message.encoded)
-    log_output.json.tap do |json|
-      expect(json['source']).to eq(LogStasher.source)
-      expect(json['tags']).to eq(['mailer', 'receive'])
-      expect(json['mailer']).to eq('SampleMailer')
-      expect(json['from']).to eq(['some-dude@example.com'])
-      expect(json['to']).to eq(['some-other-dude@example.com'])
-      expect(json['message_id']).to eq(message.message_id)
-    end
-  end
-
-  it 'deliver an outgoing e-mail' do
-    email = SampleMailer.welcome
-
-    if version = ENV['RAILS_VERSION'] and version >= '4.1'
-      log_output.json.tap do |json|
-        expect(json['source']).to eq(LogStasher.source)
-        expect(json['tags']).to eq(['mailer', 'process'])
-        expect(json['mailer']).to eq('SampleMailer')
-        expect(json['action']).to eq('welcome')
-      end
-    end
-
-    email.deliver
-    log_output.json.tap do |json|
-      expect(json['source']).to eq(LogStasher.source)
-      expect(json['tags']).to eq(['mailer', 'deliver'])
-      expect(json['mailer']).to eq('SampleMailer')
-      expect(json['from']).to eq(['some-dude@example.com'])
-      expect(json['to']).to eq(['some-other-dude@example.com'])
-      # Message-Id appears not to be yet available at this point in time.
-      expect(json['message_id']).to be_nil
     end
   end
 end

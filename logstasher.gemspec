@@ -12,8 +12,10 @@ Gem::Specification.new do |s|
   s.files         = `git ls-files lib`.split("\n")
 
   s.add_runtime_dependency 'logstash-event', '~> 1.2.0'
+  s.add_runtime_dependency 'delayed_job', '~> 4.0.2'
   s.add_runtime_dependency 'request_store'
   s.add_runtime_dependency 'activesupport', '>= 3.0'
+  s.add_runtime_dependency 'activerecord', '>= 3.0'
 
   s.add_development_dependency('rspec', '>= 2.14')
   s.add_development_dependency('bundler', '>= 1.0.0')
