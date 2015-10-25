@@ -1,6 +1,5 @@
 require 'spec_helper'
 require 'active_record'
-require 'delayed_job'
 require 'rake'
 
 describe LogStasher do
@@ -122,7 +121,7 @@ describe LogStasher do
     let(:logstasher_config) { double(:enabled => true, 
                                      :logger => logger, :log_level => 'warn', :log_controller_parameters => nil,
                                      :source => logstasher_source, :logger_path => logger_path, :backtrace => true,
-                                     :controller_monkey_patch => true, :delayed_jobs_support => false) }
+                                     :controller_monkey_patch => true) }
     let(:config) { double(:logstasher => logstasher_config) }
     let(:app) { double(:config => config) }
     before do
@@ -200,23 +199,6 @@ describe LogStasher do
             LogStasher.suppress_app_logs(app.config.logstasher)
           end
         end
-      end
-    end
-  end
-
-  describe '.delayed_jobs_support' do
-    let(:logstasher_config){ double(:logstasher => double(:delayed_jobs_support => true))}
-    let(:app){ double(:config => logstasher_config)}
-
-    it 'loades the delayed job plugin' do
-      LogStasher.delayed_plugin(app.config.logstasher)
-      expect(Delayed::Worker.plugins).to include(::LogStasher::Delayed::Plugin)
-    end
-    context 'when disabled' do
-      let(:logstasher_config){ double(:logstasher => double(:delayed_jobs_support => false))}
-      it 'does not load the delayed job plugin' do
-        expect(LogStasher).to_not receive(:require).with('logstasher/delayed/plugin')
-        LogStasher.delayed_plugin(app.config.logstasher)
       end
     end
   end

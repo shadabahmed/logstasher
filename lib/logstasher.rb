@@ -15,7 +15,7 @@ module LogStasher
   REQUEST_CONTEXT_KEY = :logstasher_request_context
 
   attr_accessor :logger, :logger_path, :enabled, :log_controller_parameters, :source, :backtrace, 
-    :delayed_jobs_support, :controller_monkey_patch
+    :controller_monkey_patch
   # Setting the default to 'unknown' to define the default behaviour
   @source = 'unknown'
   # By default log the backtrace of exceptions
@@ -96,7 +96,6 @@ module LogStasher
     if (! config.controller_monkey_patch && config.controller_monkey_patch != false) || config.controller_monkey_patch == true 
       require 'logstasher/rails_ext/action_controller/metal/instrumentation'
     end
-    self.delayed_plugin(config)
     self.suppress_app_logs(config)
     self.logger_path = config.logger_path || "#{Rails.root}/log/logstash_#{Rails.env}.log"
     self.logger = config.logger || new_logger(self.logger_path)
@@ -122,13 +121,6 @@ module LogStasher
 
   def called_as_console?
     defined?(Rails::Console) && true || false
-  end
-
-  def delayed_plugin(config)
-    if config.delayed_jobs_support || false
-      require 'logstasher/delayed/plugin'
-      ::Delayed::Worker.plugins << ::LogStasher::Delayed::Plugin
-    end
   end
 
   def suppress_app_logs(config)
