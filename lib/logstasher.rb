@@ -14,7 +14,7 @@ module LogStasher
   STORE_KEY = :logstasher_data
   REQUEST_CONTEXT_KEY = :logstasher_request_context
 
-  attr_accessor :logger, :logger_path, :enabled, :log_controller_parameters, :source, :backtrace,
+  attr_accessor :logger, :logger_path, :enabled, :log_controller_parameters, :source, :backtrace, 
     :delayed_jobs_support, :controller_monkey_patch
   # Setting the default to 'unknown' to define the default behaviour
   @source = 'unknown'
@@ -93,7 +93,7 @@ module LogStasher
 
   def setup(config)
     # Path instrumentation class to insert our hook
-    if (! config.controller_monkey_patch && config.controller_monkey_patch != false) || config.controller_monkey_patch == true
+    if (! config.controller_monkey_patch && config.controller_monkey_patch != false) || config.controller_monkey_patch == true 
       require 'logstasher/rails_ext/action_controller/metal/instrumentation'
     end
     self.delayed_plugin(config)
