@@ -31,7 +31,7 @@ module LogStasher
         data.merge! extract_custom_fields(data)
 
         tags = ['request']
-        tags.push('exception') if payload[:exception]
+        tags.push('exception') if data[:exception]
         LogStasher.build_logstash_event(data, tags)
       end
 
