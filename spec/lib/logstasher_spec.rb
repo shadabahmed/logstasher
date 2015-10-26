@@ -239,25 +239,35 @@ describe LogStasher do
     let(:logger) { double() }
     before do
       LogStasher.logger = logger
+      allow(logger).to receive(:send).with('warn?').and_return(true)
       allow(Time).to receive_messages(:now => Time.at(0))
       allow_message_expectations_on_nil
     end
     it 'adds to log with specified level' do
-      expect(logger).to receive(:send).with('warn?').and_return(true)
       expect(logger).to receive(:<<).with('{"level":"warn","message":"WARNING","source":"unknown","tags":["log"],"@timestamp":"'+$test_timestamp+'","@version":"1"}'+"\n")
       LogStasher.log('warn', 'WARNING')
     end
     it 'logs a message responding to to_hash with keys at top level' do
-      expect(logger).to receive(:send).with('warn?').and_return(true)
       expect(logger).to receive(:<<).with('{"level":"warn","foo":"bar","baz":"quux","source":"unknown","tags":["log"],"@timestamp":"'+$test_timestamp+'","@version":"1"}'+"\n")
       LogStasher.log('warn', {foo: 'bar', baz: 'quux'})
+    end
+    it 'logs a string message and additional structured data' do
+      expect(logger).to receive(:<<).with('{"level":"warn","message":"main message","other":"data","source":"unknown","tags":["log"],"@timestamp":"'+$test_timestamp+'","@version":"1"}'+"\n")
+      LogStasher.log('warn', 'main message', {other:'data'})
+    end
+    it 'allows specification of tags' do
+      expect(logger).to receive(:<<).with('{"level":"warn","message":"main message","other":"data","source":"unknown","tags":["a","b"],"@timestamp":"'+$test_timestamp+'","@version":"1"}'+"\n")
+      LogStasher.log('warn', 'main message', {other:'data', tags:['a', 'b']})
+    end
+    it 'allows a single tag as a string' do
+      expect(logger).to receive(:<<).with('{"level":"warn","message":"main message","other":"data","source":"unknown","tags":["one"],"@timestamp":"'+$test_timestamp+'","@version":"1"}'+"\n")
+      LogStasher.log('warn', 'main message', {other:'data', tags:'one'})
     end
     context 'with a source specified' do
       before :each do
         LogStasher.source = 'foo'
       end
       it 'sets the correct source' do
-        expect(logger).to receive(:send).with('warn?').and_return(true)
         expect(logger).to receive(:<<).with('{"level":"warn","message":"WARNING","source":"foo","tags":["log"],"@timestamp":"'+$test_timestamp+'","@version":"1"}'+"\n")
         LogStasher.log('warn', 'WARNING')
       end
@@ -268,8 +278,8 @@ describe LogStasher do
     describe ".#{severity}" do
       let(:message) { "This is a #{severity} message" }
       it 'should log with specified level' do
-        expect(LogStasher).to receive(:log).with(severity.to_sym, message)
-        LogStasher.send(severity, message )
+        expect(LogStasher).to receive(:log).with(severity.to_sym, message, {})
+        LogStasher.send(severity, message)
       end
     end
   end
