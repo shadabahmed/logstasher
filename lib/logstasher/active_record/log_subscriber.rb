@@ -6,7 +6,9 @@ module LogStasher
     class LogSubscriber < ::ActiveRecord::LogSubscriber
       def identity(event)
         if logger
-          logger << logstash_event(event).to_json + "\n"
+          if log_event = logstash_event(event)
+            logger << log_event.to_json + "\n"
+          end
         end
       end
       alias :sql :identity
