@@ -30,6 +30,8 @@ module LogStasher
           unsubscribe(:action_controller, subscriber)
         when 'ActionMailer::LogSubscriber'
           unsubscribe(:action_mailer, subscriber)
+        when 'ActiveRecord::LogSubscriber'
+          unsubscribe(:active_record, subscriber)
       end
     end
   end
