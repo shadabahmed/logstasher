@@ -1,0 +1,7 @@
+development:
+  enabled: true
+  controller_enabled: true
+  mailer_enabled: false
+  record_enabled: false
+  view_enabled: false
+  suppress_app_log: false

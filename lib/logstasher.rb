@@ -14,7 +14,7 @@ module LogStasher
   STORE_KEY = :logstasher_data
   REQUEST_CONTEXT_KEY = :logstasher_request_context
 
-  attr_accessor :logger, :logger_path, :enabled, :log_controller_parameters, :source, :backtrace, 
+  attr_accessor :logger, :logger_path, :enabled, :log_controller_parameters, :source, :backtrace,
     :controller_monkey_patch
   # Setting the default to 'unknown' to define the default behaviour
   @source = 'unknown'
@@ -87,15 +87,15 @@ module LogStasher
   def setup_before(config)
     require 'logstash-event'
     self.enabled = config.enabled
-    LogStasher::ActiveSupport::LogSubscriber.attach_to :action_controller
-    LogStasher::ActiveSupport::MailerLogSubscriber.attach_to :action_mailer
-    LogStasher::ActiveRecord::LogSubscriber.attach_to :active_record
-    LogStasher::ActionView::LogSubscriber.attach_to :action_view
+    LogStasher::ActiveSupport::LogSubscriber.attach_to :action_controller if config.controller_enabled
+    LogStasher::ActiveSupport::MailerLogSubscriber.attach_to :action_mailer if config.mailer_enabled
+    LogStasher::ActiveRecord::LogSubscriber.attach_to :active_record if config.record_enabled
+    LogStasher::ActionView::LogSubscriber.attach_to :action_view if config.view_enabled
   end
 
   def setup(config)
     # Path instrumentation class to insert our hook
-    if (! config.controller_monkey_patch && config.controller_monkey_patch != false) || config.controller_monkey_patch == true 
+    if (! config.controller_monkey_patch && config.controller_monkey_patch != false) || config.controller_monkey_patch == true
       require 'logstasher/rails_ext/action_controller/metal/instrumentation'
     end
     self.suppress_app_logs(config)

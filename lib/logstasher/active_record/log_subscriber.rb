@@ -21,7 +21,6 @@ module LogStasher
       def logstash_event(event)
         data = event.payload
 
-        return unless logger.debug?
         return if 'SCHEMA' == data[:name]
 
         data.merge! runtimes(event)
