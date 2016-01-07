@@ -81,14 +81,14 @@ In your Gemfile:
 Has the same optional fields as the `<environment>.rb`
 
     development:
-      enabled: false
+      enabled: true
       controller_enabled: true
       mailer_enabled: false
       record_enabled: true
       view_enabled: true
       suppress_app_log: false
     production:
-      enabled: false
+      enabled: true
       controller_enabled: true
       mailer_enabled: true
       record_enabled: false
