@@ -78,22 +78,20 @@ In your Gemfile:
 
 ## Optionally use config/logstasher.yml (overrides `<environment>.rb`)
 
-Has the same optional fields as the `<environment>.rb`
+Has the same optional fields as the `<environment>.rb`. You can specify common configurations that are then overriden by environment specific configurations:
 
+    controller_enabled: true
+    mailer_enabled: false
+    record_enabled: false
+    view_enabled: true
+    suppress_app_log: false
     development:
       enabled: true
-      controller_enabled: true
-      mailer_enabled: false
       record_enabled: true
-      view_enabled: true
-      suppress_app_log: false
     production:
       enabled: true
-      controller_enabled: true
       mailer_enabled: true
-      record_enabled: false
       view_enabled: false
-      suppress_app_log: false
 
 ## Logging params hash
 
