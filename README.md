@@ -58,12 +58,6 @@ In your Gemfile:
     # Enable the logstasher logs for the current environment
     config.logstasher.enabled = true
 
-    # Each of the following lines are optional. If you want to selectively disable log subscribers.
-    config.logstasher.controller_enabled = false
-    config.logstasher.mailer_enabled = false
-    config.logstasher.record_enabled = false
-    config.logstasher.view_enabled = false
-
     # This line is optional if you do not want to suppress app logs in your <environment>.log
     config.logstasher.suppress_app_log = false
 
@@ -72,26 +66,9 @@ In your Gemfile:
 
     # This line is optional if you do not want to log the backtrace of exceptions
     config.logstasher.backtrace = false
-
+    
     # This line is optional, defaults to log/logstasher_<environment>.log
     config.logstasher.logger_path = 'log/logstasher.log'
-
-## Optionally use config/logstasher.yml (overrides `<environment>.rb`)
-
-Has the same optional fields as the `<environment>.rb`. You can specify common configurations that are then overriden by environment specific configurations:
-
-    controller_enabled: true
-    mailer_enabled: false
-    record_enabled: false
-    view_enabled: true
-    suppress_app_log: false
-    development:
-      enabled: true
-      record_enabled: true
-    production:
-      enabled: true
-      mailer_enabled: true
-      view_enabled: false
 
 ## Logging params hash
 

@@ -98,6 +98,7 @@ module LogStasher
 
       def extract_custom_fields(payload)
         custom_fields = (!LogStasher.custom_fields.empty? && payload.extract!(*LogStasher.custom_fields)) || {}
+        LogStasher.custom_fields.clear
         custom_fields
       end
     end
