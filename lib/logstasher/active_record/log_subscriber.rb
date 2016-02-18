@@ -21,7 +21,6 @@ module LogStasher
       def logstash_event(event)
         data = event.payload
 
-        return unless logger.debug?
         return if 'SCHEMA' == data[:name]
 
         data.merge! runtimes(event)
@@ -52,7 +51,6 @@ module LogStasher
 
       def extract_custom_fields(data)
         custom_fields = (!LogStasher.custom_fields.empty? && data.extract!(*LogStasher.custom_fields)) || {}
-        LogStasher.custom_fields.clear
         custom_fields
       end
     end
