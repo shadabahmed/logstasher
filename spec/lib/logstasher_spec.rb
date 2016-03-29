@@ -8,6 +8,7 @@ describe LogStasher do
       ActionController::LogSubscriber.attach_to :action_controller
       ActionView::LogSubscriber.attach_to :action_view
       ActionMailer::LogSubscriber.attach_to :action_mailer
+      ActiveJob::Logging::LogSubscriber.attach_to :active_job if LogStasher.has_active_job?
     end
 
     it "should remove subscribers for controller events" do
@@ -16,6 +17,18 @@ describe LogStasher do
       }.to change {
         ActiveSupport::Notifications.notifier.listeners_for('process_action.action_controller')
       }
+    end
+
+    it "should remove subscribers for job events" do
+      if LogStasher.has_active_job?
+        expect {
+          LogStasher.remove_existing_log_subscriptions
+        }.to change {
+          ActiveSupport::Notifications.notifier.listeners_for('perform.active_job')
+        }
+      else
+        expect(ActiveSupport::Notifications.notifier.listeners_for('perform.active_job')).to eq([])
+      end
     end
 
     it "should remove subscribers for all events" do
@@ -112,6 +125,7 @@ describe LogStasher do
       expect(LogStasher::ActiveSupport::MailerLogSubscriber).to receive(:attach_to).with(:action_mailer)
       expect(LogStasher::ActiveRecord::LogSubscriber).to receive(:attach_to).with(:active_record)
       expect(LogStasher::ActionView::LogSubscriber).to receive(:attach_to).with(:action_view)
+      expect(LogStasher::ActiveJob::LogSubscriber).to receive(:attach_to).with(:active_job)
       expect(LogStasher).to receive(:require).with('logstash-event')
     end
 
@@ -122,7 +136,7 @@ describe LogStasher do
                                      :logger => logger, :log_level => 'warn', :log_controller_parameters => nil,
                                      :source => logstasher_source, :logger_path => logger_path, :backtrace => true,
                                      :controller_monkey_patch => true, :controller_enabled => true,
-                                     :mailer_enabled => true, :record_enabled => false, :view_enabled => true) }
+                                     :mailer_enabled => true, :record_enabled => false, :view_enabled => true, :job_enabled => true) }
     let(:config) { double(:logstasher => logstasher_config) }
     let(:app) { double(:config => config) }
     before do
@@ -346,6 +360,29 @@ describe LogStasher do
     it "returns true if called as rake" do
       require 'rails/commands/console'
       expect(LogStasher.called_as_console?).to be true
+    end
+  end
+
+  describe '.has_active_job?' do
+    it 'returns false when < Rails 4.2' do
+      stub_const('Rails::VERSION::MAJOR', 4)
+      stub_const('Rails::VERSION::MINOR', 1)
+
+      expect(LogStasher.has_active_job?).to be false
+    end
+
+    it 'returns true when Rails 4.2' do
+      stub_const('Rails::VERSION::MAJOR', 4)
+      stub_const('Rails::VERSION::MINOR', 2)
+
+      expect(LogStasher.has_active_job?).to be true
+    end
+
+    it 'returns true when Rails 5' do
+      stub_const('Rails::VERSION::MAJOR', 5)
+      stub_const('Rails::VERSION::MINOR', 0)
+
+      expect(LogStasher.has_active_job?).to be true
     end
   end
 
