@@ -63,8 +63,8 @@ module LogStasher
       LogStasher.custom_fields.concat(LogStasher.store.keys)
       instance_exec(fields, &block)
     end
-    ::ActionController::Metal.send(:define_method, :logtasher_add_custom_fields_to_payload, &wrapped_block)
-    ::ActionController::Base.send(:define_method, :logtasher_add_custom_fields_to_payload, &wrapped_block)
+    ::ActionController::Metal.send(:define_method, :logstasher_add_custom_fields_to_payload, &wrapped_block)
+    ::ActionController::Base.send(:define_method, :logstasher_add_custom_fields_to_payload, &wrapped_block)
   end
 
   def add_custom_fields_to_request_context(&block)

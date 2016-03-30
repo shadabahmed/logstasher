@@ -45,6 +45,7 @@ describe LogStasher::SampleController do
       before :each do
         LogStasher.add_custom_fields_to_request_context do |fields|
           fields[:some_field] = 'value'
+          fields[:before_filter_field] = @before_filter_value
         end
 
         ActiveSupport::Notifications.subscribe('process_action.action_controller') do |_, _, _, _, payload|
@@ -58,6 +59,7 @@ describe LogStasher::SampleController do
 
       after :each do
         expect(@payload[:some_field]).to eq('value')
+        expect(@payload[:before_filter_field]).to be_present
 
         ActionController::Metal.class_eval do
           undef logstasher_add_custom_fields_to_request_context
