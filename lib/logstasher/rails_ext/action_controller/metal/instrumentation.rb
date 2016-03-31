@@ -26,7 +26,13 @@ module ActionController
         begin
           result = super
         ensure
-          add_custom_fields_to_payload(raw_payload)
+          if self.respond_to?(:logstasher_add_custom_fields_to_payload)
+            before_keys = raw_payload.keys.clone
+            logstasher_add_custom_fields_to_payload(raw_payload)
+            after_keys = raw_payload.keys
+            # Store all extra keys added to payload hash in payload itself. This is a thread safe way
+            LogStasher.custom_fields += after_keys - before_keys
+          end
         end
 
         payload[:status] = response.status
@@ -42,18 +48,5 @@ module ActionController
       end
     end
     alias :logstasher_process_action :process_action
-
-    private
-
-    def add_custom_fields_to_payload(raw_payload)
-      if self.respond_to?(:logstasher_add_custom_fields_to_payload)
-        before_keys = raw_payload.keys.clone
-        logstasher_add_custom_fields_to_payload(raw_payload)
-        after_keys = raw_payload.keys
-        # Store all extra keys added to payload hash in payload itself. This is a thread safe way
-        LogStasher.custom_fields += after_keys - before_keys
-      end
-    end
-
   end
 end
