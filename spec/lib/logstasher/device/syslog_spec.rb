@@ -14,9 +14,9 @@ describe LogStasher::Device::Syslog do
   before { allow(::Syslog).to receive(:log) }
 
   around do |example|
-    ::Syslog.close if ::Syslog.opened?
+    ::Syslog.close rescue nil
     example.run
-    ::Syslog.close if ::Syslog.opened?
+    ::Syslog.close rescue nil
   end
 
   it 'has default options' do
@@ -64,25 +64,37 @@ describe LogStasher::Device::Syslog do
     expect(device.flags).to eq(::Syslog::LOG_NOWAIT | ::Syslog::LOG_ODELAY)
   end
 
+  it 'opens syslog when it is closed' do
+    expect(::Syslog).to receive(:open).with(
+      default_options['identity'],
+      default_options['flags'],
+      default_options['facility'],
+    )
+
+    LogStasher::Device::Syslog.new
+  end
+
+  it 're-opens syslog when it is already opened' do
+    ::Syslog.open('temp', ::Syslog::LOG_NDELAY, ::Syslog::LOG_AUTH)
+
+    expect(::Syslog).to receive(:reopen).with(
+      default_options['identity'],
+      default_options['flags'],
+      default_options['facility'],
+    )
+
+    LogStasher::Device::Syslog.new
+  end
+
   describe '#write' do
     subject { LogStasher::Device::Syslog.new }
 
-    it 'opens syslog when syslog is closed' do
-      expect(::Syslog).to receive(:open).with(subject.identity, subject.flags, subject.facility)
-      subject.write('a log')
-    end
-
-    it 'does not re-open syslog when its config is in sync' do
-      ::Syslog.open(subject.identity, subject.flags, subject.facility)
-      expect(::Syslog).not_to receive(:open)
-      expect(::Syslog).not_to receive(:reopen)
-      subject.write('a log')
-    end
-
-    it 're-opens syslog when its config is out of sync' do
-      ::Syslog.open('temp', ::Syslog::LOG_NDELAY, ::Syslog::LOG_AUTH)
-      expect(::Syslog).to receive(:reopen).with(subject.identity, subject.flags, subject.facility)
-      subject.write('a log')
+    it 'fails when the syslog config is out of sync' do
+      subject
+      ::Syslog.reopen('temp', ::Syslog::LOG_NDELAY, ::Syslog::LOG_AUTH)
+      expect {
+        subject.write('a log')
+      }.to raise_error(::RuntimeError, 'Syslog re-configured unexpectedly.')
     end
 
     it 'writes the log to syslog' do
@@ -94,7 +106,7 @@ describe LogStasher::Device::Syslog do
       subject.close
       expect {
         subject.write('a log')
-      }.to raise_error(::RuntimeError, 'Cannot write. The device has been closed.')
+      }.to raise_error(::RuntimeError, 'Syslog has been closed.')
     end
   end
 
@@ -106,14 +118,8 @@ describe LogStasher::Device::Syslog do
       expect(subject).to be_closed
     end
 
-    it 'closes syslog when syslog is open' do
-      ::Syslog.open(subject.identity, subject.flags, subject.facility)
+    it 'closes syslog' do
       expect(::Syslog).to receive(:close)
-      subject.close
-    end
-
-    it 'does not close syslog if it is already closed' do
-      expect(::Syslog).not_to receive(:close)
       subject.close
     end
   end
