@@ -2,14 +2,11 @@
 
 require 'logstasher/device'
 require 'syslog'
-require 'thread'
 
 module LogStasher
   module Device
     class Syslog
       include ::LogStasher::Device
-
-      SEMAPHORE = Mutex.new
 
       attr_reader :options
 
@@ -17,19 +14,15 @@ module LogStasher
         raw_options = default_options.merge(stringify_keys(options))
 
         @options = parse_options(raw_options)
-        @closed  = false
+        open_syslog
       end
 
       def close
-        SEMAPHORE.synchronize do
-          ::Syslog.close if ::Syslog.opened?
-        end
-
-        @closed = true
+        ::Syslog.close rescue nil
       end
 
       def closed?
-        @closed
+        !::Syslog.opened?
       end
 
       def facility
@@ -49,11 +42,10 @@ module LogStasher
       end
 
       def write(log)
-        fail ::RuntimeError, 'Cannot write. The device has been closed.' if closed?
+        fail ::RuntimeError, 'Syslog has been closed.' if closed?
+        fail ::RuntimeError, 'Syslog re-configured unexpectedly.' if syslog_config_changed?
 
-        with_syslog_open do
-          ::Syslog.log(priority, '%s', log)
-        end
+        ::Syslog.log(priority, '%s', log)
       end
 
       private
@@ -63,8 +55,16 @@ module LogStasher
           'identity' => 'logstasher',
           'facility' => ::Syslog::LOG_LOCAL0,
           'priority' => ::Syslog::LOG_INFO,
-          'flags'    => ::Syslog::LOG_PID | ::Syslog::LOG_CONS
+          'flags'    => ::Syslog::LOG_PID | ::Syslog::LOG_CONS,
         }
+      end
+
+      def open_syslog
+        if ::Syslog.opened?
+          ::Syslog.reopen(identity, flags, facility)
+        else
+          ::Syslog.open(identity, flags, facility)
+        end
       end
 
       def parse_option(value)
@@ -85,20 +85,8 @@ module LogStasher
         options
       end
 
-      def syslog_configured?
-        ::Syslog.ident == identity && ::Syslog.options == flags && ::Syslog.facility == facility
-      end
-
-      def with_syslog_open
-        SEMAPHORE.synchronize do
-          if ::Syslog.opened?
-            ::Syslog.reopen(identity, flags, facility) unless syslog_configured?
-          else
-            ::Syslog.open(identity, flags, facility)
-          end
-
-          yield
-        end
+      def syslog_config_changed?
+        ::Syslog.ident != identity || ::Syslog.options != flags || ::Syslog.facility != facility
       end
     end
   end

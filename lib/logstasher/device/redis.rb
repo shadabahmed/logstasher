@@ -59,7 +59,7 @@ module LogStasher
 
       def validate_options
         unless ['list', 'channel'].include?(options['data_type'])
-          fail 'Expected data_type to be either "list" or "channel"'
+          fail RuntimeError, 'Expected data_type to be either "list" or "channel"'
         end
       end
     end

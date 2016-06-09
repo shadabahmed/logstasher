@@ -19,12 +19,6 @@ describe ::LogStasher::Railtie do
   let(:config) { described_class.config.logstasher }
 
   describe 'logstasher.configure' do
-    subject do
-      described_class.instance.initializers.find do |initializer|
-        initializer.name == 'logstasher.configure'
-      end
-    end
-
     it 'should configure LogStasher' do
       config.logger                   = ::Logger.new('/dev/null')
       config.log_level                = "log_level"
@@ -40,7 +34,7 @@ describe ::LogStasher::Railtie do
       expect(::LogStasher).to receive(:logger=).with(config.logger).and_call_original
       expect(config.logger).to receive(:level=).with("log_level")
 
-      subject.run
+      ActiveSupport.run_load_hooks(:before_initialize)
     end
   end
 
