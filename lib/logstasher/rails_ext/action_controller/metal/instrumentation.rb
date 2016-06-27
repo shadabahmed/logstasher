@@ -42,10 +42,10 @@ module ActionController
         LogStasher.request_context.each do |key, value|
           payload[key] = value
         end
+        LogStasher::CustomFields.clear
         result
       end
     end
     alias :logstasher_process_action :process_action
-
   end
 end

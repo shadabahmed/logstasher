@@ -15,7 +15,7 @@ describe LogStasher::ActiveSupport::LogSubscriber do
   before do
     LogStasher.logger = logger
     LogStasher.log_controller_parameters = true
-    LogStasher.custom_fields = []
+    LogStasher::CustomFields.custom_fields = []
   end
   after do
     LogStasher.log_controller_parameters = false
@@ -171,7 +171,7 @@ describe LogStasher::ActiveSupport::LogSubscriber do
       LogStasher.add_custom_fields do |payload|
         payload[:user] = 'user'
       end
-      LogStasher.custom_fields += [:user]
+      LogStasher::CustomFields.custom_fields += [:user]
     end
 
     it "should add the custom data to the output" do

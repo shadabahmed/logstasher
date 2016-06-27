@@ -10,7 +10,6 @@ describe ActionController::Base do
     end
   end
   before :each do
-
     subject.request = ActionDispatch::TestRequest.new
     subject.response = ActionDispatch::TestResponse.new
 
