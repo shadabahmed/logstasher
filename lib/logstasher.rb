@@ -3,6 +3,7 @@ require 'logstasher/active_support/log_subscriber'
 require 'logstasher/active_support/mailer_log_subscriber'
 require 'logstasher/active_record/log_subscriber'
 require 'logstasher/action_view/log_subscriber'
+require 'logstasher/active_job/log_subscriber'
 require 'logstasher/rails_ext/action_controller/base'
 require 'request_store'
 require 'active_support/core_ext/module/attribute_accessors'
@@ -32,6 +33,8 @@ module LogStasher
           unsubscribe(:action_mailer, subscriber)
         when 'ActiveRecord::LogSubscriber'
           unsubscribe(:active_record, subscriber)
+        when 'ActiveJob::Logging::LogSubscriber'
+          unsubscribe(:active_job, subscriber)
       end
     end
   end
@@ -91,6 +94,7 @@ module LogStasher
     LogStasher::ActiveSupport::MailerLogSubscriber.attach_to :action_mailer if config.mailer_enabled
     LogStasher::ActiveRecord::LogSubscriber.attach_to :active_record if config.record_enabled
     LogStasher::ActionView::LogSubscriber.attach_to :action_view if config.view_enabled
+    LogStasher::ActiveJob::LogSubscriber.attach_to :active_job if has_active_job? && config.job_enabled
   end
 
   def setup(config)
@@ -123,6 +127,10 @@ module LogStasher
 
   def called_as_console?
     defined?(Rails::Console) && true || false
+  end
+
+  def has_active_job?
+    Rails::VERSION::MAJOR > 4 || (Rails::VERSION::MAJOR == 4 && Rails::VERSION::MINOR >= 2)
   end
 
   def suppress_app_logs(config)
