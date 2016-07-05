@@ -10,7 +10,6 @@ rvm:
   - 2.3
   - ruby-head
 env:
-  - "RAILS_VERSION=5.0"
   - "RAILS_VERSION=4.2"
   - "RAILS_VERSION=4.1"
   - "RAILS_VERSION=4.0"
