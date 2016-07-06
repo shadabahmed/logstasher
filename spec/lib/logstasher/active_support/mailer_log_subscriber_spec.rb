@@ -52,7 +52,7 @@ describe LogStasher::ActiveSupport::MailerLogSubscriber do
 
   it 'deliver an outgoing e-mail' do
     email = SampleMailer.welcome
-    email.deliver
+    email.respond_to?(:deliver_now) ? email.deliver_now : email.deliver
     log_output.json.tap do |json|
       expect(json['source']).to eq(LogStasher.source)
       expect(json['tags']).to eq(['mailer', 'deliver'])
