@@ -1,9 +1,12 @@
 require 'active_support/notifications'
 require 'active_record/log_subscriber'
+require 'logstasher/custom_fields'
 
 module LogStasher
   module ActiveRecord
     class LogSubscriber < ::ActiveRecord::LogSubscriber
+      include CustomFields::LogSubscriber
+
       def identity(event)
         lsevent = logstash_event(event)
         if logger && lsevent
@@ -47,11 +50,6 @@ module LogStasher
 
       def extract_sql(data)
         { sql: data[:sql].squeeze(' ') }
-      end
-
-      def extract_custom_fields(data)
-        custom_fields = (!LogStasher.custom_fields.empty? && data.extract!(*LogStasher.custom_fields)) || {}
-        custom_fields
       end
     end
   end
