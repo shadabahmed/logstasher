@@ -34,10 +34,11 @@ module LogStasher
       LogStasher.setup_before(app.config.logstasher) if app.config.logstasher.enabled
     end
 
-    initializer :logstasher do
+    initializer :logstasher do |app|
       config.after_initialize do
-        LogStasher.setup(config.logstasher) if config.logstasher.enabled
+        LogStasher.setup(config.logstasher, app) if config.logstasher.enabled
       end
+      LogStasher.modify_middleware(app)
     end
   end
 

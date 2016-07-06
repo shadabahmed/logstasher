@@ -6,12 +6,21 @@ require 'logstasher/action_view/log_subscriber'
 require 'logstasher/active_job/log_subscriber'
 require 'logstasher/rails_ext/action_controller/base'
 require 'logstasher/custom_fields'
+require 'logstasher/rails_ext/rack/debug_exceptions'
 require 'request_store'
 require 'active_support/core_ext/module/attribute_accessors'
 require 'active_support/core_ext/string/inflections'
 require 'active_support/ordered_options'
 
 module LogStasher
+  class NullLogger < Logger
+    def initialize(*args)
+    end
+
+    def add(*args, &block)
+    end
+  end
+
   extend self
   STORE_KEY = :logstasher_data
   REQUEST_CONTEXT_KEY = :logstasher_request_context
@@ -98,12 +107,12 @@ module LogStasher
     LogStasher::ActiveJob::LogSubscriber.attach_to :active_job if has_active_job? && config.job_enabled
   end
 
-  def setup(config)
+  def setup(config, app)
     # Path instrumentation class to insert our hook
     if (! config.controller_monkey_patch && config.controller_monkey_patch != false) || config.controller_monkey_patch == true
       require 'logstasher/rails_ext/action_controller/metal/instrumentation'
     end
-    self.suppress_app_logs(config)
+    self.suppress_app_logs(config, app)
     self.logger_path = config.logger_path || "#{Rails.root}/log/logstash_#{Rails.env}.log"
     self.logger = config.logger || new_logger(self.logger_path)
     self.logger.level = config.log_level || Logger::WARN
@@ -134,9 +143,10 @@ module LogStasher
     Rails::VERSION::MAJOR > 4 || (Rails::VERSION::MAJOR == 4 && Rails::VERSION::MINOR >= 2)
   end
 
-  def suppress_app_logs(config)
+  def suppress_app_logs(config, app)
     if configured_to_suppress_app_logs?(config)
       require 'logstasher/rails_ext/rack/logger'
+      app.env_config["action_dispatch.logger"] = NullLogger.new()
       LogStasher.remove_existing_log_subscriptions
     end
   end
@@ -144,6 +154,12 @@ module LogStasher
   def configured_to_suppress_app_logs?(config)
     # This supports both spellings: "suppress_app_log" and "supress_app_log"
     !!(config.suppress_app_log.nil? ? config.supress_app_log : config.suppress_app_log)
+  end
+
+  def modify_middleware(app)
+    if enabled
+      app.middleware.insert_after ::ActionDispatch::DebugExceptions, ::LogStasher::ActionDispatch::DebugExceptions, app
+    end
   end
 
   # Log an arbitrary message.

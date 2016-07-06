@@ -86,7 +86,7 @@ module LogStasher
       def extract_exception(payload)
         if payload[:exception]
           exception, message = payload[:exception]
-          status = ActionDispatch::ExceptionWrapper.status_code_for_exception(exception)
+          status = ::ActionDispatch::ExceptionWrapper.status_code_for_exception(exception)
           if LogStasher.backtrace
             backtrace = $!.backtrace.join("\n")
           else
