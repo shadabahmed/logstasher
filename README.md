@@ -205,7 +205,3 @@ All versions require Rails 3.0.x and higher and Ruby 1.9.2+. Tested on Rails 4 a
 ## Copyright
 
 Copyright (c) 2016 Shadab Ahmed, released under the MIT license
-
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/shadabahmed/logstasher/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
-
