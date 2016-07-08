@@ -4,7 +4,7 @@ source "https://rubygems.org"
 gemspec
 
 group :test do
-  gem 'rails', "~> #{ENV["RAILS_VERSION"] || "3.2.0"}"
+  gem 'rails', "~> #{ENV["RAILS_VERSION"] || "4.2.0"}"
   gem 'rb-fsevent', '~> 0.9'
   gem 'rcov', :platforms => :mri_18
   gem 'redis', :require => false
