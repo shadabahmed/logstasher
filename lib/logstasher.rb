@@ -3,7 +3,9 @@ require 'logstasher/active_support/log_subscriber'
 require 'logstasher/active_support/mailer_log_subscriber'
 require 'logstasher/active_record/log_subscriber'
 require 'logstasher/action_view/log_subscriber'
+require 'logstasher/active_job/log_subscriber'
 require 'logstasher/rails_ext/action_controller/base'
+require 'logstasher/custom_fields'
 require 'request_store'
 require 'active_support/core_ext/module/attribute_accessors'
 require 'active_support/core_ext/string/inflections'
@@ -32,6 +34,8 @@ module LogStasher
           unsubscribe(:action_mailer, subscriber)
         when 'ActiveRecord::LogSubscriber'
           unsubscribe(:active_record, subscriber)
+        when 'ActiveJob::Logging::LogSubscriber'
+          unsubscribe(:active_job, subscriber)
       end
     end
   end
@@ -51,16 +55,16 @@ module LogStasher
     payload[:ip] = request.remote_ip
     payload[:route] = "#{request.params[:controller]}##{request.params[:action]}"
     payload[:request_id] = request.env['action_dispatch.request_id']
-    self.custom_fields += [:ip, :route, :request_id]
+    LogStasher::CustomFields.add(:ip, :route, :request_id)
     if self.log_controller_parameters
       payload[:parameters] = payload[:params].except(*::ActionController::LogSubscriber::INTERNAL_PARAMS)
-      self.custom_fields += [:parameters]
+      LogStasher::CustomFields.add(:parameters)
     end
   end
 
   def add_custom_fields(&block)
     wrapped_block = Proc.new do |fields|
-      LogStasher.custom_fields.concat(LogStasher.store.keys)
+      LogStasher::CustomFields.add(*LogStasher.store.keys)
       instance_exec(fields, &block)
     end
     ::ActionController::Metal.send(:define_method, :logtasher_add_custom_fields_to_payload, &wrapped_block)
@@ -70,7 +74,7 @@ module LogStasher
   def add_custom_fields_to_request_context(&block)
     wrapped_block = Proc.new do |fields|
       instance_exec(fields, &block)
-      LogStasher.custom_fields.concat(fields.keys)
+      LogStasher::CustomFields.add(*fields.keys)
     end
     ::ActionController::Metal.send(:define_method, :logstasher_add_custom_fields_to_request_context, &wrapped_block)
     ::ActionController::Base.send(:define_method, :logstasher_add_custom_fields_to_request_context, &wrapped_block)
@@ -91,6 +95,7 @@ module LogStasher
     LogStasher::ActiveSupport::MailerLogSubscriber.attach_to :action_mailer if config.mailer_enabled
     LogStasher::ActiveRecord::LogSubscriber.attach_to :active_record if config.record_enabled
     LogStasher::ActionView::LogSubscriber.attach_to :action_view if config.view_enabled
+    LogStasher::ActiveJob::LogSubscriber.attach_to :active_job if has_active_job? && config.job_enabled
   end
 
   def setup(config)
@@ -125,6 +130,10 @@ module LogStasher
     defined?(Rails::Console) && true || false
   end
 
+  def has_active_job?
+    Rails::VERSION::MAJOR > 4 || (Rails::VERSION::MAJOR == 4 && Rails::VERSION::MINOR >= 2)
+  end
+
   def suppress_app_logs(config)
     if configured_to_suppress_app_logs?(config)
       require 'logstasher/rails_ext/rack/logger'
@@ -135,14 +144,6 @@ module LogStasher
   def configured_to_suppress_app_logs?(config)
     # This supports both spellings: "suppress_app_log" and "supress_app_log"
     !!(config.suppress_app_log.nil? ? config.supress_app_log : config.suppress_app_log)
-  end
-
-  def custom_fields
-    Thread.current[:logstasher_custom_fields] ||= []
-  end
-
-  def custom_fields=(val)
-    Thread.current[:logstasher_custom_fields] = val
   end
 
   # Log an arbitrary message.

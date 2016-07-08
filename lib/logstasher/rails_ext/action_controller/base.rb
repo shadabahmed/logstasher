@@ -7,6 +7,7 @@ module LogStasher
         LogStasher.add_default_fields_to_request_context(request)
 
         super(*args)
+        LogStasher::CustomFields.clear
       end
       
       private
@@ -23,7 +24,7 @@ module LogStasher
           logtasher_add_custom_fields_to_payload(payload)
           after_keys = payload.keys
           # Store all extra keys added to payload hash in payload itself. This is a thread safe way
-          LogStasher.custom_fields += after_keys - before_keys
+          LogStasher::CustomFields.add(*(after_keys - before_keys))
         end
 
         payload[:status] = response.status

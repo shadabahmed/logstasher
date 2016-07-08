@@ -1,9 +1,12 @@
 require 'active_support/core_ext/class/attribute'
 require 'active_support/log_subscriber'
+require 'logstasher/custom_fields'
 
 module LogStasher
   module ActiveSupport
     class LogSubscriber < ::ActiveSupport::LogSubscriber
+      include CustomFields::LogSubscriber
+
       def process_action(event)
         payload = event.payload
 
@@ -94,11 +97,6 @@ module LogStasher
         else
           {}
         end
-      end
-
-      def extract_custom_fields(payload)
-        custom_fields = (!LogStasher.custom_fields.empty? && payload.extract!(*LogStasher.custom_fields)) || {}
-        custom_fields
       end
     end
   end
