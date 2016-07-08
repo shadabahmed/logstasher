@@ -65,5 +65,44 @@ describe ActionController::Base do
         end
       end
     end
+
+    context "payload has custom fields defined" do
+      before :each do
+        LogStasher.add_custom_fields do |fields|
+          fields[:some_field] = 'value'
+        end
+
+        ActiveSupport::Notifications.subscribe('process_action.action_controller') do |_, _, _, _, payload|
+          @payload = payload
+        end
+      end
+
+      it "should retain the value in the request context" do
+        subject.process_action(:index)
+      end
+
+      context 'exception thrown by controller' do
+        before :each do
+          def subject.index_with_exception(*args)
+            fail 'Exception'
+          end
+        end
+
+        it 'should retain the value in the request context' do
+          expect { subject.process_action(:index_with_exception) }.to raise_exception('Exception')
+        end
+      end
+
+      after :each do
+        expect(@payload[:some_field]).to eq('value')
+
+        ActionController::Metal.class_eval do
+          undef logtasher_add_custom_fields_to_payload
+        end
+        ActionController::Base.class_eval do
+          undef logtasher_add_custom_fields_to_payload
+        end
+      end
+    end
   end
 end
