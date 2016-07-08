@@ -33,7 +33,7 @@ module ActionController
             logtasher_add_custom_fields_to_payload(raw_payload)
             after_keys = raw_payload.keys
             # Store all extra keys added to payload hash in payload itself. This is a thread safe way
-            LogStasher.custom_fields += after_keys - before_keys
+            LogStasher::CustomFields.custom_fields += after_keys - before_keys
           end
           append_info_to_payload(payload)
           LogStasher.store.each do |key, value|
