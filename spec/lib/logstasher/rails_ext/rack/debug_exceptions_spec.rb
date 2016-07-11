@@ -28,7 +28,7 @@ describe ::LogStasher::ActionDispatch::DebugExceptions do
   describe '#build_exception_hash' do
     let (:wrapper) { double(exception: Exception.new("My Exception"), application_trace: [ "line5" ]) }
     it do
-      hash = subject.build_exception_hash(wrapper)
+      hash = described_class.build_exception_hash(wrapper)
 
       expect(hash).to match({:error=>{:exception=>"Exception", :message=>"My Exception", :trace=>["line5"]}})
     end
