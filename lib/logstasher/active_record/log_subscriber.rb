@@ -29,6 +29,7 @@ module LogStasher
         data.merge! runtimes(event)
         data.merge! extract_sql(data)
         data.merge! request_context
+        data.merge! LogStasher.store
         data.merge! extract_custom_fields(data)
 
         tags = [ 'request' ]
