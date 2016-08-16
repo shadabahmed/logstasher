@@ -47,6 +47,7 @@ describe LogStasher::ActiveSupport::LogSubscriber do
     before do
       allow(LogStasher).to receive(:logger).and_return(logger)
       allow(Time).to receive(:now).and_return(Time.at(0))
+      LogStasher.store.clear
     end
     it 'calls all extractors and outputs the json' do
       expect(request_subscriber).to receive(:extract_request).with(payload).and_return({:request => true})
