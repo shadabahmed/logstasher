@@ -17,7 +17,7 @@ module LogStasher
   REQUEST_CONTEXT_KEY = :logstasher_request_context
 
   attr_accessor :logger, :logger_path, :enabled, :log_controller_parameters, :source, :backtrace,
-    :controller_monkey_patch
+    :controller_monkey_patch, :field_renaming
   # Setting the default to 'unknown' to define the default behaviour
   @source = 'unknown'
   # By default log the backtrace of exceptions
@@ -112,6 +112,7 @@ module LogStasher
     self.backtrace = !! config.backtrace unless config.backtrace.nil?
     self.set_data_for_rake
     self.set_data_for_console
+    self.field_renaming = Hash(config.field_renaming)
   end
 
   def set_data_for_rake
@@ -177,6 +178,9 @@ module LogStasher
   end
 
   def build_logstash_event(data, tags)
+    field_renaming.each do |old_name, new_name|
+        data[new_name] = data.delete(old_name) if data.key?(old_name)
+    end
     ::LogStash::Event.new(data.merge('source' => self.source, 'tags' => tags))
   end
 

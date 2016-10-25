@@ -82,6 +82,12 @@ config.logstasher.backtrace = false
 
 # This line is optional, defaults to log/logstasher_<environment>.log
 config.logstasher.logger_path = 'log/logstasher.log'
+
+# This line is optional, loaded only if the value is truthy
+config.field_renaming = {
+    old_field_name => new_field_name,
+}
+
 ```
 
 ## Optionally use config/logstasher.yml (overrides `<environment>.rb`)
