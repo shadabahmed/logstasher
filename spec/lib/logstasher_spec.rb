@@ -3,6 +3,10 @@ require 'active_record'
 require 'rake'
 
 describe LogStasher do
+  before :each do
+    LogStasher.field_renaming = {}
+  end
+
   describe "when removing Rails' log subscribers" do
     after do
       ActionController::LogSubscriber.attach_to :action_controller
@@ -108,6 +112,16 @@ describe LogStasher do
     end
   end
 
+  describe ".build_logstash_event" do
+    it 'renames fields' do
+        LogStasher.field_renaming = { field_a: 'other_name_a', field_b: 'some_name_b' }
+        data = {field_a: 111, field_b:222}
+        renamed = LogStasher.build_logstash_event(data,{})
+        expect(renamed['other_name_a']).to eq(111)
+        expect(renamed['some_name_b']).to eq(222)
+    end
+  end
+
   shared_examples 'setup_before' do
     let(:logstasher_source) { nil }
     let(:logstasher_config) { double(:enabled => true) }
@@ -135,7 +149,7 @@ describe LogStasher do
                                      :logger => logger, :log_level => 'warn', :log_controller_parameters => nil,
                                      :source => logstasher_source, :logger_path => logger_path, :backtrace => true,
                                      :controller_monkey_patch => true, :controller_enabled => true,
-                                     :mailer_enabled => true, :record_enabled => false, :view_enabled => true, :job_enabled => true) }
+                                     :mailer_enabled => true, :record_enabled => false, :view_enabled => true, :job_enabled => true, :field_renaming => {})}
     let(:config) { double(:logstasher => logstasher_config) }
     let(:app) { double(:config => config) }
     before do

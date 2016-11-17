@@ -82,6 +82,12 @@ config.logstasher.backtrace = false
 
 # This line is optional, defaults to log/logstasher_<environment>.log
 config.logstasher.logger_path = 'log/logstasher.log'
+
+# This line is optional, loaded only if the value is truthy
+config.field_renaming = {
+    old_field_name => new_field_name,
+}
+
 ```
 
 ## Optionally use config/logstasher.yml (overrides `<environment>.rb`)
@@ -213,6 +219,9 @@ bin/logstash -f quickstart.conf
 All versions require Rails 3.0.x and higher and Ruby 1.9.2+. Tested on Rails 4 and Ruby 2.0
 
 ## Development
+ - Install dependencies:
+   export RAILS_VERSION=4.2
+   bundle install --without guard --path=${BUNDLE_PATH:-vendor/bundle}
  - Run tests - `rake`
  - Generate test coverage report - `rake coverage`. Coverage report path - coverage/index.html
 

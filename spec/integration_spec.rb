@@ -11,6 +11,7 @@ describe ActionController::Base do
       #LogStasher::ActiveRecord::LogSubscriber.attach_to :active_record
       LogStasher::ActionView::LogSubscriber.attach_to :action_view
       #LogStasher::ActiveJob::LogSubscriber.attach_to :active_job
+      LogStasher.field_renaming = {}
     end
 
     before :each do
