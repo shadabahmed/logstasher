@@ -1,4 +1,4 @@
-# Logstasher [![Gem Version](https://badge.fury.io/rb/logstasher.png)](http://badge.fury.io/rb/logstasher) [![Build Status](https://secure.travis-ci.org/shadabahmed/logstasher.png)](https://secure.travis-ci.org/shadabahmed/logstasher)
+# Logstasher [![Gem Version](https://badge.fury.io/rb/logstasher.svg)](https://badge.fury.io/rb/logstasher) [![Build Status](https://travis-ci.org/shadabahmed/logstasher.svg?branch=master)](https://secure.travis-ci.org/shadabahmed/logstasher)
 ### Awesome Logging for Rails !!
 
 This gem is heavily inspired from [lograge](https://github.com/roidrage/lograge), but it's focused on one thing and one thing only. That's making your logs awesome like this:
