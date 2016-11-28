@@ -54,7 +54,7 @@ module LogStasher
     config.suppress_app_log = yml_config[:suppress_app_log] if yml_config.key? :suppress_app_log
     #
     # # This line is optional, it allows you to set a custom value for the @source field of the log event
-    config.source = yml_config[:source].present? ? yml_config[:source] : IPSocket.getaddress(Socket.gethostname)
+    config.source = yml_config[:source] if yml_config.key? :source
 
     config.backtrace = yml_config[:backtrace] if yml_config.key? :backtrace
     config.logger_path = yml_config[:logger_path] if yml_config.key? :logger_path
