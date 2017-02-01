@@ -1,3 +1,6 @@
+# 1.1.1
+* Typo fixes. Merge from #127
+
 # 1.1.0
 * Added 'field_renaming' configuration option
 
