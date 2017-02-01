@@ -89,7 +89,7 @@ describe LogStasher do
   describe '.append_custom_params' do
     let(:block) { ->(_, _){} }
     it 'defines a method in ActionController::Base' do
-      expect(ActionController::Base).to receive(:send).with(:define_method, :logtasher_add_custom_fields_to_payload, &block)
+      expect(ActionController::Base).to receive(:send).with(:define_method, :logstasher_add_custom_fields_to_payload, &block)
       LogStasher.add_custom_fields(&block)
     end
   end
