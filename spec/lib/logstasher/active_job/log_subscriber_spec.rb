@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'logstasher/active_job/log_subscriber'
 
 describe LogStasher::ActiveJob::LogSubscriber do
   require 'active_job'

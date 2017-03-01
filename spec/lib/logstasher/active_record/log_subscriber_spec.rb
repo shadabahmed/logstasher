@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'logstasher/active_record/log_subscriber'
 
 describe LogStasher::ActiveRecord::LogSubscriber do
   let(:log_output) {StringIO.new}

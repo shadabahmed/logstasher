@@ -1,6 +1,5 @@
 require 'spec_helper'
 require 'logstasher/rails_ext/action_controller/base'
-require 'active_record'
 
 describe ActionController::Base do
   shared_examples "controller.process_action" do

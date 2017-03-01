@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'logstasher/action_view/log_subscriber'
 
 describe LogStasher::ActionView::LogSubscriber do
   let(:log_output) {StringIO.new}

@@ -1,9 +1,9 @@
 require 'logstasher/version'
 require 'logstasher/active_support/log_subscriber'
 require 'logstasher/active_support/mailer_log_subscriber'
-require 'logstasher/active_record/log_subscriber'
-require 'logstasher/action_view/log_subscriber'
-require 'logstasher/active_job/log_subscriber'
+require 'logstasher/active_record/log_subscriber' if defined?(ActiveRecord)
+require 'logstasher/action_view/log_subscriber' if defined?(ActionView)
+require 'logstasher/active_job/log_subscriber' if defined?(ActiveJob)
 require 'logstasher/rails_ext/action_controller/base'
 require 'logstasher/custom_fields'
 require 'request_store'
