@@ -1,3 +1,7 @@
+# 1.2.0
+* Merge from #130 - Allow non-rails project to use this gem
+* Merge from #125 - Updated yaml config
+
 # 1.1.1
 * Typo fixes. Merge from #127
 
