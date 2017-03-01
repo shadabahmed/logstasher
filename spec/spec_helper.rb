@@ -10,7 +10,7 @@ if ENV['COVERAGE']
   end
 end
 
-# Modify load path so you can require 'ogstasher directly.
+# Modify load path so you can require 'logstasher directly.
 $LOAD_PATH.unshift(File.expand_path('../../lib', __FILE__))
 
 require 'rubygems'
@@ -27,25 +27,6 @@ Dir[File.join("./spec/support/**/*.rb")].each { |f| require f }
 
 # Set Rails environment as test
 ENV['RAILS_ENV'] = 'test'
-
-require 'action_pack'
-require 'action_controller'
-require 'logstasher'
-require 'active_support/notifications'
-require 'active_support/core_ext/string'
-require 'active_support/log_subscriber'
-require 'action_controller/log_subscriber'
-require 'action_view/log_subscriber'
-require 'active_support/core_ext/hash/except'
-require 'active_support/core_ext/hash/indifferent_access'
-require 'active_support/core_ext/hash/slice'
-require 'active_support/core_ext/string'
-require 'active_support/core_ext/time/zones'
-require 'abstract_controller/base'
-require 'action_mailer'
-require 'logger'
-require 'logstash-event'
-
 
 $test_timestamp = case Rails.version
 when /^3\./

@@ -14,9 +14,9 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'logstash-event', '~> 1.2.0'
   s.add_runtime_dependency 'request_store'
   s.add_runtime_dependency 'activesupport', '>= 4.0'
-  s.add_runtime_dependency 'activerecord', '>= 4.0'
 
   s.add_development_dependency('rspec', '>= 2.14')
   s.add_development_dependency('bundler', '>= 1.0.0')
   s.add_development_dependency('rails', '>= 4.0')
+  s.add_development_dependency('activerecord', '>= 4.0')
 end

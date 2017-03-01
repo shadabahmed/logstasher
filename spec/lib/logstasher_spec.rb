@@ -1,6 +1,6 @@
 require 'spec_helper'
-require 'active_record'
 require 'rake'
+require 'logstash-event'
 
 describe LogStasher do
   before :each do
