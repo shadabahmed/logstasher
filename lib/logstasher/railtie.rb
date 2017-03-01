@@ -49,12 +49,12 @@ module LogStasher
     config.record_enabled = yml_config[:record_enabled] if yml_config.key? :record_enabled
     config.view_enabled = yml_config[:view_enabled] if yml_config.key? :view_enabled
     config.job_enabled = yml_config[:job_enabled] if yml_config.key? :job_enabled
-    #
-    # # This line is optional if you do not want to suppress app logs in your <environment>.log
+
+    # This line is optional if you do not want to suppress app logs in your <environment>.log
     config.suppress_app_log = yml_config[:suppress_app_log] if yml_config.key? :suppress_app_log
-    #
-    # # This line is optional, it allows you to set a custom value for the @source field of the log event
-    config.source = yml_config[:source] if yml_config.key? :source
+
+    # This line is optional, it allows you to set a custom value for the @source field of the log event
+    config.source = yml_config.key?(:source) ? yml_config[:source] : IPSocket.getaddress(Socket.gethostname)
 
     config.backtrace = yml_config[:backtrace] if yml_config.key? :backtrace
     config.logger_path = yml_config[:logger_path] if yml_config.key? :logger_path
