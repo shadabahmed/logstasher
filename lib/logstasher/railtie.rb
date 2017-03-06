@@ -41,6 +41,21 @@ module LogStasher
     end
   end
 
+  def default_source
+    case RUBY_PLATFORM
+    when /darwin/
+      # NOTE: MacOS Sierra and later are setting `.local`
+      # hostnames that even as real hostnames without the `.local` part,
+      # are still unresolvable. One reliable way to get an IP is to
+      # get all available IP address lists and use the first one.
+      # This will always be `127.0.0.1`.
+      address_info = Socket.ip_address_list.first
+      address_info && address_info.ip_address
+    else
+      IPSocket.getaddress(Socket.gethostname)
+    end
+  end
+
   def process_config(config, yml_config)
     # Enable the logstasher logs for the current environment
     config.enabled = yml_config[:enabled] if yml_config.key? :enabled
@@ -54,7 +69,7 @@ module LogStasher
     config.suppress_app_log = yml_config[:suppress_app_log] if yml_config.key? :suppress_app_log
 
     # This line is optional, it allows you to set a custom value for the @source field of the log event
-    config.source = yml_config.key?(:source) ? yml_config[:source] : IPSocket.getaddress(Socket.gethostname)
+    config.source = yml_config.key?(:source) ? yml_config[:source] : default_source
 
     config.backtrace = yml_config[:backtrace] if yml_config.key? :backtrace
     config.logger_path = yml_config[:logger_path] if yml_config.key? :logger_path
