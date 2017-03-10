@@ -16,6 +16,7 @@ module LogStasher
     config.logstasher.record_enabled = false
     config.logstasher.view_enabled = true
     config.logstasher.job_enabled = true
+    config.logstasher.source = LogStasher.default_source
 
     # Try loading the config/logstasher.yml if present
     env = Rails.env.to_sym || :development
