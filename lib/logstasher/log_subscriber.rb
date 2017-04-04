@@ -57,7 +57,7 @@ module LogStasher
         :controller => payload[:controller],
         :format     => extract_format(payload),
         :ip         => request.remote_ip,
-        :request_id => request.request_id,
+        :request_id => request.env["HTTP_X_REQUEST_ID"],
         :method     => payload[:method],
         :path       => extract_path(payload),
         :route      => "#{payload[:controller]}##{payload[:action]}"
