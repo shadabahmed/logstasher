@@ -80,6 +80,9 @@ config.logstasher.source = 'your.arbitrary.source'
 # This line is optional if you do not want to log the backtrace of exceptions
 config.logstasher.backtrace = false
 
+# This line is optional if you want to filter backtrace, it will just log result of callable as backtrace
+config.logstasher.backtrace_filter = ->(bt){ Rails.backtrace_cleaner.clean(bt) }
+
 # This line is optional, defaults to log/logstasher_<environment>.log
 config.logstasher.logger_path = 'log/logstasher.log'
 
