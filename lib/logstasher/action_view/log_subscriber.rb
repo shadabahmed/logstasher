@@ -1,9 +1,12 @@
 require 'active_support/notifications'
 require 'action_view/log_subscriber'
+require 'logstasher/custom_fields'
 
 module LogStasher
   module ActionView
     class LogSubscriber < ::ActionView::LogSubscriber
+      include CustomFields::LogSubscriber
+
       def render_template(event)
         logstash_event(event)
       end
@@ -23,7 +26,7 @@ module LogStasher
         data.merge! runtimes(event)
         data.merge! extract_data(data)
         data.merge! request_context
-#        data.merge! store
+        data.merge! LogStasher.store
         data.merge! extract_custom_fields(data)
 
         tags = []
@@ -57,13 +60,6 @@ module LogStasher
           runtimes[name] = runtime.to_f.round(2) if runtime
           runtimes
         end
-
-      end
-
-      def extract_custom_fields(data)
-        custom_fields = (!LogStasher.custom_fields.empty? && data.extract!(*LogStasher.custom_fields)) || {}
-        LogStasher.custom_fields.clear
-        custom_fields
       end
     end
   end

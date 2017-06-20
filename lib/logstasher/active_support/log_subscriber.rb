@@ -1,9 +1,12 @@
 require 'active_support/core_ext/class/attribute'
 require 'active_support/log_subscriber'
+require 'logstasher/custom_fields'
 
 module LogStasher
   module ActiveSupport
     class LogSubscriber < ::ActiveSupport::LogSubscriber
+      include CustomFields::LogSubscriber
+
       def process_action(event)
         payload = event.payload
 
@@ -12,6 +15,7 @@ module LogStasher
         data.merge! runtimes(event)
         data.merge! location(event)
         data.merge! extract_exception(payload)
+        data.merge! LogStasher.store
         data.merge! extract_custom_fields(payload)
 
         tags = ['request']
@@ -83,7 +87,7 @@ module LogStasher
       def extract_exception(payload)
         if payload[:exception]
           exception, message = payload[:exception]
-          status = ActionDispatch::ExceptionWrapper.status_code_for_exception(exception)
+          status = ::ActionDispatch::ExceptionWrapper.status_code_for_exception(exception)
           if LogStasher.backtrace
             backtrace = $!.backtrace.join("\n")
           else
@@ -94,12 +98,6 @@ module LogStasher
         else
           {}
         end
-      end
-
-      def extract_custom_fields(payload)
-        custom_fields = (!LogStasher.custom_fields.empty? && payload.extract!(*LogStasher.custom_fields)) || {}
-        LogStasher.custom_fields.clear
-        custom_fields
       end
     end
   end

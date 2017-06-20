@@ -3,3 +3,6 @@
 Gemfile.lock
 pkg/*
 .idea
+.ruby-version
+vendor
+coverage

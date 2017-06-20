@@ -18,7 +18,7 @@ describe LogStasher::ActiveSupport::MailerLogSubscriber do
     LogStasher::ActiveSupport::MailerLogSubscriber.attach_to(:action_mailer)
   end
 
-  before do
+  before :each do
     LogStasher.logger = logger
     expect(LogStasher.request_context).to receive(:merge).at_most(2).times.and_call_original
   end
@@ -52,17 +52,7 @@ describe LogStasher::ActiveSupport::MailerLogSubscriber do
 
   it 'deliver an outgoing e-mail' do
     email = SampleMailer.welcome
-
-    if version = ENV['RAILS_VERSION'] and version >= '4.1'
-      log_output.json.tap do |json|
-        expect(json['source']).to eq(LogStasher.source)
-        expect(json['tags']).to eq(['mailer', 'process'])
-        expect(json['mailer']).to eq('SampleMailer')
-        expect(json['action']).to eq('welcome')
-      end
-    end
-
-    email.deliver
+    email.respond_to?(:deliver_now) ? email.deliver_now : email.deliver
     log_output.json.tap do |json|
       expect(json['source']).to eq(LogStasher.source)
       expect(json['tags']).to eq(['mailer', 'deliver'])

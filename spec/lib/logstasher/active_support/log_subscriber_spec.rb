@@ -15,7 +15,7 @@ describe LogStasher::ActiveSupport::LogSubscriber do
   before do
     LogStasher.logger = logger
     LogStasher.log_controller_parameters = true
-    LogStasher.custom_fields = []
+    LogStasher::CustomFields.custom_fields = []
   end
   after do
     LogStasher.log_controller_parameters = false
@@ -47,6 +47,7 @@ describe LogStasher::ActiveSupport::LogSubscriber do
     before do
       allow(LogStasher).to receive(:logger).and_return(logger)
       allow(Time).to receive(:now).and_return(Time.at(0))
+      LogStasher.store.clear
     end
     it 'calls all extractors and outputs the json' do
       expect(request_subscriber).to receive(:extract_request).with(payload).and_return({:request => true})
@@ -171,7 +172,7 @@ describe LogStasher::ActiveSupport::LogSubscriber do
       LogStasher.add_custom_fields do |payload|
         payload[:user] = 'user'
       end
-      LogStasher.custom_fields += [:user]
+      LogStasher::CustomFields.custom_fields += [:user]
     end
 
     it "should add the custom data to the output" do
