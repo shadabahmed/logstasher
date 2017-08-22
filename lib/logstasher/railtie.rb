@@ -74,5 +74,6 @@ module LogStasher
     config.backtrace = yml_config[:backtrace] if yml_config.key? :backtrace
     config.logger_path = yml_config[:logger_path] if yml_config.key? :logger_path
     config.log_level = yml_config[:log_level] if yml_config.key? :log_level
+    config.log_controller_parameters = yml_config[:log_controller_parameters] if yml_config.key? :log_controller_parameters
   end
 end
