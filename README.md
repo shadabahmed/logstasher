@@ -84,7 +84,7 @@ config.logstasher.backtrace = false
 config.logstasher.logger_path = 'log/logstasher.log'
 
 # This line is optional, loaded only if the value is truthy
-config.field_renaming = {
+config.logstasher.field_renaming = {
     old_field_name => new_field_name,
 }
 
