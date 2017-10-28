@@ -1,3 +1,6 @@
+# 1.2.2
+* Merge from #142 - Fix bug in detection of ActiveJob
+
 # 1.2.1
 * Merge from #131 - Fix gem initialization on MacOS Sierra
 
