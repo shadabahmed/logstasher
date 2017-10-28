@@ -132,7 +132,7 @@ module LogStasher
   end
 
   def has_active_job?
-    Rails::VERSION::MAJOR > 4 || (Rails::VERSION::MAJOR == 4 && Rails::VERSION::MINOR >= 2)
+    defined?(ActiveJob)
   end
 
   def suppress_app_logs(config)

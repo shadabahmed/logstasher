@@ -363,29 +363,6 @@ describe LogStasher do
     end
   end
 
-  describe '.has_active_job?' do
-    it 'returns false when < Rails 4.2' do
-      stub_const('Rails::VERSION::MAJOR', 4)
-      stub_const('Rails::VERSION::MINOR', 1)
-
-      expect(LogStasher.has_active_job?).to be false
-    end
-
-    it 'returns true when Rails 4.2' do
-      stub_const('Rails::VERSION::MAJOR', 4)
-      stub_const('Rails::VERSION::MINOR', 2)
-
-      expect(LogStasher.has_active_job?).to be true
-    end
-
-    it 'returns true when Rails 5' do
-      stub_const('Rails::VERSION::MAJOR', 5)
-      stub_const('Rails::VERSION::MINOR', 0)
-
-      expect(LogStasher.has_active_job?).to be true
-    end
-  end
-
   describe ".set_data_for_console" do
     it "does not touch request_context if not called as console" do
       expect(LogStasher.request_context).to be_empty
