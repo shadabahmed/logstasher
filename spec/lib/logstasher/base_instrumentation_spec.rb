@@ -3,10 +3,9 @@ require 'logstasher/rails_ext/action_controller/base'
 
 describe LogStasher::SampleController do
   before do
-    module ActionController              # Revert the monkey patch again
-      module Instrumentation
-        alias :process_action :orig_process_action
-      end
+    # Revert the monkey patch again
+    ::ActionController::Instrumentation.class_eval do
+      alias_method :process_action, :process_action_without_logstasher
     end
   end
 
