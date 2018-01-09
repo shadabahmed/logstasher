@@ -5,10 +5,11 @@ describe ActionController::Base do
   before do
     module ActionController              # Revert the monkey patch again
       module Instrumentation
-        alias :process_action :logstasher_process_action
+        alias :process_action :process_action_with_logstasher
       end
     end
   end
+
   before :each do
     subject.request = ActionDispatch::TestRequest.new
     subject.response = ActionDispatch::TestResponse.new
