@@ -22,6 +22,7 @@ module LogStasher
       private
 
       def logstash_event(event)
+        self.class.runtime += event.duration
         data = event.payload
 
         return if 'SCHEMA' == data[:name]
