@@ -17,6 +17,8 @@ describe LogStasher::ActiveRecord::LogSubscriber do
     LogStasher.logger = logger
     LogStasher.log_controller_parameters = true
     LogStasher::CustomFields.custom_fields = []
+    allow(described_class).to receive(:runtime).and_return(0)
+    allow(described_class).to receive(:runtime=)
   end
   after do
     LogStasher.log_controller_parameters = false
@@ -89,5 +91,19 @@ describe LogStasher::ActiveRecord::LogSubscriber do
       expect(log_output.json['user']).to eq 'user'
     end
   end
-end
 
+  describe "db_runtime incrementing" do
+    let(:event) do
+      start = Time.now
+      finish = Time.now + 1
+      ActiveSupport::Notifications::Event.new(
+        'identity.active_record', start, finish, 1, { sql: '' }
+      )
+    end
+
+    it "should increment runtime by event duration" do
+      expect(described_class).to receive(:runtime=).with(be_within(0.01).of(1000.0))
+      subject.identity(event)
+    end
+  end
+end
