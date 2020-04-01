@@ -60,6 +60,15 @@ describe LogStasher::ActiveRecord::LogSubscriber do
       subject.identity(event)
       expect(log_output.json['duration']).to eq 0.00
     end
+
+    it "should not contain :connection" do
+      event.payload[:connection] = Object.new
+
+      subject.identity(event)
+      expect(event.payload[:connection]).not_to be_nil
+      expect(log_output.json['connection']).to be_nil
+    end
+
   end
 
   describe "with append_custom_params block specified" do

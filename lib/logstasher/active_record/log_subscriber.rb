@@ -23,9 +23,13 @@ module LogStasher
 
       def logstash_event(event)
         self.class.runtime += event.duration
-        data = event.payload
+        data = event.payload.dup
 
         return if 'SCHEMA' == data[:name]
+
+        # A connection cannot be converted to JSON as it fails with
+        # SystemStackError when running against ActiveSupport JSON patches.
+        data.delete(:connection)
 
         data.merge! runtimes(event)
         data.merge! extract_sql(data)
