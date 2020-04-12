@@ -161,9 +161,9 @@ describe LogStasher do
     after { LogStasher.source = @previous_source } # Need to restore old source for specs
     it 'defines a method in ActionController::Base' do
       expect(LogStasher).to receive(:require).with('logstasher/rails_ext/action_controller/metal/instrumentation')
-      expect(LogStasher).to receive(:suppress_app_logs).with(config.logstasher)
+      expect(LogStasher).to receive(:suppress_app_logs).with(config.logstasher, app)
       expect(logger).to receive(:level=).with('warn')
-      LogStasher.setup(config.logstasher)
+      LogStasher.setup(config.logstasher, app)
       expect(LogStasher.source).to eq (logstasher_source || 'unknown')
       expect(LogStasher).to be_enabled
       expect(LogStasher::CustomFields.custom_fields).to be_empty
@@ -204,19 +204,33 @@ describe LogStasher do
   end
 
   describe '.suppress_app_logs' do
-    let(:logstasher_config){ double(:logstasher => double(:suppress_app_log => true))}
-    let(:app){ double(:config => logstasher_config)}
-    it 'removes existing subscription if enabled' do
-      expect(LogStasher).to receive(:require).with('logstasher/rails_ext/rack/logger')
-      expect(LogStasher).to receive(:remove_existing_log_subscriptions)
-      LogStasher.suppress_app_logs(app.config.logstasher)
+    let(:app){ double(config: logstasher_config, env_config: {})}
+
+    context 'when enabled' do
+      let(:logstasher_config){ double(logstasher: double(:suppress_app_log => true))}
+      it 'removes existing subscription if enabled' do
+        expect(LogStasher).to receive(:require).with('logstasher/rails_ext/rack/logger')
+        expect(LogStasher).to receive(:remove_existing_log_subscriptions)
+        LogStasher.suppress_app_logs(app.config.logstasher, app)
+      end
+
+      it 'changes "action_dispatch.logger" to NullLogger' do
+        LogStasher.suppress_app_logs(app.config.logstasher, app)
+        expect(app.env_config).to include('action_dispatch.logger' => an_instance_of(::LogStasher::NullLogger))
+      end
     end
 
     context 'when disabled' do
       let(:logstasher_config){ double(:logstasher => double(:suppress_app_log => false)) }
+
       it 'does not remove existing subscription' do
         expect(LogStasher).to_not receive(:remove_existing_log_subscriptions)
-        LogStasher.suppress_app_logs(app.config.logstasher)
+        LogStasher.suppress_app_logs(app.config.logstasher, app)
+      end
+
+      it 'leaves "action_dispatch.logger" as before' do
+        LogStasher.suppress_app_logs(app.config.logstasher, app)
+        expect(app.env_config).to match({})
       end
 
       describe "backward compatibility" do
@@ -224,7 +238,7 @@ describe LogStasher do
           let(:logstasher_config){ double(:logstasher => double(:suppress_app_log => nil, :supress_app_log => false)) }
           it 'does not remove existing subscription' do
             expect(LogStasher).to_not receive(:remove_existing_log_subscriptions)
-            LogStasher.suppress_app_logs(app.config.logstasher)
+            LogStasher.suppress_app_logs(app.config.logstasher, app)
           end
         end
       end
