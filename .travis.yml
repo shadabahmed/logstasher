@@ -4,11 +4,14 @@ cache: bundler
 bundler_args: --without guard
 script: "bundle exec rspec"
 rvm:
-  - 2.0.0-p648
-  - 2.1.10
-  - 2.2.5
-  - 2.3.1
+  - 2.4.10
+  - 2.5.8
+  - 2.6.6
+  - 2.7.1
 env:
+  - "RAILS_VERSION=6.0"
+  - "RAILS_VERSION=5.2"
+  - "RAILS_VERSION=5.1"
+  - "RAILS_VERSION=5.0"
   - "RAILS_VERSION=4.2"
-  - "RAILS_VERSION=4.1"
-  - "RAILS_VERSION=4.0"
+  
