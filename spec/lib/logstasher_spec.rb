@@ -12,7 +12,7 @@ describe LogStasher do
       ActionController::LogSubscriber.attach_to :action_controller
       ActionView::LogSubscriber.attach_to :action_view
       ActionMailer::LogSubscriber.attach_to :action_mailer
-      ActiveJob::Logging::LogSubscriber.attach_to :active_job if LogStasher.has_active_job?
+      ActiveJob::LogSubscriber.attach_to :active_job if LogStasher.has_active_job?
     end
 
     it "should remove subscribers for controller events" do

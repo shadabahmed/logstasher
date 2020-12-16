@@ -1,12 +1,12 @@
 begin
   # `rescue nil` didn't work for some Ruby versions
-  require 'active_job/logging'
+  require 'active_job/log_subscriber'
 rescue LoadError
 end
 
 module LogStasher
   module ActiveJob
-    class LogSubscriber < ::ActiveJob::Logging::LogSubscriber
+    class LogSubscriber < ::ActiveJob::LogSubscriber
 
       def enqueue(event)
         process_event(event, 'enqueue')
@@ -89,4 +89,4 @@ module LogStasher
 
     end
   end
-end if defined?(::ActiveJob::Logging::LogSubscriber)
+end if defined?(::ActiveJob::LogSubscriber)
