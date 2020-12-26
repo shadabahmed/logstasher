@@ -2,6 +2,15 @@ require 'spec_helper'
 require 'rake'
 require 'logstash-event'
 
+def console
+  if Rails.version < '5.1.0'
+    require 'rails/commands/console'
+  else
+    require 'rails/command'
+    require 'rails/commands/console/console_command'
+  end
+end
+
 describe LogStasher do
   before :each do
     LogStasher.field_renaming = {}
@@ -358,7 +367,7 @@ describe LogStasher do
     end
 
     it "returns true if called as rake" do
-      require 'rails/commands/console'
+      console
       expect(LogStasher.called_as_console?).to be true
     end
   end
@@ -369,7 +378,7 @@ describe LogStasher do
     end
 
     it "sets request_context accordingly if called as console" do
-      require 'rails/commands/console'
+      console
       expect(LogStasher).to receive(:called_as_console?).and_return(true)
       expect(Process).to receive(:pid).and_return(1234)
       LogStasher.set_data_for_console
