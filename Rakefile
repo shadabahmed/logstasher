@@ -24,21 +24,11 @@ RDoc::Task.new do |rdoc|
   rdoc.rdoc_files.include('lib/**/*.rb')
 end
 
-# Code coverage tasks. Different for Ruby 1.8 vs 1.9
-if RUBY_VERSION =~ /^1\.8/
-  # Ruby 1.8 uses rcov for code coverage
-  RSpec::Core::RakeTask.new(:coverage) do |spec|
-    spec.pattern = 'spec/**/*_spec.rb'
-    spec.rcov = true
-    spec.rcov_opts = %w{--exclude pkg\/,spec\/,features\/}
-  end
-else
   # Ruby 1.9+ using simplecov. Note: Simplecov config defined in spec_helper
-  desc "Code coverage detail"
-  task :coverage do
-    ENV['COVERAGE'] = "true"
-    Rake::Task['spec'].execute
-  end
+desc "Code coverage detail"
+task :coverage do
+  ENV['COVERAGE'] = "true"
+  Rake::Task['spec'].execute
 end
 
 task :console do
