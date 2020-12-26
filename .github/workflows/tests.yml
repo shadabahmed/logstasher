@@ -12,6 +12,9 @@ jobs:
          - ruby-version: 2.6.6
            bundler-version: 1.17.3
            rails-version: 4.2.11.3
+         - ruby-version: 2.7.2
+           bundler-version: 2.2.3
+           rails-version: 6.0.3.4
 
     steps:
     - uses: actions/checkout@v2
