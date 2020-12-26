@@ -4,11 +4,10 @@ source "https://rubygems.org"
 gemspec
 
 group :test do
-  gem 'rails', "~> #{ENV["RAILS_VERSION"] || "4.2.0"}"
-  gem 'rb-fsevent', '~> 0.9'
-  gem 'rcov', :platforms => :mri_18
-  gem 'redis', :require => false
-  gem 'simplecov', :require => false
+  gem 'rails', "~> #{ENV["RAILS_VERSION"] || "6.0.3.4"}"
+  gem 'rb-fsevent'
+  gem 'redis', require: false
+  gem 'simplecov', require: false
 end
 
 group :guard do

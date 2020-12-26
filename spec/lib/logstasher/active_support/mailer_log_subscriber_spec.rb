@@ -59,8 +59,7 @@ describe LogStasher::ActiveSupport::MailerLogSubscriber do
       expect(json['mailer']).to eq('SampleMailer')
       expect(json['from']).to eq(['some-dude@example.com'])
       expect(json['to']).to eq(['some-other-dude@example.com'])
-      # Message-Id appears not to be yet available at this point in time.
-      expect(json['message_id']).to be_nil
+      expect(json['message_id']).to eq(email.message_id)
     end
   end
 end

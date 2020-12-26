@@ -1,6 +1,4 @@
 # Notice there is a .rspec file in the root folder. It defines rspec arguments
-
-# Ruby 1.9 uses simplecov. The ENV['COVERAGE'] is set when rake coverage is run in ruby 1.9
 if ENV['COVERAGE']
   require 'simplecov'
   SimpleCov.start do
