@@ -8,6 +8,7 @@ group :test do
   gem 'rb-fsevent', '~> 0.9'
   gem 'simplecov', :require => false
   gem "byebug"
+  gem 'redis'
 end
 
 group :guard do
