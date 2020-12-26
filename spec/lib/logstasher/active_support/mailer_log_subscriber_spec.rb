@@ -59,7 +59,7 @@ describe LogStasher::ActiveSupport::MailerLogSubscriber do
       expect(json['mailer']).to eq('SampleMailer')
       expect(json['from']).to eq(['some-dude@example.com'])
       expect(json['to']).to eq(['some-other-dude@example.com'])
-      expect(json['message_id']).to eq(email.message_id)
+      expect(json['message_id']).to eq(email.message_id) if Rails.version >= '5.1.0'
     end
   end
 end
