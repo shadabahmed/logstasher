@@ -6,6 +6,7 @@ require 'logstasher/action_view/log_subscriber' if defined?(ActionView)
 require 'logstasher/active_job/log_subscriber' if defined?(ActiveJob)
 require 'logstasher/rails_ext/action_controller/base'
 require 'logstasher/custom_fields'
+require 'logstasher/event'
 require 'request_store'
 require 'active_support/core_ext/module/attribute_accessors'
 require 'active_support/core_ext/string/inflections'
@@ -181,7 +182,7 @@ module LogStasher
     field_renaming.each do |old_name, new_name|
         data[new_name] = data.delete(old_name) if data.key?(old_name)
     end
-    ::LogStash::Event.new(data.merge('source' => self.source, 'tags' => tags))
+    Event.new(data.merge('source' => self.source, 'tags' => tags))
   end
 
   def store
