@@ -15,6 +15,7 @@ describe LogStasher::ActiveSupport::MailerLogSubscriber do
 
   before :all do
     SampleMailer.delivery_method = :test
+    LogStasher.field_renaming = {}
     LogStasher::ActiveSupport::MailerLogSubscriber.attach_to(:action_mailer)
   end
 
@@ -59,7 +60,7 @@ describe LogStasher::ActiveSupport::MailerLogSubscriber do
       expect(json['mailer']).to eq('SampleMailer')
       expect(json['from']).to eq(['some-dude@example.com'])
       expect(json['to']).to eq(['some-other-dude@example.com'])
-      expect(json['message_id']).to eq(email.message_id) if Rails.version >= '5.1.0'
+      expect(json['message_id']).to eq(email.message_id)
     end
   end
 end
