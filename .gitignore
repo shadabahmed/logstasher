@@ -6,3 +6,4 @@ pkg/*
 .ruby-version
 vendor
 coverage
+.byebug_history

@@ -3,7 +3,7 @@ require 'logstasher/active_job/log_subscriber'
 
 
 describe LogStasher::ActiveJob::LogSubscriber do 
-  require 'active_job' 
+  include ActiveJob::TestHelper
 
   class ActiveJobTestClass < ActiveJob::Base
     include ActiveJob::TestHelper
@@ -13,10 +13,16 @@ describe LogStasher::ActiveJob::LogSubscriber do
     end
   end
 
-  before(:all) { 
+  before(:each) do
+    clear_enqueued_jobs
+    clear_performed_jobs
+    log_output.truncate(0)
+  end
+
+  before(:all) do
     LogStasher::ActiveJob::LogSubscriber.attach_to(:active_job) 
     LogStasher.field_renaming = {}
-  }
+  end
 
   let(:log_output) { StringIO.new }
   let(:logger) do
@@ -44,7 +50,11 @@ describe LogStasher::ActiveJob::LogSubscriber do
   end
 
   def enqueue_job
-    ActiveJobTestClass.perform_later(1,2,3, {'a' => {'b' => ['c']}})
+    job = nil
+    perform_enqueued_jobs do
+      job = ActiveJobTestClass.perform_later(1,2,3, {'a' => {'b' => ['c']}})
+    end
+    job
   end
 
   def log_line(type)
@@ -55,7 +65,6 @@ describe LogStasher::ActiveJob::LogSubscriber do
     job = nil
     expect { job = enqueue_job }
       .to_not change { LogStasher.request_context[:request_id] }.from('foobar123')
-
     expect(log_line('enqueue')['request_id']).to eq('foobar123')
     expect(log_line('perform_start')['request_id']).to eq(job.job_id)
     expect(log_line('perform')['request_id']).to eq(job.job_id)
@@ -72,7 +81,7 @@ describe LogStasher::ActiveJob::LogSubscriber do
     log_line('perform').tap do |json|
       expect(json['tags']).to eq(['job', 'perform'])
       expect(json['job_id']).to eq(job.job_id)
-      expect(json['queue_name']).to eq('Async(default)')
+      expect(json['queue_name']).to eq('Test(default)')
       expect(json['job_class']).to eq('ActiveJobTestClass')
       expect(json['job_args']).to eq([1,2,3, {'a' => {'b' => ['c']}}])
       expect(json['duration']).to be_between(0, 1)
@@ -83,14 +92,15 @@ describe LogStasher::ActiveJob::LogSubscriber do
 
   it 'logs the exception when performing' do
     job = nil
-    expect { job = ActiveJobTestClass.perform_later('error' => true) }
-      .to raise_error(ZeroDivisionError)
+    expect do
+      perform_enqueued_jobs { job = ActiveJobTestClass.perform_later('error' => true) }
+    end.to raise_error(ZeroDivisionError)
 
     log_line('perform').tap do |json|
       expect(json['tags']).to eq(['job', 'perform', 'exception'])
       expect(json['job_id']).to be_a(String) # Don't have good access to the real id in this test
       expect(json['job_id']).to_not eq('foobar123')
-      expect(json['queue_name']).to eq('Async(default)')
+      expect(json['queue_name']).to eq('Test(default)')
       expect(json['job_class']).to eq('ActiveJobTestClass')
       expect(json['job_args']).to eq([{'error' => true}])
       expect(json['duration']).to be_between(0, 1)
@@ -104,7 +114,7 @@ describe LogStasher::ActiveJob::LogSubscriber do
     log_line('perform_start').tap do |json|
       expect(json['tags']).to eq(['job', 'perform_start'])
       expect(json['job_id']).to eq(job.job_id)
-      expect(json['queue_name']).to eq('Async(default)')
+      expect(json['queue_name']).to eq('Test(default)')
       expect(json['job_class']).to eq('ActiveJobTestClass')
       expect(json['job_args']).to eq([1,2,3, {'a' => {'b' => ['c']}}])
       expect(json).to_not have_key('duration')
@@ -118,7 +128,7 @@ describe LogStasher::ActiveJob::LogSubscriber do
     log_line('enqueue').tap do |json|
       expect(json['tags']).to eq(['job', 'enqueue'])
       expect(json['job_id']).to eq(job.job_id)
-      expect(json['queue_name']).to eq('Async(default)')
+      expect(json['queue_name']).to eq('Test(default)')
       expect(json['job_class']).to eq('ActiveJobTestClass')
       expect(json['job_args']).to eq([1,2,3, {'a' => {'b' => ['c']}}])
       expect(json).to_not have_key('duration')

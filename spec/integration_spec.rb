@@ -14,8 +14,8 @@ describe ActionController::Base do
     end
 
     before :each do
-      subject.request = ActionDispatch::TestRequest.new
-      subject.response = ActionDispatch::TestResponse.new
+      subject.request = ActionDispatch::TestRequest.create
+      subject.response = ActionDispatch::TestResponse.create
 
       LogStasher.add_custom_fields_to_request_context do |fields|
         fields[:some_field] = 'value'
@@ -28,6 +28,7 @@ describe ActionController::Base do
       LogStasher.logger = logger
 
       allow(logger).to receive(:<<)
+      allow(logger).to receive(:info)
     end
 
     2.times do |index|
@@ -65,7 +66,7 @@ describe ActionController::Base do
 
         def index(*args)
 #          ActiveRecord::Base.connection.execute("SELECT true;")
-          render text: 'OK'
+          render plain: 'OK'
         end
       end
     end
@@ -80,7 +81,7 @@ describe ActionController::Base do
     before do
       class MyController < ActionController::Base
         def index(*args)
-          render text: 'OK'
+          render plain: 'OK'
         end
       end
     end

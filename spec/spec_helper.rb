@@ -18,6 +18,10 @@ require 'rubygems'
 # do bundle install instead of ugly load error on require.
 require 'bundler/setup'
 
+require 'active_record'
+require 'active_job'
+require 'action_view'
+
 # This will require me all the gems automatically for the groups. If I do only .setup then I will have to require gems
 # manually. Note that you have still have to require some gems if they are part of bigger gem like ActiveRecord which is
 # part of Rails. You can say :require => false in gemfile to always use explicit requiring
@@ -38,4 +42,6 @@ end
 RSpec.configure do |config|
   config.run_all_when_everything_filtered = true
   config.filter_run :focus
+
+  ActiveJob::Base.queue_adapter = :test
 end
