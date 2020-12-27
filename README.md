@@ -220,7 +220,7 @@ All versions require Rails 5.2.x and higher and Ruby 2.6+.
 
 ## Development
  - Install dependencies:
-   export RAILS_VERSION=6.0.0
+   export RAILS_VERSION=5.2.0
    bundle install --without guard --path=${BUNDLE_PATH:-vendor/bundle}
  - Run tests - `rake`
  - Generate test coverage report - `rake coverage`. Coverage report path - coverage/index.html
