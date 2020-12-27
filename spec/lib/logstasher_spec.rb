@@ -7,6 +7,11 @@ def console
   require 'rails/commands/console/console_command'
 end
 
+def console
+  require 'rails/command'
+  require 'rails/commands/console/console_command'
+end
+
 describe LogStasher do
   require 'active_job'
   before :each do
