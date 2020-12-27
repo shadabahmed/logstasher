@@ -40,8 +40,17 @@ if LogStasher.has_active_job?
       LogStasher.request_context[:request_id] = 'foobar123'
 
       # Silence the default logger from spitting out to the console
-      allow_any_instance_of(ActiveJob::Logging::LogSubscriber).to receive(:logger)
-        .and_return(double.as_null_object)
+      subscriber_base =
+        if defined?(ActiveJob::LogSubscriber)
+          ActiveJob::LogSubscriber
+        elsif defined?(ActiveJob::Logging::LogSubscriber)
+          ActiveJob::Logging::LogSubscriber
+        end
+
+      if subscriber_base
+        allow_any_instance_of(subscriber_base).to receive(:logger)
+          .and_return(double.as_null_object)
+      end
     end
 
     describe '#logger' do

@@ -8,6 +8,8 @@ describe LogStasher::ActiveSupport::MailerLogSubscriber do
       msg
     }
     def log_output.json
+      return '' if string.nil?
+
       JSON.parse!(string.split("\n").last)
     end
     logger

@@ -20,7 +20,13 @@ describe LogStasher do
       ActionMailer::LogSubscriber.attach_to :action_mailer
       if LogStasher.has_active_job?
         require 'active_job'
-        ActiveJob::Logging::LogSubscriber.attach_to :active_job
+        subscriber_base =
+          if defined?(ActiveJob::LogSubscriber)
+            ActiveJob::LogSubscriber
+          elsif defined?(ActiveJob::Logging::LogSubscriber)
+            ActiveJob::Logging::LogSubscriber
+          end
+        subscriber_base.attach_to :active_job if subscriber_base
       end
     end
 
