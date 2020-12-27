@@ -9,10 +9,12 @@ group :test do
   gem 'rcov', :platforms => :mri_18
   gem 'redis', :require => false
   gem 'simplecov', :require => false
+  gem "byebug"
 end
 
 group :guard do
   gem 'growl'
   gem 'guard'
   gem 'guard-rspec'
+  
 end

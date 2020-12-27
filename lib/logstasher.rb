@@ -180,7 +180,7 @@ module LogStasher
 
   def build_logstash_event(data, tags)
     field_renaming.each do |old_name, new_name|
-        data[new_name] = data.delete(old_name) if data.key?(old_name)
+      data[new_name] = data.delete(old_name) if data.key?(old_name)
     end
     Event.new(data.merge('source' => self.source, 'tags' => tags))
   end

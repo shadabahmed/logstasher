@@ -12,11 +12,11 @@ describe LogStasher::SampleController do
 
   before :each do
 
-    subject.request = ActionDispatch::TestRequest.new
-    subject.response = ActionDispatch::TestResponse.new
+    subject.request = ActionDispatch::TestRequest.create
+    subject.response = ActionDispatch::TestResponse.create
 
     def subject.index(*args)
-      render text: 'OK'
+      render plain: 'OK'
     end
   end
 

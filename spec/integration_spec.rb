@@ -7,9 +7,9 @@ describe ActionController::Base do
 
     before :all do
       LogStasher::ActiveSupport::LogSubscriber.attach_to :action_controller
-      #LogStasher::ActiveRecord::LogSubscriber.attach_to :active_record
+      LogStasher::ActiveRecord::LogSubscriber.attach_to :active_record
       LogStasher::ActionView::LogSubscriber.attach_to :action_view
-      #LogStasher::ActiveJob::LogSubscriber.attach_to :active_job
+      LogStasher::ActiveJob::LogSubscriber.attach_to :active_job
       LogStasher.field_renaming = {}
     end
 

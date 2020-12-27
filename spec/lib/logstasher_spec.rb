@@ -1,8 +1,11 @@
 require 'spec_helper'
 require 'rake'
 require 'logstash-event'
+require 'action_view/log_subscriber'
+
 
 describe LogStasher do
+  require 'active_job'
   before :each do
     LogStasher.field_renaming = {}
   end
@@ -12,7 +15,10 @@ describe LogStasher do
       ActionController::LogSubscriber.attach_to :action_controller
       ActionView::LogSubscriber.attach_to :action_view
       ActionMailer::LogSubscriber.attach_to :action_mailer
-      ActiveJob::Logging::LogSubscriber.attach_to :active_job if LogStasher.has_active_job?
+      if LogStasher.has_active_job?
+        require 'active_job'
+        ActiveJob::Logging::LogSubscriber.attach_to :active_job 
+      end
     end
 
     it "should remove subscribers for controller events" do
@@ -358,7 +364,8 @@ describe LogStasher do
     end
 
     it "returns true if called as rake" do
-      require 'rails/commands/console'
+      require 'rails/command'
+      require 'rails/commands/console/console_command'
       expect(LogStasher.called_as_console?).to be true
     end
   end
@@ -369,7 +376,8 @@ describe LogStasher do
     end
 
     it "sets request_context accordingly if called as console" do
-      require 'rails/commands/console'
+      require 'rails/command'
+      require 'rails/commands/console/console_command'
       expect(LogStasher).to receive(:called_as_console?).and_return(true)
       expect(Process).to receive(:pid).and_return(1234)
       LogStasher.set_data_for_console
