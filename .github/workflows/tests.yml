@@ -23,6 +23,7 @@ jobs:
       with:
         ruby-version: ${{ matrix.ruby-version }}
         bundler: ${{ matrix.bundler-version }} 
+        bundler-cache: true
     - name: Install dependencies
       run: bundle install
       env:

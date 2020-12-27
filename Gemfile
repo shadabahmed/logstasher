@@ -11,7 +11,11 @@ group :test do
   gem 'simplecov', require: false
 end
 
-group :guard do
+group :lint, optional: true do
+  gem 'rubocop'
+end
+
+group :guard, optional: true do
   gem 'growl'
   gem 'guard'
   gem 'guard-rspec'
