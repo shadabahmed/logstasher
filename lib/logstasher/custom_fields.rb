@@ -5,7 +5,7 @@ module LogStasher
         (!CustomFields.custom_fields.empty? && data.extract!(*CustomFields.custom_fields)) || {}
       end
     end
-    
+
     def self.clear
       Thread.current[:logstasher_custom_fields] = []
     end

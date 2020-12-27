@@ -1,14 +1,18 @@
 module ActionController
   module Instrumentation
-    alias :orig_process_action :process_action
+    alias orig_process_action process_action
     def process_action(*args)
       raw_payload = {
-          :controller => self.class.name,
-          :action     => self.action_name,
-          :params     => request.filtered_parameters,
-          :format     => request.format.try(:ref),
-          :method     => request.method,
-          :path       => (request.fullpath rescue "unknown")
+        controller: self.class.name,
+        action: action_name,
+        params: request.filtered_parameters,
+        format: request.format.try(:ref),
+        method: request.method,
+        path: begin
+          request.fullpath
+        rescue StandardError
+          'unknown'
+        end
       }
 
       LogStasher.add_default_fields_to_payload(raw_payload, request)
@@ -16,14 +20,14 @@ module ActionController
       LogStasher.clear_request_context
       LogStasher.add_default_fields_to_request_context(request)
 
-      ActiveSupport::Notifications.instrument("start_processing.action_controller", raw_payload.dup)
+      ActiveSupport::Notifications.instrument('start_processing.action_controller', raw_payload.dup)
 
-      ActiveSupport::Notifications.instrument("process_action.action_controller", raw_payload) do |payload|
-        if self.respond_to?(:logstasher_add_custom_fields_to_request_context)
+      ActiveSupport::Notifications.instrument('process_action.action_controller', raw_payload) do |payload|
+        if respond_to?(:logstasher_add_custom_fields_to_request_context)
           logstasher_add_custom_fields_to_request_context(LogStasher.request_context)
         end
 
-        if self.respond_to?(:logstasher_add_custom_fields_to_payload)
+        if respond_to?(:logstasher_add_custom_fields_to_payload)
           before_keys = raw_payload.keys.clone
           logstasher_add_custom_fields_to_payload(raw_payload)
           after_keys = raw_payload.keys
@@ -45,6 +49,6 @@ module ActionController
         result
       end
     end
-    alias :logstasher_process_action :process_action
+    alias logstasher_process_action process_action
   end
 end

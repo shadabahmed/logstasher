@@ -1,6 +1,16 @@
 name: Tests
 
-on: [push, pull_request]
+on:
+  pull_request:
+    branches:
+      - master
+    paths-ignore:
+      - 'README.md'
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - 'README.md'
 
 jobs:
   test:
@@ -10,8 +20,11 @@ jobs:
       matrix:
          include:
          - ruby-version: 2.6.6
-           bundler-version: 1.17.3
-           rails-version: 4.2.11.3
+           bundler-version: default
+           rails-version: 5.2
+         - ruby-version: 2.7.2
+           bundler-version: default
+           rails-version: 5.2
 
     steps:
     - uses: actions/checkout@v2
@@ -20,6 +33,7 @@ jobs:
       with:
         ruby-version: ${{ matrix.ruby-version }}
         bundler: ${{ matrix.bundler-version }} 
+        bundler-cache: true
     - name: Install dependencies
       run: bundle install
       env:

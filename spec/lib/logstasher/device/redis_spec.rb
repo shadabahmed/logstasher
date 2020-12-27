@@ -3,13 +3,14 @@ require 'spec_helper'
 require 'logstasher/device/redis'
 
 describe LogStasher::Device::Redis do
-
   let(:redis_mock) { double('Redis') }
 
-  let(:default_options) {{
-    key: 'logstash',
-    data_type: 'list'
-  }}
+  let(:default_options) do
+    {
+      key: 'logstash',
+      data_type: 'list'
+    }
+  end
 
   it 'has default options' do
     device = LogStasher::Device::Redis.new
@@ -18,7 +19,7 @@ describe LogStasher::Device::Redis do
 
   it 'creates a redis instance' do
     expect(::Redis).to receive(:new).with({})
-    LogStasher::Device::Redis.new()
+    LogStasher::Device::Redis.new
   end
 
   it 'assumes unknown options are for redis' do
@@ -38,9 +39,9 @@ describe LogStasher::Device::Redis do
   end
 
   it 'does not allow unsupported data types' do
-    expect {
+    expect do
       device = LogStasher::Device::Redis.new(data_type: 'blargh')
-    }.to raise_error(RuntimeError)
+    end.to raise_error(RuntimeError)
   end
 
   it 'quits the redis connection on #close' do
@@ -57,23 +58,22 @@ describe LogStasher::Device::Redis do
   end
 
   describe '#write' do
-    it "rpushes logs onto a list" do
+    it 'rpushes logs onto a list' do
       device = LogStasher::Device::Redis.new(data_type: 'list')
       expect(device.redis).to receive(:rpush).with('logstash', 'the log')
       device.write('the log')
     end
 
-    it "rpushes logs onto a custom key" do
+    it 'rpushes logs onto a custom key' do
       device = LogStasher::Device::Redis.new(data_type: 'list', key: 'custom')
       expect(device.redis).to receive(:rpush).with('custom', 'the log')
       device.write('the log')
     end
 
-    it "publishes logs onto a channel" do
+    it 'publishes logs onto a channel' do
       device = LogStasher::Device::Redis.new(data_type: 'channel', key: 'custom')
       expect(device.redis).to receive(:publish).with('custom', 'the log')
       device.write('the log')
     end
   end
-
 end

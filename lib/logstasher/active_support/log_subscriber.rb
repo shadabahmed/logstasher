@@ -44,7 +44,7 @@ module LogStasher
       end
 
       def extract_path(payload)
-        payload[:path].split("?").first
+        payload[:path].split('?').first
       end
 
       def extract_format(payload)
@@ -57,27 +57,26 @@ module LogStasher
 
       def extract_status(payload)
         if payload[:status]
-          { :status => payload[:status].to_i }
+          { status: payload[:status].to_i }
         else
-          { :status => 0 }
+          { status: 0 }
         end
       end
 
       def runtimes(event)
         {
-          :duration => event.duration,
-          :view => event.payload[:view_runtime],
-          :db => event.payload[:db_runtime]
-        }.inject({}) do |runtimes, (name, runtime)|
+          duration: event.duration,
+          view: event.payload[:view_runtime],
+          db: event.payload[:db_runtime]
+        }.each_with_object({}) do |(name, runtime), runtimes|
           runtimes[name] = runtime.to_f.round(2) if runtime
-          runtimes
         end
       end
 
-      def location(event)
+      def location(_event)
         if location = Thread.current[:logstasher_location]
           Thread.current[:logstasher_location] = nil
-          { :location => location }
+          { location: location }
         else
           {}
         end
@@ -88,13 +87,13 @@ module LogStasher
         if payload[:exception]
           exception, message = payload[:exception]
           status = ::ActionDispatch::ExceptionWrapper.status_code_for_exception(exception)
-          if LogStasher.backtrace
-            backtrace = $!.backtrace.join("\n")
-          else
-            backtrace = $!.backtrace.first
-          end
+          backtrace = if LogStasher.backtrace
+                        $!.backtrace.join("\n")
+                      else
+                        $!.backtrace.first
+                      end
           message = "#{exception}\n#{message}\n#{backtrace}"
-          { :status => status, :error => message }
+          { status: status, error: message }
         else
           {}
         end

@@ -1,20 +1,21 @@
 require 'spec_helper'
 
 describe LogStasher::ActiveSupport::MailerLogSubscriber do
-  let(:log_output) {StringIO.new}
-  let(:logger) {
+  let(:log_output) { StringIO.new }
+  let(:logger) do
     logger = Logger.new(log_output)
-    logger.formatter = ->(_, _, _, msg) {
+    logger.formatter = lambda { |_, _, _, msg|
       msg
     }
     def log_output.json
-      JSON.parse!(self.string.split("\n").last)
+      JSON.parse!(string.split("\n").last)
     end
     logger
-  }
+  end
 
   before :all do
     SampleMailer.delivery_method = :test
+    LogStasher.field_renaming = {}
     LogStasher::ActiveSupport::MailerLogSubscriber.attach_to(:action_mailer)
   end
 
@@ -32,8 +33,8 @@ describe LogStasher::ActiveSupport::MailerLogSubscriber do
     end
   end
 
-  describe "#logger" do
-    it "returns an instance of Logstash::Logger" do
+  describe '#logger' do
+    it 'returns an instance of Logstash::Logger' do
       expect(LogStasher::ActiveSupport::MailerLogSubscriber.new.logger).to eq logger
     end
   end
@@ -42,7 +43,7 @@ describe LogStasher::ActiveSupport::MailerLogSubscriber do
     SampleMailer.receive(message.encoded)
     log_output.json.tap do |json|
       expect(json['source']).to eq(LogStasher.source)
-      expect(json['tags']).to eq(['mailer', 'receive'])
+      expect(json['tags']).to eq(%w[mailer receive])
       expect(json['mailer']).to eq('SampleMailer')
       expect(json['from']).to eq(['some-dude@example.com'])
       expect(json['to']).to eq(['some-other-dude@example.com'])
@@ -55,12 +56,11 @@ describe LogStasher::ActiveSupport::MailerLogSubscriber do
     email.respond_to?(:deliver_now) ? email.deliver_now : email.deliver
     log_output.json.tap do |json|
       expect(json['source']).to eq(LogStasher.source)
-      expect(json['tags']).to eq(['mailer', 'deliver'])
+      expect(json['tags']).to eq(%w[mailer deliver])
       expect(json['mailer']).to eq('SampleMailer')
       expect(json['from']).to eq(['some-dude@example.com'])
       expect(json['to']).to eq(['some-other-dude@example.com'])
-      # Message-Id appears not to be yet available at this point in time.
-      expect(json['message_id']).to be_nil
+      expect(json['message_id']).to eq(email.message_id)
     end
   end
 end

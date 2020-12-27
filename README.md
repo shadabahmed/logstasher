@@ -1,6 +1,8 @@
 # Logstasher [![Gem Version](https://badge.fury.io/rb/logstasher.svg)](https://badge.fury.io/rb/logstasher) ![Tests](https://github.com/shadabahmed/logstasher/workflows/Tests/badge.svg)
 ### Awesome Logging for Rails !!
 
+[Note:] This version supports only Rails 5 now. For older versions of Rails, try versions < 2.0. Rails 6 support is coming soon.
+
 This gem is heavily inspired from [lograge](https://github.com/roidrage/lograge), but it's focused on one thing and one thing only. That's making your logs awesome like this:
 
 [![Awesome Logs](https://f.cloud.github.com/assets/830679/2407078/dcde03e8-aa82-11e3-85ac-8c5b3a86676e.png)](https://f.cloud.github.com/assets/830679/2407078/dcde03e8-aa82-11e3-85ac-8c5b3a86676e.png)
@@ -123,7 +125,7 @@ config.logstasher.log_controller_parameters = true
 
 ## Adding custom fields to the log
 
-Since some fields are very specific to your application for e.g. *user_name*, so it is left upto you, to add them. Here's how to add those fields to the logs:
+Since some fields are very specific to your application for e.g. *user_name*, so it is left up to you, to add them. Here's how to add those fields to the logs:
 ```ruby
 # Create a file - config/initializers/logstasher.rb
 
@@ -216,11 +218,11 @@ bin/logstash -f quickstart.conf
 ```
 
 ## Versions
-All versions require Rails 3.0.x and higher and Ruby 1.9.2+. Tested on Rails 4 and Ruby 2.0
+All versions require Rails 5.2.x and higher and Ruby 2.6+.
 
 ## Development
  - Install dependencies:
-   export RAILS_VERSION=4.2
+   export RAILS_VERSION=5.2.0
    bundle install --without guard --path=${BUNDLE_PATH:-vendor/bundle}
  - Run tests - `rake`
  - Generate test coverage report - `rake coverage`. Coverage report path - coverage/index.html
