@@ -1,6 +1,8 @@
 # Logstasher [![Gem Version](https://badge.fury.io/rb/logstasher.svg)](https://badge.fury.io/rb/logstasher) ![Tests](https://github.com/shadabahmed/logstasher/workflows/Tests/badge.svg)
 ### Awesome Logging for Rails !!
 
+[Note:] This version supports only Rails 5 now. For older versions of Rails, try versions < 2.0. Rails 6 support is coming soon.
+
 This gem is heavily inspired from [lograge](https://github.com/roidrage/lograge), but it's focused on one thing and one thing only. That's making your logs awesome like this:
 
 [![Awesome Logs](https://f.cloud.github.com/assets/830679/2407078/dcde03e8-aa82-11e3-85ac-8c5b3a86676e.png)](https://f.cloud.github.com/assets/830679/2407078/dcde03e8-aa82-11e3-85ac-8c5b3a86676e.png)
