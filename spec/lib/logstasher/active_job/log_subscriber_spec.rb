@@ -21,7 +21,7 @@ if LogStasher.has_active_job?
     end
 
     before(:all) do
-      LogStasher::ActiveJob::LogSubscriber.attach_to(:active_job)
+      LogStasher::ActiveJob::LogSubscriber.attach_to(:active_job) 
       LogStasher.field_renaming = {}
     end
 
@@ -58,7 +58,7 @@ if LogStasher.has_active_job?
         expect(described_class.new.logger).to eq logger
       end
     end
-
+  
     def enqueue_job
       job = nil
       perform_enqueued_jobs do
