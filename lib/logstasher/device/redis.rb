@@ -3,7 +3,6 @@ require 'redis'
 module LogStasher
   module Device
     class Redis
-
       attr_reader :options, :redis
 
       def initialize(options = {})
@@ -23,7 +22,7 @@ module LogStasher
       def redis_options
         unless @redis_options
           default_keys = default_options.keys
-          @redis_options = options.select { |k, v| !default_keys.include?(k) }
+          @redis_options = options.select { |k, _v| !default_keys.include?(k) }
         end
 
         @redis_options
@@ -36,7 +35,7 @@ module LogStasher
         when 'channel'
           redis.publish(key, log)
         else
-          fail "Unknown data type #{data_type}"
+          raise "Unknown data type #{data_type}"
         end
       end
 
@@ -51,12 +50,12 @@ module LogStasher
       end
 
       def default_options
-          { key: 'logstash', data_type: 'list' }
+        { key: 'logstash', data_type: 'list' }
       end
 
       def validate_options
-        unless ['list', 'channel'].include?(options[:data_type])
-          fail 'Expected :data_type to be either "list" or "channel"'
+        unless %w[list channel].include?(options[:data_type])
+          raise 'Expected :data_type to be either "list" or "channel"'
         end
       end
     end

@@ -9,10 +9,9 @@ class SampleMailer < ActionMailer::Base
     end
   end
 
-  def receive(email)
-  end
+  def receive(email); end
 
   def _render_template(_)
-    ""
+    ''
   end
 end

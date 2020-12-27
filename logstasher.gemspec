@@ -9,14 +9,14 @@ Gem::Specification.new do |s|
   s.summary     = s.description = 'Awesome rails logs'
   s.license     = 'MIT'
 
-  s.files         = `git ls-files lib`.split("\n")
+  s.files = `git ls-files lib`.split("\n")
 
+  s.add_runtime_dependency 'activesupport', '>= 5.0'
   s.add_runtime_dependency 'logstash-event', '~> 1.2.0'
   s.add_runtime_dependency 'request_store'
-  s.add_runtime_dependency 'activesupport', '>= 4.0'
 
-  s.add_development_dependency('rspec', '>= 2.14')
+  s.add_development_dependency('activerecord', '>= 5.0')
   s.add_development_dependency('bundler', '>= 1.0.0')
-  s.add_development_dependency('rails', '>= 4.0')
-  s.add_development_dependency('activerecord', '>= 4.0')
+  s.add_development_dependency('rails', '>= 5.0')
+  s.add_development_dependency('rspec', '>= 2.14')
 end

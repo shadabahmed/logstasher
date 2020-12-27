@@ -12,7 +12,7 @@ describe LogStasher::CustomFields do
     end
 
     it 'returns the stored var in current thread' do
-      expect(Thread.current[:logstasher_custom_fields]).to eq [:test, :test2]
+      expect(Thread.current[:logstasher_custom_fields]).to eq %i[test test2]
     end
   end
 end

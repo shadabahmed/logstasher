@@ -9,17 +9,17 @@ module LogStasher
         super(*args)
         LogStasher::CustomFields.clear
       end
-      
+
       private
 
       # this method is called from within super of process_action.
       def append_info_to_payload(payload) #:nodoc:
         LogStasher.add_default_fields_to_payload(payload, request)
-        if self.respond_to?(:logstasher_add_custom_fields_to_request_context)
+        if respond_to?(:logstasher_add_custom_fields_to_request_context)
           logstasher_add_custom_fields_to_request_context(LogStasher.request_context)
         end
 
-        if self.respond_to?(:logstasher_add_custom_fields_to_payload)
+        if respond_to?(:logstasher_add_custom_fields_to_payload)
           before_keys = payload.keys.clone
           logstasher_add_custom_fields_to_payload(payload)
           after_keys = payload.keys
@@ -38,7 +38,7 @@ module LogStasher
           payload[key] = value
         end
       end
-      
+
       def add_custom_fields_to_store
         LogStasher.store[:ip] = request.remote_ip
         LogStasher.store[:route] = "#{request.params[:controller]}##{request.params[:action]}"

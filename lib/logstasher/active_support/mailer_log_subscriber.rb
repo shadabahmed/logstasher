@@ -4,18 +4,18 @@ require 'active_support/log_subscriber'
 module LogStasher
   module ActiveSupport
     class MailerLogSubscriber < ::ActiveSupport::LogSubscriber
-      MAILER_FIELDS = [:mailer, :action, :message_id, :from, :to]
+      MAILER_FIELDS = %i[mailer action message_id from to].freeze
 
       def deliver(event)
-        process_event(event, ['mailer', 'deliver'])
+        process_event(event, %w[mailer deliver])
       end
 
       def receive(event)
-        process_event(event, ['mailer', 'receive'])
+        process_event(event, %w[mailer receive])
       end
 
       def process(event)
-        process_event(event, ['mailer', 'process'])
+        process_event(event, %w[mailer process])
       end
 
       def logger

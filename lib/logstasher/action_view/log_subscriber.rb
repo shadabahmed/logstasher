@@ -10,8 +10,8 @@ module LogStasher
       def render_template(event)
         logstash_event(event)
       end
-      alias :render_partial :render_template
-      alias :render_collection :render_template
+      alias render_partial render_template
+      alias render_collection render_template
 
       def logger
         LogStasher.logger
@@ -35,7 +35,7 @@ module LogStasher
       end
 
       def extract_data(data)
-        {  identifier: from_rails_root(data[:identifier]) }
+        { identifier: from_rails_root(data[:identifier]) }
       end
 
       def request_context
@@ -49,16 +49,15 @@ module LogStasher
       def event_data(event)
         {
           name: event.name,
-          transaction_id: event.transaction_id,
+          transaction_id: event.transaction_id
         }
       end
 
       def runtimes(event)
         {
-          duration: event.duration,
-        }.inject({}) do |runtimes, (name, runtime)|
+          duration: event.duration
+        }.each_with_object({}) do |(name, runtime), runtimes|
           runtimes[name] = runtime.to_f.round(2) if runtime
-          runtimes
         end
       end
     end

@@ -17,12 +17,12 @@ module LogStasher
 
     # Try loading the config/logstasher.yml if present
     env = Rails.env.to_sym || :development
-    config_file = File.expand_path "./config/logstasher.yml"
+    config_file = File.expand_path './config/logstasher.yml'
 
     # Load and ERB templating of YAML files
-    LOGSTASHER = File.exists?(config_file) ? YAML.load(ERB.new(File.read(config_file)).result).symbolize_keys : nil
+    LOGSTASHER = File.exist?(config_file) ? YAML.load(ERB.new(File.read(config_file)).result).symbolize_keys : nil
 
-    initializer :logstasher, :before => :load_config_initializers do |app|
+    initializer :logstasher, before: :load_config_initializers do |app|
       if LOGSTASHER.present?
         # process common configs
         LogStasher.process_config(app.config.logstasher, LOGSTASHER)
@@ -79,6 +79,8 @@ module LogStasher
     config.backtrace = yml_config[:backtrace] if yml_config.key? :backtrace
     config.logger_path = yml_config[:logger_path] if yml_config.key? :logger_path
     config.log_level = yml_config[:log_level] if yml_config.key? :log_level
-    config.log_controller_parameters = yml_config[:log_controller_parameters] if yml_config.key? :log_controller_parameters
+    if yml_config.key? :log_controller_parameters
+      config.log_controller_parameters = yml_config[:log_controller_parameters]
+    end
   end
 end
