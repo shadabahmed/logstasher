@@ -12,10 +12,10 @@ module LogStasher
       if data.include?("@timestamp")
         t = data["@timestamp"]
         if t.is_a?(String)
-          data["@timestamp"] = Time.parse(t).gmtime
+          data["@timestamp"] = Time.parse(t).gmtime.iso8601(3)
         end
       else
-        data["@timestamp"] = ::Time.now.utc 
+        data["@timestamp"] = ::Time.now.utc.iso8601(3)
       end
       data["@version"] = "1" if !@data.include?("@version")
     end 
