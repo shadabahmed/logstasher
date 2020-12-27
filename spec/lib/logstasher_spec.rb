@@ -4,6 +4,11 @@ require 'logstash-event'
 require 'action_view/log_subscriber'
 
 
+def console
+  require 'rails/command'
+  require 'rails/commands/console/console_command'
+end
+
 describe LogStasher do
   require 'active_job'
   before :each do
@@ -364,8 +369,7 @@ describe LogStasher do
     end
 
     it "returns true if called as rake" do
-      require 'rails/command'
-      require 'rails/commands/console/console_command'
+      console
       expect(LogStasher.called_as_console?).to be true
     end
   end
@@ -376,8 +380,7 @@ describe LogStasher do
     end
 
     it "sets request_context accordingly if called as console" do
-      require 'rails/command'
-      require 'rails/commands/console/console_command'
+      console
       expect(LogStasher).to receive(:called_as_console?).and_return(true)
       expect(Process).to receive(:pid).and_return(1234)
       LogStasher.set_data_for_console

@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'logstasher/active_job/log_subscriber'
+require 'active_job'
 
 
 describe LogStasher::ActiveJob::LogSubscriber do 
@@ -34,7 +35,7 @@ describe LogStasher::ActiveJob::LogSubscriber do
     logger
   end
 
-  before(:each) do
+  before do
     LogStasher.logger = logger
     LogStasher.request_context[:request_id] = 'foobar123'
 
@@ -72,6 +73,7 @@ describe LogStasher::ActiveJob::LogSubscriber do
 
   it 'logs 3 lines per job' do
     # enqueue, perform_start, perform
+    expect(log_output.json.size).to eq(0)
     enqueue_job
     expect(log_output.json.size).to eq(3)
   end
@@ -103,7 +105,7 @@ describe LogStasher::ActiveJob::LogSubscriber do
       expect(json['queue_name']).to eq('Test(default)')
       expect(json['job_class']).to eq('ActiveJobTestClass')
       expect(json['job_args']).to eq([{'error' => true}])
-      expect(json['duration']).to be_between(0, 1)
+      expect(json['duration']).to be_between(0, 2)
       expect(json['exception']).to eq(['ZeroDivisionError', 'divided by 0'])
       expect(json).to_not have_key('scheduled_at')
     end
