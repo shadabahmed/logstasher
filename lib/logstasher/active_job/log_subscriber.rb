@@ -1,13 +1,19 @@
 if ActiveJob::VERSION::MAJOR == 5
   require 'active_job/logging' 
-  ActiveJob.const_set('LogSubscriber', ActiveJob::Logging::LogSubscriber)
 else
   require 'active_job/log_subscriber' 
 end
 
 module LogStasher
   module ActiveJob
-    class LogSubscriber < ::ActiveJob::LogSubscriber
+
+    BASE_SUBSCRIBER = if ::ActiveJob::VERSION::MAJOR == 5
+      ::ActiveJob::Logging::LogSubscriber
+    else
+      ::ActiveJob::LogSubscriber
+    end
+
+    class LogSubscriber < BASE_SUBSCRIBER
       def enqueue(event)
         process_event(event, 'enqueue')
       end
