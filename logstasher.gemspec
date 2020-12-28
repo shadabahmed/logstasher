@@ -14,7 +14,6 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'activesupport', '>= 5.2'
   s.add_runtime_dependency 'request_store'
 
-  s.add_development_dependency('activerecord', '>= 5.2')
   s.add_development_dependency('bundler', '>= 1.0.0')
   s.add_development_dependency('rails', '>= 5.2')
   s.add_development_dependency('rspec', '>= 2.14')
