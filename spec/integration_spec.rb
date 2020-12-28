@@ -28,6 +28,7 @@ describe ActionController::Base do
       allow(logger).to receive(:<<)
       allow(logger).to receive(:debug)
       allow(logger).to receive(:info)
+      allow(logger).to receive(:debug)
     end
 
     2.times do |index|
