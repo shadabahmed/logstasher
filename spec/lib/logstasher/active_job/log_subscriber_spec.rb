@@ -68,7 +68,7 @@ if LogStasher.has_active_job?
     end
 
     def enqueue_job_with_error
-      if Rails.version < '6.1'
+      if ActiveJob.gem_version.to_s < '6.1'
         enqueue_job_with_error_pre_6_1
       else
         enqueue_job_with_error_6_1
