@@ -1,7 +1,8 @@
-if ActiveJob::VERSION::MAJOR >= 6 && ActiveJob::VERSION::MINOR >= 1
-  require 'active_job/log_subscriber'
-else
+# For Rails 6.0 or below, require the logging module which contains LogSubscriber
+if ActiveJob::VERSION::MAJOR < 6 || (ActiveJob::VERSION::MAJOR == 6 && ActiveJob::VERSION::MINOR == 0)
   require 'active_job/logging' 
+else
+  require 'active_job/log_subscriber'
 end
 
 module LogStasher
