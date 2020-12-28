@@ -27,8 +27,11 @@ jobs:
            rails-version: 5.2
          - ruby-version: 2.7.2
            bundler-version: default
-           rails-version: 6.0.3.4
+           rails-version: 6.0
          - ruby-version: 2.7.2
+           bundler-version: default
+           rails-version: 6.1
+         - ruby-version: 3.0.0
            bundler-version: default
            rails-version: 6.1
     steps:
