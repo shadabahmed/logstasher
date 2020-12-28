@@ -16,6 +16,7 @@ describe LogStasher::ActiveRecord::LogSubscriber do
   before do
     LogStasher.logger = logger
     LogStasher.log_controller_parameters = true
+    LogStasher.field_renaming = {}
     LogStasher::CustomFields.custom_fields = []
     allow(described_class).to receive(:runtime).and_return(0)
     allow(described_class).to receive(:runtime=)
@@ -61,6 +62,14 @@ describe LogStasher::ActiveRecord::LogSubscriber do
     it 'should include duration time' do
       subject.identity(event)
       expect(log_output.json['duration']).to eq 0.00
+    end
+
+    it "should not contain :connection" do
+      event.payload[:connection] = Object.new
+
+      subject.identity(event)
+      expect(event.payload[:connection]).not_to be_nil
+      expect(log_output.json['connection']).to be_nil
     end
   end
 
