@@ -40,8 +40,17 @@ if LogStasher.has_active_job?
       LogStasher.request_context[:request_id] = 'foobar123'
 
       # Silence the default logger from spitting out to the console
-      allow_any_instance_of(ActiveJob::Logging::LogSubscriber).to receive(:logger)
-        .and_return(double.as_null_object)
+      subscriber_base =
+        if defined?(ActiveJob::LogSubscriber)
+          ActiveJob::LogSubscriber
+        elsif defined?(ActiveJob::Logging::LogSubscriber)
+          ActiveJob::Logging::LogSubscriber
+        end
+
+      if subscriber_base
+        allow_any_instance_of(subscriber_base).to receive(:logger)
+          .and_return(double.as_null_object)
+      end
     end
 
     describe '#logger' do
@@ -56,6 +65,28 @@ if LogStasher.has_active_job?
         job = ActiveJobTestClass.perform_later(1, 2, 3, { 'a' => { 'b' => ['c'] } })
       end
       job
+    end
+
+    def enqueue_job_with_error
+      if ActiveJob.gem_version.to_s < '6.1'
+        enqueue_job_with_error_pre_6_1
+      else
+        enqueue_job_with_error_6_1
+      end
+    end
+
+    def enqueue_job_with_error_pre_6_1
+      job = nil
+      expect do
+        perform_enqueued_jobs { job = ActiveJobTestClass.perform_later('error' => true) }
+      end.to raise_error(ZeroDivisionError)
+    end
+
+    def enqueue_job_with_error_6_1
+      job = ActiveJobTestClass.perform_later('error' => true)
+      expect do
+        perform_enqueued_jobs
+      end.to raise_error(ZeroDivisionError)
     end
 
     def log_line(type)
@@ -93,10 +124,7 @@ if LogStasher.has_active_job?
     end
 
     it 'logs the exception when performing' do
-      job = nil
-      expect do
-        perform_enqueued_jobs { job = ActiveJobTestClass.perform_later('error' => true) }
-      end.to raise_error(ZeroDivisionError)
+      enqueue_job_with_error
 
       log_line('perform').tap do |json|
         expect(json['tags']).to eq(%w[job perform exception])

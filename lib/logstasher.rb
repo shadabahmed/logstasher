@@ -38,6 +38,8 @@ module LogStasher
         unsubscribe(:active_record, subscriber)
       when 'ActiveJob::Logging::LogSubscriber'
         unsubscribe(:active_job, subscriber)
+      when 'ActiveJob::LogSubscriber'
+        unsubscribe(:active_job, subscriber)
       end
     end
   end

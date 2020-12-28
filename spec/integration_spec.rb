@@ -26,6 +26,7 @@ describe ActionController::Base do
       LogStasher.logger = logger
 
       allow(logger).to receive(:<<)
+      allow(logger).to receive(:debug)
       allow(logger).to receive(:info)
     end
 

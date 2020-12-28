@@ -16,6 +16,7 @@ require 'rubygems'
 # do bundle install instead of ugly load error on require.
 require 'bundler/setup'
 
+require 'active_support'
 require 'active_record'
 require 'active_job'
 require 'action_view'
@@ -42,4 +43,8 @@ RSpec.configure do |config|
   config.filter_run :focus
 
   ActiveJob::Base.queue_adapter = :test
+
+  def assert_nothing_raised(&block)
+    expect(&block).to_not raise_error
+  end
 end

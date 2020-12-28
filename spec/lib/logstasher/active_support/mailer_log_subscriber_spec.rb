@@ -8,6 +8,8 @@ describe LogStasher::ActiveSupport::MailerLogSubscriber do
       msg
     }
     def log_output.json
+      return '' if string.nil?
+
       JSON.parse!(string.split("\n").last)
     end
     logger
@@ -39,15 +41,18 @@ describe LogStasher::ActiveSupport::MailerLogSubscriber do
     end
   end
 
-  it 'receive an e-mail' do
-    SampleMailer.receive(message.encoded)
-    log_output.json.tap do |json|
-      expect(json['source']).to eq(LogStasher.source)
-      expect(json['tags']).to eq(%w[mailer receive])
-      expect(json['mailer']).to eq('SampleMailer')
-      expect(json['from']).to eq(['some-dude@example.com'])
-      expect(json['to']).to eq(['some-other-dude@example.com'])
-      expect(json['message_id']).to eq(message.message_id)
+  # Receive functionality was removed from ActionMailer in 6.1.0
+  if ActionMailer.gem_version.to_s < '6.1.0'
+    it 'receives an e-mail' do
+      SampleMailer.receive(message.encoded)
+      log_output.json.tap do |json|
+        expect(json['source']).to eq(LogStasher.source)
+        expect(json['tags']).to eq(%w[mailer receive])
+        expect(json['mailer']).to eq('SampleMailer')
+        expect(json['from']).to eq(['some-dude@example.com'])
+        expect(json['to']).to eq(['some-other-dude@example.com'])
+        expect(json['message_id']).to eq(message.message_id)
+      end
     end
   end
 

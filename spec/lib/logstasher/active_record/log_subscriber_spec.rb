@@ -113,7 +113,7 @@ describe LogStasher::ActiveRecord::LogSubscriber do
     end
 
     it 'should increment runtime by event duration' do
-      expect(described_class).to receive(:runtime=).with(be_within(0.01).of(1000.0))
+      expect(described_class).to receive(:runtime=).with(be_within(0.05).of(1000.0))
       subject.identity(event)
     end
   end

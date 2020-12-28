@@ -25,7 +25,12 @@ jobs:
          - ruby-version: 2.7.2
            bundler-version: default
            rails-version: 5.2
-
+         - ruby-version: 2.7.2
+           bundler-version: default
+           rails-version: 6.0.3.4
+         - ruby-version: 2.7.2
+           bundler-version: default
+           rails-version: 6.1
     steps:
     - uses: actions/checkout@v2
     - name: Set up Ruby ${{ matrix.ruby-version }}
@@ -33,7 +38,7 @@ jobs:
       with:
         ruby-version: ${{ matrix.ruby-version }}
         bundler: ${{ matrix.bundler-version }} 
-        bundler-cache: true
+        bundler-cache: false
     - name: Install dependencies
       run: bundle install
       env:
