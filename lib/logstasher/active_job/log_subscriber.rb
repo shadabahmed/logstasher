@@ -1,16 +1,16 @@
-if ActiveJob::VERSION::MAJOR == 5
-  require 'active_job/logging' 
+if ActiveJob::VERSION::MAJOR >= 6 && ActiveJob::VERSION::MINOR >= 1
+  require 'active_job/log_subscriber'
 else
-  require 'active_job/log_subscriber' 
+  require 'active_job/logging' 
 end
 
 module LogStasher
   module ActiveJob
 
-    BASE_SUBSCRIBER = if ::ActiveJob::VERSION::MAJOR == 5
-      ::ActiveJob::Logging::LogSubscriber
-    else
+    BASE_SUBSCRIBER = if defined?(::ActiveJob::LogSubscriber)
       ::ActiveJob::LogSubscriber
+    else
+      ::ActiveJob::Logging::LogSubscriber
     end
 
     class LogSubscriber < BASE_SUBSCRIBER
