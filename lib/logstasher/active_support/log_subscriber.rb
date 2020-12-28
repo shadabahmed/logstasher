@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'active_support/core_ext/class/attribute'
 require 'active_support/log_subscriber'
 require 'logstasher/custom_fields'
@@ -20,7 +22,7 @@ module LogStasher
 
         tags = ['request']
         tags.push('exception') if payload[:exception]
-        logger << LogStasher.build_logstash_event(data, tags).to_json + "\n"
+        logger << "#{LogStasher.build_logstash_event(data, tags).to_json}\n"
       end
 
       def redirect_to(event)
@@ -48,11 +50,7 @@ module LogStasher
       end
 
       def extract_format(payload)
-        if ::ActionPack::VERSION::MAJOR == 3 && ::ActionPack::VERSION::MINOR == 0
-          payload[:formats].first
-        else
-          payload[:format]
-        end
+        payload[:format]        
       end
 
       def extract_status(payload)

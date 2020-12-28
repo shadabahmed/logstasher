@@ -1,18 +1,19 @@
+# frozen_string_literal: true
+
 # For Rails 6.0 or below, require the logging module which contains LogSubscriber
-if ActiveJob::VERSION::MAJOR < 6 || (ActiveJob::VERSION::MAJOR == 6 && ActiveJob::VERSION::MINOR == 0)
-  require 'active_job/logging' 
+if ActiveJob::VERSION::MAJOR < 6 || (ActiveJob::VERSION::MAJOR == 6 && ActiveJob::VERSION::MINOR.zero?)
+  require 'active_job/logging'
 else
   require 'active_job/log_subscriber'
 end
 
 module LogStasher
   module ActiveJob
-
     BASE_SUBSCRIBER = if defined?(::ActiveJob::LogSubscriber)
-      ::ActiveJob::LogSubscriber
-    else
-      ::ActiveJob::Logging::LogSubscriber
-    end
+                        ::ActiveJob::LogSubscriber
+                      else
+                        ::ActiveJob::Logging::LogSubscriber
+                      end
 
     class LogSubscriber < BASE_SUBSCRIBER
       def enqueue(event)
@@ -61,7 +62,7 @@ module LogStasher
 
         tags = ['job', type]
         tags.push('exception') if data[:exception]
-        logger << LogStasher.build_logstash_event(data, tags).to_json + "\n"
+        logger << "#{LogStasher.build_logstash_event(data, tags).to_json}\n"
       end
 
       def extract_metadata(event)
@@ -96,4 +97,3 @@ module LogStasher
     end
   end
 end
-

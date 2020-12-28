@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'logstasher/version'
 require 'logstasher/active_support/log_subscriber'
 require 'logstasher/active_support/mailer_log_subscriber'
@@ -109,8 +111,8 @@ module LogStasher
     self.logger = config.logger || new_logger(logger_path)
     logger.level = config.log_level || Logger::WARN
     self.source = config.source unless config.source.nil?
-    self.log_controller_parameters = !!config.log_controller_parameters
-    self.backtrace = !!config.backtrace unless config.backtrace.nil?
+    self.log_controller_parameters = !config.log_controller_parameters.nil?
+    self.backtrace = !config.backtrace.nil? unless config.backtrace.nil?
     set_data_for_rake
     set_data_for_console
     self.field_renaming = Hash(config.field_renaming)
@@ -125,7 +127,7 @@ module LogStasher
   end
 
   def called_as_rake?
-    File.basename($0) == 'rake'
+    File.basename($PROGRAM_NAME) == 'rake'
   end
 
   def called_as_console?
@@ -160,7 +162,7 @@ module LogStasher
   #   LogStasher.info("message", timing:1234)
   #   LogStasher.info(custom1:"yes", custom2:"no")
   def log(severity, message, additional_fields = {})
-    if logger && logger.send("#{severity}?")
+    if logger&.send("#{severity}?")
 
       data = { 'level' => severity }
       if message.respond_to?(:to_hash)
@@ -173,7 +175,7 @@ module LogStasher
       tags = Array(additional_fields.delete(:tags) || 'log')
 
       data.merge!(additional_fields)
-      logger << build_logstash_event(data, tags).to_json + "\n"
+      logger << "#{build_logstash_event(data, tags).to_json}\n"
 
     end
   end
