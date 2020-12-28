@@ -7,6 +7,11 @@ def console
   require 'rails/commands/console/console_command'
 end
 
+def console
+  require 'rails/command'
+  require 'rails/commands/console/console_command'
+end
+
 describe LogStasher do
   require 'active_job'
   before :each do
@@ -20,13 +25,7 @@ describe LogStasher do
       ActionMailer::LogSubscriber.attach_to :action_mailer
       if LogStasher.has_active_job?
         require 'active_job'
-        subscriber_base =
-          if defined?(ActiveJob::LogSubscriber)
-            ActiveJob::LogSubscriber
-          elsif defined?(ActiveJob::Logging::LogSubscriber)
-            ActiveJob::Logging::LogSubscriber
-          end
-        subscriber_base.attach_to :active_job if subscriber_base
+        LogStasher::ActiveJob::BASE_SUBSCRIBER.attach_to :active_job
       end
     end
 
