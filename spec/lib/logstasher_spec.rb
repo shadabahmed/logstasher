@@ -1,6 +1,5 @@
 require 'spec_helper'
 require 'rake'
-require 'logstash-event'
 require 'action_view/log_subscriber'
 
 def console
@@ -153,7 +152,6 @@ describe LogStasher do
       expect(LogStasher::ActiveRecord::LogSubscriber).to receive(:attach_to).with(:active_record)
       expect(LogStasher::ActionView::LogSubscriber).to receive(:attach_to).with(:action_view)
       expect(LogStasher::ActiveJob::LogSubscriber).to receive(:attach_to).with(:active_job)
-      expect(LogStasher).to receive(:require).with('logstash-event')
     end
   end
   shared_examples 'setup' do
