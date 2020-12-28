@@ -89,7 +89,6 @@ module LogStasher
   end
 
   def setup_before(config)
-    require 'logstash-event'
     self.enabled = config.enabled
     LogStasher::ActiveSupport::LogSubscriber.attach_to :action_controller if config.controller_enabled
     LogStasher::ActiveSupport::MailerLogSubscriber.attach_to :action_mailer if config.mailer_enabled
