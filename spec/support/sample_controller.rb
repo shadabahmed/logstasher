@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'action_controller'
 require 'logstasher/rails_ext/action_controller/base'
 

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'active_support/notifications'
 require 'action_view/log_subscriber'
 require 'logstasher/custom_fields'
@@ -31,7 +33,7 @@ module LogStasher
 
         tags = []
         tags.push('exception') if data[:exception]
-        logger << LogStasher.build_logstash_event(data, tags).to_json + "\n"
+        logger << "#{LogStasher.build_logstash_event(data, tags).to_json}\n"
       end
 
       def extract_data(data)

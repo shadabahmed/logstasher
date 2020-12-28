@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'active_support/core_ext/class/attribute'
 require 'active_support/log_subscriber'
 
@@ -31,7 +33,7 @@ module LogStasher
 
       def process_event(event, tags)
         data = LogStasher.request_context.merge(extract_metadata(event.payload))
-        logger << LogStasher.build_logstash_event(data, tags).to_json + "\n"
+        logger << "#{LogStasher.build_logstash_event(data, tags).to_json}\n"
       end
 
       def extract_metadata(payload)

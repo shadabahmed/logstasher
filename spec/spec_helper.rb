@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Notice there is a .rspec file in the root folder. It defines rspec arguments
 if ENV['COVERAGE']
   require 'simplecov'
@@ -16,7 +18,7 @@ ENV['RAILS_ENV'] = 'test'
 # part of Rails. You can say :require => false in gemfile to always use explicit requiring
 Bundler.require(:default, :test)
 require 'active_support/testing/assertions'
-Dir[File.join('./spec/support/**/*.rb')].each { |f| require f }
+Dir[File.join('./spec/support/**/*.rb')].sort.each { |f| require f }
 
 # Set Rails environment as test
 $test_timestamp = '1970-01-01T00:00:00.000Z'

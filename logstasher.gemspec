@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require './lib/logstasher/version'
 
 Gem::Specification.new do |s|

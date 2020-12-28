@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'redis'
 
 module LogStasher
@@ -22,7 +24,7 @@ module LogStasher
       def redis_options
         unless @redis_options
           default_keys = default_options.keys
-          @redis_options = options.select { |k, _v| !default_keys.include?(k) }
+          @redis_options = options.reject { |k, _v| default_keys.include?(k) }
         end
 
         @redis_options

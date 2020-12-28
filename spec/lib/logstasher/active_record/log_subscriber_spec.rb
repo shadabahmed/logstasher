@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'spec_helper'
 require 'logstasher/active_record/log_subscriber'
 
@@ -64,7 +65,7 @@ describe LogStasher::ActiveRecord::LogSubscriber do
       expect(log_output.json['duration']).to eq 0.00
     end
 
-    it "should not contain :connection" do
+    it 'should not contain :connection' do
       event.payload[:connection] = Object.new
 
       subject.identity(event)

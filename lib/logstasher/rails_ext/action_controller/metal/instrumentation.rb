@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ActionController
   module Instrumentation
     alias orig_process_action process_action

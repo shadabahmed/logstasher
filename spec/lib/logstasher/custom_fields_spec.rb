@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'logstasher/custom_fields'
 
 describe LogStasher::CustomFields do

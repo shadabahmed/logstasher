@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'active_support/notifications'
 require 'active_record/log_subscriber'
 require 'logstasher/custom_fields'
@@ -9,7 +11,7 @@ module LogStasher
 
       def identity(event)
         lsevent = logstash_event(event)
-        logger << lsevent.to_json + "\n" if logger && lsevent
+        logger << "#{lsevent.to_json}\n" if logger && lsevent
       end
       alias sql identity
 
@@ -23,7 +25,7 @@ module LogStasher
         self.class.runtime += event.duration
         data = event.payload.dup
 
-        return if 'SCHEMA' == data[:name]
+        return if data[:name] == 'SCHEMA'
 
         # A connection cannot be converted to JSON as it fails with
         # SystemStackError when running against ActiveSupport JSON patches.

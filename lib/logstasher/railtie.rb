@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'rails/railtie'
 require 'action_view/log_subscriber'
 require 'action_controller/log_subscriber'
@@ -20,7 +22,7 @@ module LogStasher
     config_file = File.expand_path './config/logstasher.yml'
 
     # Load and ERB templating of YAML files
-    LOGSTASHER = File.exist?(config_file) ? YAML.load(ERB.new(File.read(config_file)).result).symbolize_keys : nil
+    LOGSTASHER = File.exist?(config_file) ? YAML.safe_load(ERB.new(File.read(config_file)).result).symbolize_keys : nil
 
     initializer :logstasher, before: :load_config_initializers do |app|
       if LOGSTASHER.present?
@@ -42,7 +44,7 @@ module LogStasher
     end
 
     def rack_cache_hashlike?(app)
-      app.config.action_dispatch.rack_cache && app.config.action_dispatch.rack_cache.respond_to?(:[]=)
+      app.config.action_dispatch.rack_cache&.respond_to?(:[]=)
     end
   end
 
@@ -55,7 +57,7 @@ module LogStasher
       # get all available IP address lists and use the first one.
       # This will always be `127.0.0.1`.
       address_info = Socket.ip_address_list.first
-      address_info && address_info.ip_address
+      address_info&.ip_address
     else
       IPSocket.getaddress(Socket.gethostname)
     end
