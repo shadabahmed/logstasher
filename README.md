@@ -1,8 +1,6 @@
 # Logstasher [![Gem Version](https://badge.fury.io/rb/logstasher.svg)](https://badge.fury.io/rb/logstasher) ![Tests](https://github.com/shadabahmed/logstasher/workflows/Tests/badge.svg)
 ### Awesome Logging for Rails !!
 
-[Note:] This version supports only Rails 5 now. For older versions of Rails, try versions < 2.0. Rails 6 support is coming soon.
-
 This gem is heavily inspired from [lograge](https://github.com/roidrage/lograge), but it's focused on one thing and one thing only. That's making your logs awesome like this:
 
 [![Awesome Logs](https://f.cloud.github.com/assets/830679/2407078/dcde03e8-aa82-11e3-85ac-8c5b3a86676e.png)](https://f.cloud.github.com/assets/830679/2407078/dcde03e8-aa82-11e3-85ac-8c5b3a86676e.png)
@@ -13,7 +11,7 @@ By, using these awesome tools:
 * [Logstash](http://logstash.net) - Store and index your logs
 * [Kibana](http://kibana.org/) - for awesome visualization. This is optional though, and you can use any other visualizer
 
-Update: Logstash now includes Kibana build in, so no need to separately install. Logstasher has been tested with **logstash version 1.4.2** with `file input` and `json codec`.
+Update: Logstash now includes Kibana build in, so no need to separately install. Logstasher has been tested with logstash with `file input` and `json codec`.
 
 See [quickstart](#quick-setup-for-logstash) for quickly setting up logstash
 
@@ -160,7 +158,7 @@ Note: Since mailers are executed within the lifetime of a request, they will sho
 
 ## Logging ActiveJob events
 
-Logstasher can also easily log messages from `ActiveJob` (Rails >= 4.2).
+Logstasher can also easily log messages from `ActiveJob` (Rails >= 5.2).
 This functionality is automatically enabled. The `request_id` is set to the Job ID when the job is
 performed, and then reverted back to its previous value once the job is complete. Imagine this
 scenario:
@@ -218,7 +216,7 @@ bin/logstash -f quickstart.conf
 ```
 
 ## Versions
-All versions require Rails 5.2.x and higher and Ruby 2.6+.
+All versions require Rails 5.2.x (Tested upto 6.1.x) and higher and Ruby 2.6+.
 
 ## Development
  - Install dependencies:
