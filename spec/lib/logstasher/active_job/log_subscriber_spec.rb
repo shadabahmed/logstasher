@@ -67,6 +67,28 @@ if LogStasher.has_active_job?
       job
     end
 
+    def enqueue_job_with_error
+      if Rails.version < '6.1'
+        enqueue_job_with_error_pre_6_1
+      else
+        enqueue_job_with_error_6_1
+      end
+    end
+
+    def enqueue_job_with_error_pre_6_1
+      job = nil
+      expect do
+        perform_enqueued_jobs { job = ActiveJobTestClass.perform_later('error' => true) }
+      end.to raise_error(ZeroDivisionError)
+    end
+
+    def enqueue_job_with_error_6_1
+      job = ActiveJobTestClass.perform_later('error' => true)
+      expect do
+        perform_enqueued_jobs
+      end.to raise_error(ZeroDivisionError)
+    end
+
     def log_line(type)
       log_output.json.detect { |j| j['tags'].include?(type) }
     end
@@ -102,10 +124,7 @@ if LogStasher.has_active_job?
     end
 
     it 'logs the exception when performing' do
-      job = nil
-      expect do
-        perform_enqueued_jobs { job = ActiveJobTestClass.perform_later('error' => true) }
-      end.to raise_error(ZeroDivisionError)
+      enqueue_job_with_error
 
       log_line('perform').tap do |json|
         expect(json['tags']).to eq(%w[job perform exception])
