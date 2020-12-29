@@ -71,12 +71,12 @@ if LogStasher.has_active_job?
     def enqueue_job_with_error_pre_6_1
       job = nil
       expect do
-        perform_enqueued_jobs { job = ActiveJobTestClass.perform_later('error' => true) }
+        perform_enqueued_jobs { job = ActiveJobTestClass.perform_later({error: true}) }
       end.to raise_error(ZeroDivisionError)
     end
 
     def enqueue_job_with_error_6_1
-      job = ActiveJobTestClass.perform_later('error' => true)
+      job = ActiveJobTestClass.perform_later({error: true})
       expect do
         perform_enqueued_jobs
       end.to raise_error(ZeroDivisionError)
@@ -109,7 +109,7 @@ if LogStasher.has_active_job?
         expect(json['job_id']).to eq(job.job_id)
         expect(json['queue_name']).to eq('Test(default)')
         expect(json['job_class']).to eq('ActiveJobTestClass')
-        expect(json['job_args']).to eq([1, 2, 3, { 'a' => { 'b' => ['c'] } }])
+        expect(json['job_args']).to eq(::ActiveJob::Arguments.serialize(job.arguments))
         expect(json['duration']).to be_between(0, 1)
         expect(json).to_not have_key('scheduled_at')
         expect(json).to_not have_key('exception')
@@ -125,7 +125,8 @@ if LogStasher.has_active_job?
         expect(json['job_id']).to_not eq('foobar123')
         expect(json['queue_name']).to eq('Test(default)')
         expect(json['job_class']).to eq('ActiveJobTestClass')
-        expect(json['job_args']).to eq([{ 'error' => true }])
+        expect(json['job_args']).to eq(::ActiveJob::Arguments.serialize([{error: true}]))
+        #expect(json['job_args']).to eq([{"_aj_ruby2_keywords"=>[], "error"=>true}])
         expect(json['duration']).to be_between(0, 2)
         expect(json['exception']).to eq(['ZeroDivisionError', 'divided by 0'])
         expect(json).to_not have_key('scheduled_at')
@@ -139,7 +140,7 @@ if LogStasher.has_active_job?
         expect(json['job_id']).to eq(job.job_id)
         expect(json['queue_name']).to eq('Test(default)')
         expect(json['job_class']).to eq('ActiveJobTestClass')
-        expect(json['job_args']).to eq([1, 2, 3, { 'a' => { 'b' => ['c'] } }])
+        expect(json['job_args']).to eq(::ActiveJob::Arguments.serialize(job.arguments))
         expect(json).to_not have_key('duration')
         expect(json).to_not have_key('scheduled_at')
         expect(json).to_not have_key('exception')
@@ -153,7 +154,7 @@ if LogStasher.has_active_job?
         expect(json['job_id']).to eq(job.job_id)
         expect(json['queue_name']).to eq('Test(default)')
         expect(json['job_class']).to eq('ActiveJobTestClass')
-        expect(json['job_args']).to eq([1, 2, 3, { 'a' => { 'b' => ['c'] } }])
+        expect(json['job_args']).to eq(::ActiveJob::Arguments.serialize(job.arguments))
         expect(json).to_not have_key('duration')
         expect(json).to_not have_key('scheduled_at')
         expect(json).to_not have_key('exception')
