@@ -92,7 +92,7 @@ module LogStasher
 
       # The default args_info makes a string. We need objects to turn into JSON.
       def args_info(job)
-        job.arguments.map { |arg| arg.try(:to_global_id).try(:to_s) || arg }
+        ::ActiveJob::Arguments.serialize(job.arguments)
       end
     end
   end
