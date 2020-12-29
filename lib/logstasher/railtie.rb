@@ -6,6 +6,21 @@ require 'action_controller/log_subscriber'
 require 'socket'
 
 module LogStasher
+  def default_source
+    case RUBY_PLATFORM
+    when /darwin/
+      # NOTE: MacOS Sierra and later are setting `.local`
+      # hostnames that even as real hostnames without the `.local` part,
+      # are still unresolvable. One reliable way to get an IP is to
+      # get all available IP address lists and use the first one.
+      # This will always be `127.0.0.1`.
+      address_info = Socket.ip_address_list.first
+      address_info&.ip_address
+    else
+      IPSocket.getaddress(Socket.gethostname)
+    end
+  end
+
   class Railtie < Rails::Railtie
     config.logstasher = ::ActiveSupport::OrderedOptions.new
     config.logstasher.enabled = false
@@ -46,21 +61,6 @@ module LogStasher
 
     def rack_cache_hashlike?(app)
       app.config.action_dispatch.rack_cache&.respond_to?(:[]=)
-    end
-  end
-
-  def default_source
-    case RUBY_PLATFORM
-    when /darwin/
-      # NOTE: MacOS Sierra and later are setting `.local`
-      # hostnames that even as real hostnames without the `.local` part,
-      # are still unresolvable. One reliable way to get an IP is to
-      # get all available IP address lists and use the first one.
-      # This will always be `127.0.0.1`.
-      address_info = Socket.ip_address_list.first
-      address_info&.ip_address
-    else
-      IPSocket.getaddress(Socket.gethostname)
     end
   end
 
