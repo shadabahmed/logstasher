@@ -166,7 +166,7 @@ describe LogStasher do
              logger: logger, log_level: 'warn', log_controller_parameters: nil,
              source: logstasher_source, logger_path: logger_path, backtrace: true,
              controller_monkey_patch: true, controller_enabled: true,
-             mailer_enabled: true, record_enabled: false, view_enabled: true, job_enabled: true, field_renaming: {})
+             mailer_enabled: true, record_enabled: false, view_enabled: true, job_enabled: true, field_renaming: {}, backtrace_filter: false)
     end
     let(:config) { double(logstasher: logstasher_config) }
     let(:app) { double(config: config) }

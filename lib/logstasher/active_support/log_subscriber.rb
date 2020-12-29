@@ -86,10 +86,14 @@ module LogStasher
           exception, message = payload[:exception]
           status = ::ActionDispatch::ExceptionWrapper.status_code_for_exception(exception)
           backtrace = if LogStasher.backtrace
-                        $!.backtrace.join("\n")
-                      else
-                        $!.backtrace.first
-                      end
+            if LogStasher.backtrace_filter.respond_to?(:call)
+              LogStasher.backtrace_filter.call($!.backtrace).join("\n")
+            else
+              $!.backtrace.join("\n")
+            end
+          else
+            $!.backtrace.first
+          end
           message = "#{exception}\n#{message}\n#{backtrace}"
           { status: status, error: message }
         else

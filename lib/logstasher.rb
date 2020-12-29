@@ -20,7 +20,7 @@ module LogStasher
   REQUEST_CONTEXT_KEY = :logstasher_request_context
 
   attr_accessor :logger, :logger_path, :enabled, :log_controller_parameters, :source, :backtrace,
-                :controller_monkey_patch, :field_renaming
+                :controller_monkey_patch, :field_renaming, :backtrace_filter
 
   # Setting the default to 'unknown' to define the default behaviour
   @source = 'unknown'
@@ -113,6 +113,7 @@ module LogStasher
     self.source = config.source unless config.source.nil?
     self.log_controller_parameters = !config.log_controller_parameters.nil?
     self.backtrace = !config.backtrace.nil? unless config.backtrace.nil?
+    self.backtrace_filter = config.backtrace_filter
     set_data_for_rake
     set_data_for_console
     self.field_renaming = Hash(config.field_renaming)
