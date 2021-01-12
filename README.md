@@ -1,4 +1,5 @@
 # Logstasher [![Gem Version](https://badge.fury.io/rb/logstasher.svg)](https://badge.fury.io/rb/logstasher) ![Tests](https://github.com/shadabahmed/logstasher/workflows/Tests/badge.svg)
+<a href="https://www.buymeacoffee.com/shadabahmed" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
 ### Awesome Logging for Rails !!
 
 This gem is heavily inspired from [lograge](https://github.com/roidrage/lograge), but it's focused on one thing and one thing only. That's making your logs awesome like this:
