@@ -52,7 +52,7 @@ module LogStasher
         {
           name: event.name,
           transaction_id: event.transaction_id,
-          allocations: event.allocations
+          allocations: event.try(:allocations) || 0
         }
       end
 
