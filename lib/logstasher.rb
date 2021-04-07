@@ -71,8 +71,10 @@ module LogStasher
       LogStasher::CustomFields.add(*LogStasher.store.keys)
       instance_exec(fields, &block)
     end
-    ::ActionController::Metal.send(:define_method, :logstasher_add_custom_fields_to_payload, &wrapped_block)
-    ::ActionController::Base.send(:define_method, :logstasher_add_custom_fields_to_payload, &wrapped_block)
+    ::ActiveSupport.on_load(:action_controller) do
+      ::ActionController::Metal.send(:define_method, :logstasher_add_custom_fields_to_payload, &wrapped_block)
+      ::ActionController::Base.send(:define_method, :logstasher_add_custom_fields_to_payload, &wrapped_block)
+    end
   end
 
   def add_custom_fields_to_request_context(&block)
@@ -80,8 +82,10 @@ module LogStasher
       instance_exec(fields, &block)
       LogStasher::CustomFields.add(*fields.keys)
     end
-    ::ActionController::Metal.send(:define_method, :logstasher_add_custom_fields_to_request_context, &wrapped_block)
-    ::ActionController::Base.send(:define_method, :logstasher_add_custom_fields_to_request_context, &wrapped_block)
+    ::ActiveSupport.on_load(:action_controller) do
+      ::ActionController::Metal.send(:define_method, :logstasher_add_custom_fields_to_request_context, &wrapped_block)
+      ::ActionController::Base.send(:define_method, :logstasher_add_custom_fields_to_request_context, &wrapped_block)
+    end
   end
 
   def add_default_fields_to_request_context(request)
