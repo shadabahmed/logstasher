@@ -29,26 +29,27 @@ module ActionController
           logstasher_add_custom_fields_to_request_context(LogStasher.request_context)
         end
 
-        if respond_to?(:logstasher_add_custom_fields_to_payload)
-          before_keys = raw_payload.keys.clone
-          logstasher_add_custom_fields_to_payload(raw_payload)
-          after_keys = raw_payload.keys
-          # Store all extra keys added to payload hash in payload itself. This is a thread safe way
-          LogStasher::CustomFields.add(*(after_keys - before_keys))
-        end
+        begin
+          result = super
+          payload[:status] = response.status
+          result
+        ensure
+          if respond_to?(:logstasher_add_custom_fields_to_payload)
+            before_keys = raw_payload.keys.clone
+            logstasher_add_custom_fields_to_payload(raw_payload)
+            after_keys = raw_payload.keys
+            # Store all extra keys added to payload hash in payload itself. This is a thread safe way
+            LogStasher::CustomFields.add(*(after_keys - before_keys))
+          end
+          append_info_to_payload(payload)
+          LogStasher.store.each do |key, value|
+            payload[key] = value
+          end
 
-        result = super
-
-        payload[:status] = response.status
-        append_info_to_payload(payload)
-        LogStasher.store.each do |key, value|
-          payload[key] = value
+          LogStasher.request_context.each do |key, value|
+            payload[key] = value
+          end
         end
-
-        LogStasher.request_context.each do |key, value|
-          payload[key] = value
-        end
-        result
       end
     end
     alias logstasher_process_action process_action
