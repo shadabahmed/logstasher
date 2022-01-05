@@ -11,6 +11,9 @@ module LogStasher
       when "syslog", :syslog then
         require 'logstasher/device/syslog'
         ::LogStasher::Device::Syslog.new(config)
+      when "udp", :udp then
+        require 'logstasher/device/udp'
+        ::LogStasher::Device::UDP.new(config)
       else
         fail ArgumentError, "Unknown type: #{type}"
       end

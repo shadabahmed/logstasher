@@ -3,6 +3,7 @@ require "spec_helper"
 require "logstasher/device"
 require "logstasher/device/redis"
 require "logstasher/device/syslog"
+require "logstasher/device/udp"
 
 describe LogStasher::Device do
   describe ".factory" do
@@ -47,7 +48,17 @@ describe LogStasher::Device do
       device = ::LogStasher::Device.factory(:type => "syslog")
       expect(device).to be_a_kind_of(::LogStasher::Device::Syslog)
     end
+    
+    it "can create udp devices" do
+      expect(
+        ::LogStasher::Device
+       ).to receive(:require).with("logstasher/device/udp")
 
+      device = ::LogStasher::Device.factory(:type => "udp")
+      expect(device).to be_a_kind_of(::LogStasher::Device::UDP)
+    end
+
+    
     it "fails to create unknown devices" do
       expect {
         ::LogStasher::Device.factory(:type => "unknown")
