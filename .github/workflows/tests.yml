@@ -43,6 +43,15 @@ jobs:
          - ruby-version: 3.1
            bundler-version: default
            rails-version: 6.1
+         - ruby-version: 2.7
+           bundler-version: default
+           rails-version: '7.0'
+         - ruby-version: '3.0'
+           bundler-version: default
+           rails-version: '7.0'
+         - ruby-version: '3.1'
+           bundler-version: default
+           rails-version: '7.0'
     steps:
     - uses: actions/checkout@v2
     - name: Set up Ruby ${{ matrix.ruby-version }}
