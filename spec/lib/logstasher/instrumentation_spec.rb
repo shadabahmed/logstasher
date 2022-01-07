@@ -25,14 +25,14 @@ describe ActionController::Base do
     it 'adds default fields to payload' do
       expect(LogStasher).to receive(:add_default_fields_to_payload).once
       expect(LogStasher).to receive(:add_default_fields_to_request_context).once
-      subject.process_action(:index)
+      subject.send(:process_action, :index)
     end
 
     it 'creates the request context before processing' do
       LogStasher.request_context[:some_key] = 'value'
       expect(LogStasher).to receive(:clear_request_context).once.and_call_original
       expect do
-        subject.process_action(:index)
+        subject.send(:process_action, :index)
       end.to change { LogStasher.request_context }
     end
 
@@ -41,7 +41,7 @@ describe ActionController::Base do
                                                                         anything).once
       expect(ActiveSupport::Notifications).to receive(:instrument).with('process_action.action_controller',
                                                                         anything).once
-      subject.process_action(:index)
+      subject.send(:process_action, :index)
     end
 
     context 'request context has custom fields defined' do
@@ -56,7 +56,7 @@ describe ActionController::Base do
       end
 
       it 'should retain the value in the request context' do
-        subject.process_action(:index)
+        subject.send(:process_action, :index)
       end
 
       after :each do
