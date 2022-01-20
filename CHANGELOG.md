@@ -1,3 +1,6 @@
+# 2.1.5
+* Ruby 3.0 and Rails 6 support
+
 # 1.2.2
 * Merge from #142 - Fix bug in detection of ActiveJob
 
