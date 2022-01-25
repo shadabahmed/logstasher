@@ -10,15 +10,24 @@ class MockController
 end
 
 class MockRequest
+  attr_accessor :env
+
+  def initialize
+    @env = { 'action_dispatch.request_id' => 1 }
+  end
+
   def remote_ip
     '127.0.0.1'
   end
 end
 
-describe LogStasher::LogSubscriber do
+
+ describe LogStasher::LogSubscriber do
   subject { described_class.new }
 
-  let(:logger) { ::Logger.new('/dev/null') }
+  device = LogStasher::Device::UDP.new
+  let(:logger) { ::Logger.new(device) }
+
   let(:mock_controller) { MockController.new }
   let(:mock_request) { MockRequest.new }
   let(:context) {{ :controller => mock_controller, :request => mock_request }}
@@ -64,7 +73,9 @@ describe LogStasher::LogSubscriber do
           'path'       => payload[:path],
           'route'      => "#{payload[:controller]}##{payload[:action]}",
           'status'     => payload[:status],
-          'runtime'    => { 'total' => duration }
+          'runtime'    => { 'total' => duration },
+          'request_id' => 1,
+          'namespace'  => "test"
         })
       end
 

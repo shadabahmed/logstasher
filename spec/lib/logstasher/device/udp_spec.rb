@@ -6,7 +6,8 @@ describe LogStasher::Device::UDP do
 
   let(:default_options) {{
                            'hostname' => '127.0.0.1',
-                           'port' => 31459
+                           'port' => 31459,
+                           'namespace' => 'test'
                          }}
 
   it 'has default options' do

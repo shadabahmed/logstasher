@@ -5,6 +5,10 @@ require 'socket'
 
 
 module LogStasher
+  class << self
+    attr_accessor :namespace
+  end
+
   module Device
     class UDP
       include ::LogStasher::Device
@@ -13,6 +17,7 @@ module LogStasher
 
       def initialize(options = {})
         @options = default_options.merge(stringify_keys(options))
+        LogStasher::namespace = @options["namespace"]
         @socket = UDPSocket.new
       end
 
@@ -30,6 +35,7 @@ module LogStasher
         {
           'hostname' => '127.0.0.1',
           'port'     => 31459,
+          'namespace' => 'test'
         }
       end
     end

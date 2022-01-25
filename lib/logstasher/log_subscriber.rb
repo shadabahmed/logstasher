@@ -60,7 +60,8 @@ module LogStasher
         :request_id => request.env["action_dispatch.request_id"],
         :method     => payload[:method],
         :path       => extract_path(payload),
-        :route      => "#{payload[:controller]}##{payload[:action]}"
+        :route      => "#{payload[:controller]}##{payload[:action]}",
+        :namespace  => LogStasher::namespace
       }
     end
 
