@@ -13,7 +13,6 @@ module LogStasher
 
       def initialize(options = {})
         @options = default_options.merge(stringify_keys(options))
-
         @socket = UDPSocket.new
       end
 
