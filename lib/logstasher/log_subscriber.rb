@@ -21,7 +21,6 @@ module LogStasher
       payload = event.payload
       tags    = extract_tags(payload)
       fields  = extract_request(payload)
-
       fields.merge! extract_status(payload)
       fields.merge! runtimes(event)
       fields.merge! location
@@ -52,7 +51,7 @@ module LogStasher
     end
 
     def extract_request(payload)
-      {
+      result = {
         :action     => payload[:action],
         :controller => payload[:controller],
         :format     => extract_format(payload),
@@ -62,6 +61,9 @@ module LogStasher
         :path       => extract_path(payload),
         :route      => "#{payload[:controller]}##{payload[:action]}"
       }
+      metadata = ::LogStasher.metadata
+      result.merge!(:metadata => metadata) unless metadata&.empty?
+      result
     end
 
     # Monkey patching to enable exception logging
@@ -87,7 +89,6 @@ module LogStasher
     def extract_parameters(payload)
       if LogStasher.include_parameters?
         external_params = payload[:params].except(*INTERNAL_PARAMS)
-
         if LogStasher.serialize_parameters?
           { :params => JSON.generate(external_params) }
         else
