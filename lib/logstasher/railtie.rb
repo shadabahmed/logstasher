@@ -8,6 +8,7 @@ module LogStasher
     config.logstasher.logger = nil
     config.logstasher.log_level = ::Logger::INFO
 
+    config.logstasher.metadata  = {}
     config.before_initialize do
       options = config.logstasher
 
@@ -17,6 +18,7 @@ module LogStasher
       ::LogStasher.silence_standard_logging = options.silence_standard_logging
       ::LogStasher.logger                   = options.logger || default_logger
       ::LogStasher.logger.level             = options.log_level
+      ::LogStasher.metadata                 = options.metadata
     end
 
     initializer 'logstasher.load' do

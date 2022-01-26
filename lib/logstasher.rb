@@ -8,6 +8,7 @@ module LogStasher
     attr_writer :include_parameters
     attr_writer :serialize_parameters
     attr_writer :silence_standard_logging
+    attr_accessor :metadata
 
     def append_fields(&block)
       @append_fields_callback = block

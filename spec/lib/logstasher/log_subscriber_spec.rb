@@ -25,8 +25,7 @@ end
  describe LogStasher::LogSubscriber do
   subject { described_class.new }
 
-  device = LogStasher::Device::UDP.new
-  let(:logger) { ::Logger.new(device) }
+  let(:logger) { ::Logger.new('/dev/null') }
 
   let(:mock_controller) { MockController.new }
   let(:mock_request) { MockRequest.new }
@@ -55,10 +54,12 @@ end
       :path       => '/users/1',
       :status     => 200
     }}
+    let(:data) { { "namespace" => "test", "appversion" => "v1" } }
 
     let(:event) { double(:payload => payload, :duration => duration) }
 
     it 'logs the event in logstash format' do
+      ::LogStasher.metadata = data
       expect(logger).to receive(:<<) do |json|
         expect(JSON.parse(json)).to eq({
           '@timestamp' => timestamp,
@@ -75,7 +76,7 @@ end
           'status'     => payload[:status],
           'runtime'    => { 'total' => duration },
           'request_id' => 1,
-          'namespace'  => "test"
+          'metadata'   => data
         })
       end
 
