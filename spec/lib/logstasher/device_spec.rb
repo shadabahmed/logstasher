@@ -58,6 +58,10 @@ describe LogStasher::Device do
       expect(device).to be_a_kind_of(::LogStasher::Device::UDP)
     end
 
+    it "can create stdout devices" do
+      device = ::LogStasher::Device.factory(:type => "stdout")
+      expect(device).to eq $stdout
+    end
     
     it "fails to create unknown devices" do
       expect {
