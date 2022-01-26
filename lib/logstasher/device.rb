@@ -14,6 +14,8 @@ module LogStasher
       when "udp", :udp then
         require 'logstasher/device/udp'
         ::LogStasher::Device::UDP.new(config)
+      when "stdout", :stdout then
+        $stdout
       else
         fail ArgumentError, "Unknown type: #{type}"
       end
