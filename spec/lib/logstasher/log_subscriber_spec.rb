@@ -21,7 +21,6 @@ class MockRequest
   end
 end
 
-
  describe LogStasher::LogSubscriber do
   subject { described_class.new }
 
