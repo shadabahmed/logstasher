@@ -4,7 +4,6 @@ module LogStasher
     def self.factory(config)
       config = stringify_keys(config)
       type   = config.delete('type') or fail ArgumentError, 'No "type" given'
-
       case type
       when 'redis', :redis then
         require 'logstasher/device/redis'

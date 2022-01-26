@@ -5,7 +5,6 @@ require 'socket'
 
 
 module LogStasher
-
   module Device
     class UDP
       include ::LogStasher::Device
