@@ -62,9 +62,7 @@ module LogStasher
         :route      => "#{payload[:controller]}##{payload[:action]}"
       }
       metadata = ::LogStasher.metadata
-      if !!metadata
-        result.merge!({:metadata => metadata })
-      end
+      result.merge!(:metadata => metadata) unless metadata&.empty?
       result
     end
 
