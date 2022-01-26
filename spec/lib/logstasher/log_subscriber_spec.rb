@@ -40,7 +40,7 @@ end
     LogStasher.logger = backup_logger
   end
 
-  describe '#process_action' do
+ describe '#process_action' do
     let(:timestamp) { ::Time.new.utc.iso8601(3) }
     let(:duration) { 12.4 }
     let(:json_params) { JSON.dump(payload[:params]) }
