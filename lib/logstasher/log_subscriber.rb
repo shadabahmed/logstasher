@@ -28,9 +28,7 @@ module LogStasher
       fields.merge! extract_parameters(payload)
       fields.merge! appended_fields
 
-      event = LogStash::Event.new(fields.merge('tags' => tags))
-
-      LogStasher.logger << event.to_json + "\n"
+      LogStasher.log_as_json(fields.merge('tags' => tags), :as_logstash_event => true)
     end
 
     def redirect_to(event)
@@ -51,7 +49,7 @@ module LogStasher
     end
 
     def extract_request(payload)
-      result = {
+      {
         :action     => payload[:action],
         :controller => payload[:controller],
         :format     => extract_format(payload),
@@ -61,9 +59,6 @@ module LogStasher
         :path       => extract_path(payload),
         :route      => "#{payload[:controller]}##{payload[:action]}"
       }
-      metadata = ::LogStasher.metadata
-      result.merge!(:metadata => metadata) unless metadata&.empty?
-      result
     end
 
     # Monkey patching to enable exception logging

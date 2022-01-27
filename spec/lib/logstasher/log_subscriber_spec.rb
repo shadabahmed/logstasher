@@ -57,8 +57,10 @@ describe LogStasher::LogSubscriber do
 
     let(:event) { double(:payload => payload, :duration => duration) }
 
+    before { ::LogStasher.metadata = data }
+    after { ::LogStasher.metadata = {} }
+
     it 'logs the event in logstash format' do
-      ::LogStasher.metadata = data
       expect(logger).to receive(:<<) do |json|
         expect(JSON.parse(json)).to eq({
           '@timestamp' => timestamp,
