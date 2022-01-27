@@ -45,10 +45,8 @@ module LogStasher
     end
 
     def log_as_json(payload, as_logstash_event: false)
-      raise ArgumentError, "Expected a hash value" unless payload.is_a?(::Hash)
-
       payload = payload.dup
-      payload.merge!(:metadata => metadata) unless metadata&.empty?
+      payload.merge!(:metadata => metadata) if !metadata&.empty? && payload.is_a?(::Hash)
 
       # Wrap the hash in a logstash event if the caller wishes for a specific
       # formatting applied to the hash. This is used by log subscriber, for

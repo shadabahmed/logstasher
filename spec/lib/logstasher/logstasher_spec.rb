@@ -35,6 +35,14 @@ describe ::LogStasher do
 
         ::LogStasher.log_as_json(:yolo => :brolo)
       end
+
+      it "does not merge metadata on an array" do
+        expect(::LogStasher.logger).to receive(:<<) do |json|
+          expect(::JSON.parse(json)).to eq([{ "yolo" => "brolo" }])
+        end
+
+        ::LogStasher.log_as_json([{:yolo => :brolo}])
+      end
     end
   end
 end
