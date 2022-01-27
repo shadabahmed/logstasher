@@ -44,6 +44,22 @@ module LogStasher
       end
     end
 
+    def log_as_json(payload, as_logstash_event: false)
+      payload = payload.dup
+      payload.merge!(:metadata => metadata) if !metadata&.empty? && payload.is_a?(::Hash)
+
+      # Wrap the hash in a logstash event if the caller wishes for a specific
+      # formatting applied to the hash. This is used by log subscriber, for
+      # example.
+      json_payload = if as_logstash_event
+                       ::LogStash::Event.new(payload).to_json
+                     else
+                       payload.to_json
+                     end
+
+      logger << json_payload + $INPUT_RECORD_SEPARATOR
+    end
+
     def logger
       @logger ||= initialize_logger
     end
