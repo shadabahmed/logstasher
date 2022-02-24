@@ -31,7 +31,7 @@ describe LogStasher::ActionView::LogSubscriber do
   describe '.process_action' do
     let(:logger)  { double }
     let(:json)    do
-      '{"identifier":"mytemplate","layout":"mylayout","name":"render_template.action_view","transaction_id":1,"duration":0.0,"request_id":"1","source":"unknown","tags":[],"@timestamp":"1970-01-01T00:00:00.000Z","@version":"1"}' + "\n"
+      '{"identifier":"mytemplate","layout":"mylayout","name":"render_template.action_view","transaction_id":1,"allocations":0,"duration":0.0,"request_id":"1","source":"unknown","tags":[],"@timestamp":"1970-01-01T00:00:00.000Z","@version":"1"}' + "\n"
     end
     before do
       LogStasher.store.clear
