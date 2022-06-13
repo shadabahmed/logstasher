@@ -21,37 +21,26 @@ jobs:
       matrix:
          include:
          - ruby-version: 2.6
-           bundler-version: default
            rails-version: 5.2
          - ruby-version: 2.7
-           bundler-version: default
            rails-version: 5.2
          - ruby-version: 2.6
-           bundler-version: default
            rails-version: '6.0'
          - ruby-version: 2.7
-           bundler-version: default
            rails-version: '6.0'
          - ruby-version: 2.6
-           bundler-version: default
            rails-version: 6.1
          - ruby-version: 2.7
-           bundler-version: default
            rails-version: 6.1
          - ruby-version: '3.0'
-           bundler-version: default
            rails-version: 6.1
          - ruby-version: 3.1
-           bundler-version: default
            rails-version: 6.1
          - ruby-version: 2.7
-           bundler-version: default
            rails-version: '7.0'
          - ruby-version: '3.0'
-           bundler-version: default
            rails-version: '7.0'
          - ruby-version: '3.1'
-           bundler-version: default
            rails-version: '7.0'
     steps:
     - uses: actions/checkout@v2
@@ -59,7 +48,6 @@ jobs:
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby-version }}
-        bundler: ${{ matrix.bundler-version }} 
         bundler-cache: false
     - name: Install dependencies
       run: bundle install
