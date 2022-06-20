@@ -13,7 +13,7 @@ end
 
 group :test do
   gem 'byebug'
-  gem 'rails', "~> #{ENV['RAILS_VERSION'] || '5.2.0'}"
+  gem 'rails', "~> #{ENV['RAILS_VERSION'] || '6.1.0'}"
   gem 'rb-fsevent', '~> 0.9'
   gem 'redis', require: false
   gem 'simplecov', require: false
