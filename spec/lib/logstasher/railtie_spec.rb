@@ -26,8 +26,10 @@ describe ::LogStasher::Railtie do
   end
 
   describe 'logstasher should NOT touch log file if silence disabled' do
+    before { config.silence_creation_message = false }
+    after { config.silence_creation_message = true }
+
     it 'should configure LogStasher' do
-      config.silence_creation_message = false
       expect(::FileUtils).not_to receive(:touch)
       ActiveSupport.run_load_hooks(:before_initialize)
     end
