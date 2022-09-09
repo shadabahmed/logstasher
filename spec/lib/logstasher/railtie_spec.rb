@@ -18,9 +18,8 @@ end
 describe ::LogStasher::Railtie do
   let(:config) { described_class.config.logstasher }
 
-  describe 'logstasher should touch log file to prevent meessage by default' do
+  describe 'logstasher should touch log file to prevent creation message by default' do
     it 'should configure LogStasher' do
-      config.silence_creation_message = true
       expect(::FileUtils).to receive(:touch)
       ActiveSupport.run_load_hooks(:before_initialize)
     end
