@@ -18,6 +18,23 @@ end
 describe ::LogStasher::Railtie do
   let(:config) { described_class.config.logstasher }
 
+  describe 'logstasher should touch log file to prevent meessage by default' do
+    it 'should configure LogStasher' do
+      config.silence_creation_message = true
+      expect(::FileUtils).to receive(:touch)
+      ActiveSupport.run_load_hooks(:before_initialize)
+    end
+  end
+
+  describe 'logstasher should NOT touch log file if silence disabled' do
+    it 'should configure LogStasher' do
+      config.silence_creation_message = false
+      expect(::FileUtils).not_to receive(:touch)
+      ActiveSupport.run_load_hooks(:before_initialize)
+    end
+  end
+
+
   describe 'logstasher.configure' do
     it 'should configure LogStasher' do
       config.logger                   = ::Logger.new('/dev/null')
