@@ -24,7 +24,7 @@ jobs:
           version-file: "lib/logstasher/version.rb"
           token: "${{secrets.GITHUB_TOKEN}}"
       # Checkout code if release was created
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         if: ${{ steps.release.outputs.release_created }}
       # Setup ruby if a release was created
       - uses: ruby/setup-ruby@v1
