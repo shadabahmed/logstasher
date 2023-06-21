@@ -32,6 +32,7 @@ module LogStasher
     config.logstasher.view_enabled = true
     config.logstasher.job_enabled = true
     config.logstasher.source = LogStasher.default_source
+    config.logstasher.log_raw_events = false
 
     # Try loading the config/logstasher.yml if present
     env = Rails.env.to_sym || :development
@@ -72,6 +73,7 @@ module LogStasher
     config.record_enabled = yml_config[:record_enabled] if yml_config.key? :record_enabled
     config.view_enabled = yml_config[:view_enabled] if yml_config.key? :view_enabled
     config.job_enabled = yml_config[:job_enabled] if yml_config.key? :job_enabled
+    config.log_raw_events = yml_config[:log_raw_events] if yml_config.key? :log_raw_events
 
     # This line is optional if you do not want to suppress app logs in your <environment>.log
     config.suppress_app_log = yml_config[:suppress_app_log] if yml_config.key? :suppress_app_log

@@ -22,7 +22,7 @@ module LogStasher
 
         tags = ['request']
         tags.push('exception') if payload[:exception]
-        logger << "#{LogStasher.build_logstash_event(data, tags).to_json}\n"
+        LogStasher.log_event(LogStasher.build_logstash_event(data, tags))
       end
 
       def redirect_to(event)

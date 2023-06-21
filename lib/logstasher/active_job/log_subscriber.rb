@@ -62,7 +62,7 @@ module LogStasher
 
         tags = ['job', type]
         tags.push('exception') if data[:exception]
-        logger << "#{LogStasher.build_logstash_event(data, tags).to_json}\n"
+        LogStasher.log_event(LogStasher.build_logstash_event(data, tags))
       end
 
       def extract_metadata(event)

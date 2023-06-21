@@ -20,7 +20,7 @@ module LogStasher
   REQUEST_CONTEXT_KEY = :logstasher_request_context
 
   attr_accessor :logger, :logger_path, :enabled, :log_controller_parameters, :source, :backtrace,
-                :controller_monkey_patch, :field_renaming, :backtrace_filter
+                :controller_monkey_patch, :field_renaming, :backtrace_filter, :log_raw_events
 
   # Setting the default to 'unknown' to define the default behaviour
   @source = 'unknown'
@@ -121,6 +121,7 @@ module LogStasher
     set_data_for_rake
     set_data_for_console
     self.field_renaming = Hash(config.field_renaming)
+    self.log_raw_events = config.log_raw_events
   end
 
   def set_data_for_rake
@@ -180,9 +181,19 @@ module LogStasher
       tags = Array(additional_fields.delete(:tags) || 'log')
 
       data.merge!(additional_fields)
-      logger << "#{build_logstash_event(data, tags).to_json}\n"
 
+      logstash_event = build_logstash_event(data, tags)
+
+      log_event(logstash_event)
     end
+  end
+
+  def log_event(logstash_event)
+    logger << if log_raw_events
+                logstash_event
+              else
+                "#{logstash_event.to_json}\n"
+              end
   end
 
   def build_logstash_event(data, tags)
