@@ -14,16 +14,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Create release
-      - uses: GoogleCloudPlatform/release-please-action@v2
-        id: release
+      - uses: google-github-actions/release-please-action@v3
         with:
           release-type: ruby
+          command: github-release
           package-name: logstasher
           bump-minor-pre-major: true
           # Path to our version file to increment
           version-file: "lib/logstasher/version.rb"
+          token: "${{secrets.GITHUB_TOKEN}}"
       # Checkout code if release was created
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         if: ${{ steps.release.outputs.release_created }}
       # Setup ruby if a release was created
       - uses: ruby/setup-ruby@v1

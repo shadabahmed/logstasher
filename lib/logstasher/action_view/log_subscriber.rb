@@ -51,7 +51,8 @@ module LogStasher
       def event_data(event)
         {
           name: event.name,
-          transaction_id: event.transaction_id
+          transaction_id: event.transaction_id,
+          allocations: event.try(:allocations) || 0
         }
       end
 
