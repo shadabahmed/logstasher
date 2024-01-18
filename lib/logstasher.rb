@@ -9,6 +9,28 @@ module LogStasher
     attr_writer :serialize_parameters
     attr_writer :silence_standard_logging
     attr_accessor :metadata
+    attr_accessor :default_device
+
+    def load_from_config(config)
+      ::LogStasher.logger = ::Logger.new("/dev/null")
+
+      config.each do |key,value|
+        key = key.to_s
+        case key
+        when 'metadata'
+          ::LogStasher.metadata = value
+        when 'device'
+          ::LogStasher.default_device = ::LogStasher::Device.factory(value)
+          ::LogStasher.logger = ::Logger.new(::LogStasher.default_device)
+        when 'include_parameters'
+          ::LogStasher.include_parameters = value
+        when 'serialize_parameters'
+          ::LogStasher.serialize_parameters = value
+        when 'silence_standard_logging'
+          ::LogStasher.silence_standard_logging = value
+        end
+      end
+    end
 
     def append_fields(&block)
       @append_fields_callback = block
