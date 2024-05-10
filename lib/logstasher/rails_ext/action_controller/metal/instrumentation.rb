@@ -7,7 +7,9 @@ module ActionController
       raw_payload = {
         controller: self.class.name,
         action: action_name,
+        request: request,
         params: request.filtered_parameters,
+        headers: request.headers,
         format: request.format.try(:ref),
         method: request.method,
         path: begin
