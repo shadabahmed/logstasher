@@ -53,7 +53,7 @@ module LogStasher
       LogStasher.setup_before(app.config.logstasher) if app.config.logstasher.enabled
     end
 
-    initializer :logstasher do
+    initializer :logstasher_after_init do
       config.after_initialize do
         LogStasher.setup(config.logstasher) if config.logstasher.enabled
       end
