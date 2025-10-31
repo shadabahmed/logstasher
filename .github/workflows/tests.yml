@@ -44,6 +44,8 @@ jobs:
            rails-version: '7.0'
          - ruby-version: 3.2
            rails-version: '7.0'
+         - ruby-version: 3.2
+           rails-version: '8.1'
     steps:
     - uses: actions/checkout@v3
     - name: Set up Ruby ${{ matrix.ruby-version }}

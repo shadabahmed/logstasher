@@ -62,19 +62,19 @@ describe LogStasher::Device::Redis do
   describe '#write' do
     it 'rpushes logs onto a list' do
       device = LogStasher::Device::Redis.new(data_type: 'list')
-      expect(device.redis).to receive(:rpush).with('logstash', 'the log')
+      expect(device.redis).to receive(:rpush).with('logstash', 'the log').and_return(1)
       device.write('the log')
     end
 
     it 'rpushes logs onto a custom key' do
       device = LogStasher::Device::Redis.new(data_type: 'list', key: 'custom')
-      expect(device.redis).to receive(:rpush).with('custom', 'the log')
+      expect(device.redis).to receive(:rpush).with('custom', 'the log').and_return(1)
       device.write('the log')
     end
 
     it 'publishes logs onto a channel' do
       device = LogStasher::Device::Redis.new(data_type: 'channel', key: 'custom')
-      expect(device.redis).to receive(:publish).with('custom', 'the log')
+      expect(device.redis).to receive(:publish).with('custom', 'the log').and_return(1)
       device.write('the log')
     end
   end
