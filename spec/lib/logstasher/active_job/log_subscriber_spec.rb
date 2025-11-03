@@ -3,10 +3,20 @@
 require 'spec_helper'
 require 'logstasher/active_job/log_subscriber'
 require 'active_job'
+require 'minitest'
 
 if LogStasher.has_active_job?
   describe LogStasher::ActiveJob::LogSubscriber do
     include ActiveJob::TestHelper
+
+    # Provide stub methods for Minitest assertions required by ActiveJob::TestHelper in Rails 7
+    def assert(condition, message = nil)
+      expect(condition).to be_truthy, message
+    end
+
+    def assert_equal(expected, actual, message = nil)
+      expect(actual).to eq(expected), message
+    end
 
     class ActiveJobTestClass < ActiveJob::Base
       include ActiveJob::TestHelper
