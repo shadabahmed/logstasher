@@ -18,7 +18,7 @@ describe LogStasher::SampleController do
     subject.response = ActionDispatch::TestResponse.create
 
     def subject.index(*_args)
-      render plain: 'OK'
+      render plain: 'OK' unless performed?
     end
   end
 

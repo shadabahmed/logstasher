@@ -71,7 +71,7 @@ describe ActionController::Base do
 
         def index(*_args)
           #          ActiveRecord::Base.connection.execute("SELECT true;")
-          render plain: 'OK'
+          render plain: 'OK' unless performed?
         end
       end
     end
@@ -86,7 +86,7 @@ describe ActionController::Base do
     before do
       class MyController < ActionController::Base
         def index(*_args)
-          render plain: 'OK'
+          render plain: 'OK' unless performed?
         end
       end
     end
