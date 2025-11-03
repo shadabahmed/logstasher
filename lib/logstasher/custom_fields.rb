@@ -4,7 +4,10 @@ module LogStasher
   module CustomFields
     module LogSubscriber
       def extract_custom_fields(data)
-        (!CustomFields.custom_fields.empty? && data.extract!(*CustomFields.custom_fields)) || {}
+        # Don't mutate the original payload; slice the requested fields instead
+        fields = CustomFields.custom_fields
+        return {} if fields.empty?
+        data.respond_to?(:slice) ? data.slice(*fields) : fields.each_with_object({}) { |k, h| h[k] = data[k] if data.key?(k) }
       end
     end
 
