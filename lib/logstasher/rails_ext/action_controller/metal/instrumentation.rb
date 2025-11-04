@@ -17,10 +17,10 @@ module ActionController
         end
       }
 
-  LogStasher.add_default_fields_to_payload(raw_payload, request)
+      LogStasher.add_default_fields_to_payload(raw_payload, request)
 
-  LogStasher.clear_request_context
-  LogStasher.add_default_fields_to_request_context(request)
+      LogStasher.clear_request_context
+      LogStasher.add_default_fields_to_request_context(request)
 
       ActiveSupport::Notifications.instrument('start_processing.action_controller', raw_payload.dup)
 
