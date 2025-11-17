@@ -47,10 +47,24 @@ module LogStasher
   end
 
   def unsubscribe(component, subscriber)
+    # Use Rails' built-in detach mechanism when available (Rails 5.1+).
+    # detach_from is a class method, so we get the class first.
+    klass = subscriber.is_a?(Class) ? subscriber : subscriber.class
+    if klass.respond_to?(:detach_from)
+      klass.detach_from(component)
+      return
+    end
+
+    # Fallback for older Rails versions without detach_from.
     events = subscriber.public_methods(false).reject { |method| method.to_s == 'call' }
     events.each do |event|
       ::ActiveSupport::Notifications.notifier.listeners_for("#{event}.#{component}").each do |listener|
-        ::ActiveSupport::Notifications.unsubscribe listener if listener.instance_variable_get('@delegate') == subscriber
+        begin
+          delegate = listener.instance_variable_get('@delegate')
+        rescue StandardError
+          delegate = nil
+        end
+        ::ActiveSupport::Notifications.unsubscribe(listener) if delegate == subscriber
       end
     end
   end
@@ -71,9 +85,14 @@ module LogStasher
       LogStasher::CustomFields.add(*LogStasher.store.keys)
       instance_exec(fields, &block)
     end
-    ::ActiveSupport.on_load(:action_controller) do
-      ::ActionController::Metal.send(:define_method, :logstasher_add_custom_fields_to_payload, &wrapped_block)
-      ::ActionController::Base.send(:define_method, :logstasher_add_custom_fields_to_payload, &wrapped_block)
+    if defined?(::ActionController::Base) || defined?(::ActionController::Metal)
+      ::ActionController::Metal.send(:define_method, :logstasher_add_custom_fields_to_payload, &wrapped_block) if defined?(::ActionController::Metal)
+      ::ActionController::Base.send(:define_method, :logstasher_add_custom_fields_to_payload, &wrapped_block) if defined?(::ActionController::Base)
+    else
+      ::ActiveSupport.on_load(:action_controller) do
+        ::ActionController::Metal.send(:define_method, :logstasher_add_custom_fields_to_payload, &wrapped_block)
+        ::ActionController::Base.send(:define_method, :logstasher_add_custom_fields_to_payload, &wrapped_block)
+      end
     end
   end
 
@@ -82,9 +101,14 @@ module LogStasher
       instance_exec(fields, &block)
       LogStasher::CustomFields.add(*fields.keys)
     end
-    ::ActiveSupport.on_load(:action_controller) do
-      ::ActionController::Metal.send(:define_method, :logstasher_add_custom_fields_to_request_context, &wrapped_block)
-      ::ActionController::Base.send(:define_method, :logstasher_add_custom_fields_to_request_context, &wrapped_block)
+    if defined?(::ActionController::Base) || defined?(::ActionController::Metal)
+      ::ActionController::Metal.send(:define_method, :logstasher_add_custom_fields_to_request_context, &wrapped_block) if defined?(::ActionController::Metal)
+      ::ActionController::Base.send(:define_method, :logstasher_add_custom_fields_to_request_context, &wrapped_block) if defined?(::ActionController::Base)
+    else
+      ::ActiveSupport.on_load(:action_controller) do
+        ::ActionController::Metal.send(:define_method, :logstasher_add_custom_fields_to_request_context, &wrapped_block)
+        ::ActionController::Base.send(:define_method, :logstasher_add_custom_fields_to_request_context, &wrapped_block)
+      end
     end
   end
 

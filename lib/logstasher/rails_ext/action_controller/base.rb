@@ -18,7 +18,12 @@ module LogStasher
       def append_info_to_payload(payload) #:nodoc:
         LogStasher.add_default_fields_to_payload(payload, request)
         if respond_to?(:logstasher_add_custom_fields_to_request_context)
-          logstasher_add_custom_fields_to_request_context(LogStasher.request_context)
+          # Collect custom fields into a temporary hash, then merge into both
+          # the per-request context and the controller payload.
+          _fields = {}
+          logstasher_add_custom_fields_to_request_context(_fields)
+          LogStasher.request_context.merge!(_fields)
+          payload.merge!(_fields)
         end
 
         if respond_to?(:logstasher_add_custom_fields_to_payload)

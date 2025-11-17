@@ -26,7 +26,12 @@ module ActionController
 
       ActiveSupport::Notifications.instrument('process_action.action_controller', raw_payload) do |payload|
         if respond_to?(:logstasher_add_custom_fields_to_request_context)
-          logstasher_add_custom_fields_to_request_context(LogStasher.request_context)
+          # Collect custom fields in a temporary hash then merge into both
+          # request context and the event payload to satisfy specs.
+          _fields = {}
+          logstasher_add_custom_fields_to_request_context(_fields)
+          LogStasher.request_context.merge!(_fields)
+          payload.merge!(_fields)
         end
 
         if respond_to?(:logstasher_add_custom_fields_to_payload)

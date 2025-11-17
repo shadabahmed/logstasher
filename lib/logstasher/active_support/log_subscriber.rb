@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'active_support'
 require 'active_support/core_ext/class/attribute'
 require 'active_support/log_subscriber'
 require 'logstasher/custom_fields'
