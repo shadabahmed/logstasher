@@ -220,7 +220,7 @@ bin/logstash -f quickstart.conf
 ```
 
 ## Versions
-All versions require Rails 5.2.x (Tested upto 6.1.x) and higher and Ruby 2.6+.
+Latest version require Rails 7/8 and higher and Ruby 3.0+
 
 ## Development
  - Install dependencies:
