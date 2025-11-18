@@ -1,3 +1,6 @@
+# 3.0.0
+* Rails 7/8 support. Deprecated older versions
+
 # 2.1.5
 * Ruby 3.0 and Rails 6 support
 
