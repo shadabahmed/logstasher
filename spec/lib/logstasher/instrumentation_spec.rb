@@ -22,6 +22,18 @@ describe ActionController::Base do
   end
 
   describe '.process_action' do
+    if Rails.version.to_i >= 7
+      it 'sets the controller in ActiveSupport::ExecutionContext' do
+        expect(ActiveSupport::ExecutionContext).to receive(:[]=).with(:controller, subject)
+        subject.send(:process_action, :index)
+      end
+    else
+      it 'does not set the controller in ActiveSupport::ExecutionContext' do
+        expect(ActiveSupport::ExecutionContext).not_to receive(:[]=).with(:controller, anything)
+        subject.send(:process_action, :index)
+      end
+    end
+
     it 'adds default fields to payload' do
       expect(LogStasher).to receive(:add_default_fields_to_payload).once
       expect(LogStasher).to receive(:add_default_fields_to_request_context).once
