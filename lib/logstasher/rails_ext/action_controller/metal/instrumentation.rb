@@ -4,6 +4,8 @@ module ActionController
   module Instrumentation
     alias orig_process_action process_action
     def process_action(*args)
+      ActiveSupport::ExecutionContext[:controller] = self if Rails.version.to_i >= 7
+
       raw_payload = {
         controller: self.class.name,
         action: action_name,
