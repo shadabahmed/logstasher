@@ -7,4 +7,6 @@ group :test do
   gem 'pry-nav'
   gem 'rails'
   gem 'timecop'
+
+  gem 'syslog'
 end

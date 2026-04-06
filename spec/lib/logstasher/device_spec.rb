@@ -15,7 +15,7 @@ describe LogStasher::Device do
 
     it "forwards configuration options to the device" do
       expect(::LogStasher::Device::Redis).to receive(:new).with(
-        'options' => "other", 'than' => "type"
+        {'options' => "other", 'than' => "type"}
       )
       ::LogStasher::Device.factory(
         'type' => 'redis', 'options' => 'other', :than => "type"
@@ -24,7 +24,7 @@ describe LogStasher::Device do
 
     it "accepts symbolized configuration keys" do
       expect(::LogStasher::Device::Redis).to receive(:new).with(
-        'options' => "other", 'than' => "type"
+        {'options' => "other", 'than' => "type"}
       )
       ::LogStasher::Device.factory(
         :type => "redis", :options => "other", :than => "type"
@@ -48,7 +48,7 @@ describe LogStasher::Device do
       device = ::LogStasher::Device.factory(:type => "syslog")
       expect(device).to be_a_kind_of(::LogStasher::Device::Syslog)
     end
-    
+
     it "can create udp devices" do
       expect(
         ::LogStasher::Device
@@ -62,7 +62,7 @@ describe LogStasher::Device do
       device = ::LogStasher::Device.factory(:type => "stdout")
       expect(device).to eq $stdout
     end
-    
+
     it "fails to create unknown devices" do
       expect {
         ::LogStasher::Device.factory(:type => "unknown")
