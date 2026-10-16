@@ -44,6 +44,22 @@ describe ActionController::Base do
       subject.send(:process_action, :index)
     end
 
+    %w[start_processing.action_controller process_action.action_controller].each do |event_name|
+      it "includes the request and headers in the #{event_name} payload" do
+        payload = nil
+        subscriber = ActiveSupport::Notifications.subscribe(event_name) do |*, event_payload|
+          payload = event_payload
+        end
+
+        subject.send(:process_action, :index)
+
+        expect(payload[:request]).to eq(subject.request)
+        expect(payload[:headers]).to be_a(ActionDispatch::Http::Headers)
+      ensure
+        ActiveSupport::Notifications.unsubscribe(subscriber)
+      end
+    end
+
     context 'request context has custom fields defined' do
       before :each do
         LogStasher.add_custom_fields_to_request_context do |fields|
